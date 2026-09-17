@@ -26,6 +26,8 @@ const playableSet = new Set(PLAYABLE_STATE_IDS);
 
 export function MapView() {
   const routes = useGameStore((s) => s.routes);
+  const rivals = useGameStore((s) => s.rivals);
+  const warehouses = useGameStore((s) => s.warehouses);
   const selectedCityId = useGameStore((s) => s.selectedCityId);
   const selectedRouteId = useGameStore((s) => s.selectedRouteId);
   const routeDraftFromCityId = useGameStore((s) => s.routeDraftFromCityId);
@@ -65,6 +67,30 @@ export function MapView() {
           </path>
         ))}
 
+        {rivals.map((rival) =>
+          rival.defeated
+            ? null
+            : rival.routes.map((route) => {
+                const from = cityById[route.fromCityId];
+                const to = cityById[route.toCityId];
+                if (!from || !to) return null;
+                return (
+                  <line
+                    key={route.id}
+                    x1={from.x}
+                    y1={from.y}
+                    x2={to.x}
+                    y2={to.y}
+                    className="rival-route-line"
+                    stroke={rival.color}
+                    pointerEvents="none"
+                  >
+                    <title>{rival.name}</title>
+                  </line>
+                );
+              }),
+        )}
+
         {routes.map((route) => {
           const from = cityById[route.fromCityId];
           const to = cityById[route.toCityId];
@@ -101,6 +127,32 @@ export function MapView() {
             className="draft-halo"
           />
         )}
+
+        {warehouses.map((w) => {
+          const city = cityById[w.cityId];
+          if (!city) return null;
+          const rival = w.ownerId !== 'player' ? rivals.find((r) => r.id === w.ownerId) : undefined;
+          const color = w.ownerId === 'player' ? '#8c1f1f' : rival?.color ?? '#555';
+          const size = 3 + w.level * 1.4;
+          const offset = DEV_RADIUS[city.dev] + 3;
+          return (
+            <rect
+              key={w.id}
+              x={city.x + offset - size / 2}
+              y={city.y - offset - size / 2}
+              width={size}
+              height={size}
+              fill={color}
+              stroke="#1c1508"
+              strokeWidth={0.5}
+              pointerEvents="none"
+            >
+              <title>
+                Entrepôt {w.ownerId === 'player' ? 'du joueur' : rival?.name} niveau {w.level} à {city.name}
+              </title>
+            </rect>
+          );
+        })}
 
         {CITIES.map((city) => {
           const isSelected = city.id === selectedCityId;

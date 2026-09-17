@@ -32,6 +32,33 @@ export function routeConstructionCost(fromCityId: string, toCityId: string): num
   return Math.round(distanceBetween(fromCityId, toCityId) * 8 + 150);
 }
 
+export const DILIGENCE_MIN_CAPITAL = 5000;
+export const TRAIN_MIN_TIER = 3;
+
+export function railwayConstructionCost(fromCityId: string, toCityId: string): number {
+  return Math.round(distanceBetween(fromCityId, toCityId) * 40 + 2000);
+}
+
+export const RAILWAY_MAINTENANCE_PER_TICK = 1.2;
+export const GUARD_COST_PER_TICK = 0.8;
+
+/** Which transport modes could legally/physically be assigned to this city pair right now. */
+export function availableTransportModes(
+  fromCityId: string,
+  toCityId: string,
+  capital: number,
+  charterTier: number,
+  infrastructure: 'piste' | 'route' | 'voie_ferree',
+): TransportMode[] {
+  const a = CITIES_BY_ID[fromCityId];
+  const b = CITIES_BY_ID[toCityId];
+  const modes: TransportMode[] = ['chariot'];
+  if (capital >= DILIGENCE_MIN_CAPITAL) modes.push('diligence');
+  if ((a.isPort || a.isRiver) && (b.isPort || b.isRiver)) modes.push('bateau');
+  if (charterTier >= TRAIN_MIN_TIER && infrastructure === 'voie_ferree') modes.push('train');
+  return modes;
+}
+
 const REF_POPULATION = 40000;
 
 function devFactor(fromCityId: string, toCityId: string): number {
@@ -60,8 +87,15 @@ export interface TickRouteResult {
  * Simulates one tick of NPC merchant trade flowing across a route: goods move
  * from whichever city has a price surplus toward the one with a deficit, for
  * every good, and the player collects a commission on the value transferred.
+ *
+ * `revenueFactorForGood` lets callers scale the commission per good (e.g. to
+ * model licenses: goods move regardless, but the player's legal cut differs).
  */
-export function tickRoute(route: Route, markets: Record<string, CityMarketState>): TickRouteResult {
+export function tickRoute(
+  route: Route,
+  markets: Record<string, CityMarketState>,
+  revenueFactorForGood?: (goodId: string) => number,
+): TickRouteResult {
   let workingMarkets = markets;
   let totalVolume = 0;
   let totalRevenue = 0;
@@ -88,7 +122,8 @@ export function tickRoute(route: Route, markets: Record<string, CityMarketState>
 
     const avgPrice = (lowPrice + highPrice) / 2;
     const value = volume * avgPrice;
-    const revenue = value * route.commissionRate;
+    const factor = revenueFactorForGood ? revenueFactorForGood(good.id) : 1;
+    const revenue = value * route.commissionRate * factor;
 
     workingMarkets = applyStockDelta(workingMarkets, cheaper, good.id, -volume);
     workingMarkets = applyStockDelta(workingMarkets, pricier, good.id, volume);

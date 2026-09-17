@@ -106,15 +106,51 @@ button.paused {
   min-height: 0;
 }
 
+.topbar-wrap {
+  background: var(--leather);
+  border-bottom: 3px solid var(--leather-dark);
+}
+
 .topbar {
   display: flex;
   align-items: center;
   gap: 24px;
   padding: 10px 20px;
-  background: var(--leather);
   color: var(--parchment);
-  border-bottom: 3px solid var(--leather-dark);
   flex-wrap: wrap;
+}
+
+.tab-nav {
+  display: flex;
+  gap: 2px;
+  padding: 0 20px;
+  background: var(--leather-dark);
+}
+
+.tab-nav .tab {
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  color: var(--parchment);
+  opacity: 0.65;
+  padding: 8px 14px;
+  font-size: 13px;
+}
+
+.tab-nav .tab:hover {
+  opacity: 0.9;
+  background: rgba(255,255,255,0.06);
+}
+
+.tab-nav .tab.active {
+  opacity: 1;
+  border-bottom: 2px solid var(--accent-light);
+  font-weight: bold;
+}
+
+.charter-tier {
+  font-size: 13px !important;
+  white-space: nowrap;
 }
 
 .brand-title {
@@ -202,6 +238,13 @@ button.paused {
 .route-line.selected {
   stroke-width: 3;
   filter: drop-shadow(0 0 2px rgba(0,0,0,0.5));
+}
+
+.rival-route-line {
+  stroke-width: 1;
+  stroke-dasharray: 2 2;
+  opacity: 0.55;
+  fill: none;
 }
 
 .route-hitbox {
@@ -421,4 +464,183 @@ input[type='range'] {
 
 .event-log li.log-danger {
   border-left-color: var(--danger);
+}
+
+/* Full-page screens (licenses, rivals, holding) */
+.screen {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px 28px;
+  background: #b9c9a8;
+}
+
+.screen-intro {
+  max-width: 760px;
+  color: var(--parchment);
+  background: rgba(43, 32, 19, 0.55);
+  padding: 10px 16px;
+  border-radius: 4px;
+  margin-bottom: 18px;
+  font-size: 13px;
+}
+
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 14px;
+}
+
+.state-card {
+  background: var(--parchment);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 12px 14px;
+}
+
+.state-card h3 {
+  margin-top: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.state-card .rep-value {
+  font-size: 12px;
+  color: var(--ink-soft);
+  font-weight: normal;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.license-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 5px 0;
+  border-bottom: 1px solid rgba(166, 138, 91, 0.3);
+  font-size: 12.5px;
+  gap: 8px;
+}
+
+.license-row:last-child {
+  border-bottom: none;
+}
+
+.license-row .tag {
+  font-size: 10px;
+  text-transform: uppercase;
+  padding: 1px 6px;
+  border-radius: 8px;
+  background: var(--border);
+  color: var(--parchment);
+}
+
+.license-row .tag.owned {
+  background: var(--success);
+}
+
+.license-row .tag.locked {
+  background: #8a8a8a;
+}
+
+.license-row .tag.contraband {
+  background: var(--danger);
+}
+
+.license-row button {
+  font-size: 11.5px;
+  padding: 3px 8px;
+}
+
+.corruption-control {
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px dashed var(--border);
+}
+
+.corruption-control label {
+  font-size: 12px;
+  display: flex;
+  justify-content: space-between;
+}
+
+.gang-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12.5px;
+  padding: 4px 0;
+}
+
+.rival-card {
+  background: var(--parchment);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 12px 14px;
+}
+
+.rival-card.defeated {
+  opacity: 0.55;
+}
+
+.rival-card h3 {
+  border-bottom: none;
+  margin-bottom: 2px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.rival-color-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.rival-card .behavior {
+  font-size: 11px;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  margin-bottom: 8px;
+}
+
+.rival-card .rival-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+
+.rival-card .rival-actions button {
+  font-size: 11.5px;
+  flex: 1;
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--parchment);
+  font-size: 13px;
+  border: 1px solid var(--border);
+}
+
+.data-table th {
+  text-align: left;
+  background: var(--leather);
+  color: var(--parchment);
+  padding: 6px 10px;
+  font-weight: normal;
+  font-size: 11px;
+  text-transform: uppercase;
+}
+
+.data-table td {
+  padding: 6px 10px;
+  border-bottom: 1px solid rgba(166, 138, 91, 0.3);
+}
+
+.data-table select,
+.data-table button {
+  font-size: 12px;
 }

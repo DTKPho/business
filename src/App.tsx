@@ -5,33 +5,42 @@ import { MapView } from './components/MapView';
 import { CityPanel } from './components/CityPanel';
 import { RoutePanel } from './components/RoutePanel';
 import { EventLog } from './components/EventLog';
+import { LicensesScreen } from './components/LicensesScreen';
+import { RivalsScreen } from './components/RivalsScreen';
+import { HoldingScreen } from './components/HoldingScreen';
 
 function App() {
   useGameLoop();
 
   const selectedCityId = useGameStore((s) => s.selectedCityId);
   const selectedRouteId = useGameStore((s) => s.selectedRouteId);
+  const activeScreen = useGameStore((s) => s.activeScreen);
 
   return (
     <div className="app-shell">
       <TopBar />
-      <div className="app-body">
-        <MapView />
-        <aside className="side-panel">
-          {selectedCityId && <CityPanel cityId={selectedCityId} />}
-          {selectedRouteId && <RoutePanel routeId={selectedRouteId} />}
-          {!selectedCityId && !selectedRouteId && (
-            <div className="panel panel-placeholder">
-              <h2>Bienvenue, marchand</h2>
-              <p>
-                Cliquez sur une ville pour consulter son marché, puis tracez une route vers une autre ville
-                pour commencer à percevoir une commission sur le commerce qui y transite.
-              </p>
-            </div>
-          )}
-          <EventLog />
-        </aside>
-      </div>
+      {activeScreen === 'map' && (
+        <div className="app-body">
+          <MapView />
+          <aside className="side-panel">
+            {selectedCityId && <CityPanel cityId={selectedCityId} />}
+            {selectedRouteId && <RoutePanel routeId={selectedRouteId} />}
+            {!selectedCityId && !selectedRouteId && (
+              <div className="panel panel-placeholder">
+                <h2>Bienvenue, marchand</h2>
+                <p>
+                  Cliquez sur une ville pour consulter son marché, puis tracez une route vers une autre ville
+                  pour commencer à percevoir une commission sur le commerce qui y transite.
+                </p>
+              </div>
+            )}
+            <EventLog />
+          </aside>
+        </div>
+      )}
+      {activeScreen === 'licenses' && <LicensesScreen />}
+      {activeScreen === 'rivals' && <RivalsScreen />}
+      {activeScreen === 'holding' && <HoldingScreen />}
     </div>
   );
 }
