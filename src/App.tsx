@@ -1,48 +1,27 @@
-import { useGameStore } from './game/store';
-import { useGameLoop } from './game/useGameLoop';
-import { TopBar } from './components/TopBar';
-import { MapView } from './components/MapView';
-import { CityPanel } from './components/CityPanel';
-import { RoutePanel } from './components/RoutePanel';
-import { EventLog } from './components/EventLog';
-import { LicensesScreen } from './components/LicensesScreen';
-import { RivalsScreen } from './components/RivalsScreen';
-import { HoldingScreen } from './components/HoldingScreen';
+import { useEffect, useState } from 'react'
+import { useGame } from './store/gameStore'
+import { lastSlot } from './persistence/idb'
+import { AppShell } from './ui/layout/AppShell'
+import { HomeScreen } from './ui/screens/HomeScreen'
+import { Toasts } from './ui/layout/Toasts'
 
-function App() {
-  useGameLoop();
-
-  const selectedCityId = useGameStore((s) => s.selectedCityId);
-  const selectedRouteId = useGameStore((s) => s.selectedRouteId);
-  const activeScreen = useGameStore((s) => s.activeScreen);
-
+export default function App() {
+  const hasGame = useGame((s) => !!s.game)
+  const loadGame = useGame((s) => s.loadGame)
+  const [booting, setBooting] = useState(() => !!lastSlot())
+  // Reprise automatique de la dernière partie ouverte.
+  useEffect(() => {
+    const id = lastSlot()
+    if (!id) return
+    loadGame(id)
+      .catch(() => undefined)
+      .finally(() => setBooting(false))
+  }, [loadGame])
+  if (booting) return <div className="flex min-h-screen items-center justify-center text-sm text-ink-400">Chargement de la partie…</div>
   return (
-    <div className="app-shell">
-      <TopBar />
-      {activeScreen === 'map' && (
-        <div className="app-body">
-          <MapView />
-          <aside className="side-panel">
-            {selectedCityId && <CityPanel cityId={selectedCityId} />}
-            {selectedRouteId && <RoutePanel routeId={selectedRouteId} />}
-            {!selectedCityId && !selectedRouteId && (
-              <div className="panel panel-placeholder">
-                <h2>Bienvenue, marchand</h2>
-                <p>
-                  Cliquez sur une ville pour consulter son marché, puis tracez une route vers une autre ville
-                  pour commencer à percevoir une commission sur le commerce qui y transite.
-                </p>
-              </div>
-            )}
-            <EventLog />
-          </aside>
-        </div>
-      )}
-      {activeScreen === 'licenses' && <LicensesScreen />}
-      {activeScreen === 'rivals' && <RivalsScreen />}
-      {activeScreen === 'holding' && <HoldingScreen />}
-    </div>
-  );
+    <>
+      {hasGame ? <AppShell /> : <HomeScreen />}
+      <Toasts />
+    </>
+  )
 }
-
-export default App;

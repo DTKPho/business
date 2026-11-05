@@ -1,0 +1,31 @@
+{
+ "season": 2027,
+ "note": "Calendrier officiel 2027 (24 manches, 10 sprints). Les dates marquées dateEstimated sont des estimations à corriger.",
+ "testing": "2027-02-25",
+ "events": [
+  {"round":1,"circuitId":"bahrain","date":"2027-03-14","sprint":true},
+  {"round":2,"circuitId":"jeddah","date":"2027-03-21","sprint":false},
+  {"round":3,"circuitId":"albertpark","date":"2027-04-04","sprint":true},
+  {"round":4,"circuitId":"suzuka","date":"2027-04-11","sprint":true},
+  {"round":5,"circuitId":"shanghai","date":"2027-04-18","sprint":false},
+  {"round":6,"circuitId":"miami","date":"2027-05-02","sprint":false},
+  {"round":7,"circuitId":"montreal","date":"2027-05-23","sprint":true},
+  {"round":8,"circuitId":"monaco","date":"2027-06-06","sprint":true},
+  {"round":9,"circuitId":"madrid","date":"2027-06-13","sprint":false,"dateEstimated":true},
+  {"round":10,"circuitId":"portimao","date":"2027-06-20","sprint":false},
+  {"round":11,"circuitId":"redbullring","date":"2027-07-04","sprint":false,"dateEstimated":true},
+  {"round":12,"circuitId":"silverstone","date":"2027-07-11","sprint":true,"dateEstimated":true},
+  {"round":13,"circuitId":"spa","date":"2027-07-25","sprint":false,"dateEstimated":true},
+  {"round":14,"circuitId":"hungaroring","date":"2027-08-01","sprint":false,"dateEstimated":true},
+  {"round":15,"circuitId":"monza","date":"2027-09-05","sprint":true,"dateEstimated":true},
+  {"round":16,"circuitId":"baku","date":"2027-09-19","sprint":false,"dateEstimated":true},
+  {"round":17,"circuitId":"istanbul","date":"2027-10-03","sprint":false},
+  {"round":18,"circuitId":"singapore","date":"2027-10-10","sprint":false,"dateEstimated":true},
+  {"round":19,"circuitId":"austin","date":"2027-10-24","sprint":false,"dateEstimated":true},
+  {"round":20,"circuitId":"mexico","date":"2027-10-31","sprint":false,"dateEstimated":true},
+  {"round":21,"circuitId":"interlagos","date":"2027-11-14","sprint":true,"dateEstimated":true},
+  {"round":22,"circuitId":"lasvegas","date":"2027-11-21","sprint":false,"dateEstimated":true},
+  {"round":23,"circuitId":"lusail","date":"2027-12-05","sprint":true},
+  {"round":24,"circuitId":"yasmarina","date":"2027-12-12","sprint":true}
+ ]
+}

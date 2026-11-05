@@ -1,0 +1,1061 @@
+[
+ {
+  "id": "pierre-wache",
+  "firstName": "Pierre",
+  "lastName": "Wache",
+  "nationality": "FRA",
+  "birthDate": "1974-11-12",
+  "role": "technicalDirector",
+  "teamId": "redbull",
+  "ratings": {
+   "leadership": 86,
+   "innovation": 84,
+   "efficiency": 85
+  },
+  "salaryEur": 4000000,
+  "contractEnd": 2028
+ },
+ {
+  "id": "enrico-balbo",
+  "firstName": "Enrico",
+  "lastName": "Balbo",
+  "nationality": "ITA",
+  "birthDate": "1980-03-01",
+  "role": "headOfAero",
+  "teamId": "redbull",
+  "ratings": {
+   "aeroKnowledge": 84,
+   "innovation": 83,
+   "efficiency": 82
+  },
+  "salaryEur": 2000000,
+  "contractEnd": 2028
+ },
+ {
+  "id": "craig-skinner",
+  "firstName": "Craig",
+  "lastName": "Skinner",
+  "nationality": "GBR",
+  "birthDate": "1978-05-01",
+  "role": "chiefDesigner",
+  "teamId": "redbull",
+  "ratings": {
+   "chassisKnowledge": 83,
+   "innovation": 81,
+   "production": 82
+  },
+  "salaryEur": 1500000,
+  "contractEnd": 2027
+ },
+ {
+  "id": "gianpiero-lambiase",
+  "firstName": "Gianpiero",
+  "lastName": "Lambiase",
+  "nationality": "ITA",
+  "birthDate": "1980-02-15",
+  "role": "raceEngineer",
+  "teamId": "redbull",
+  "ratings": {
+   "setup": 93,
+   "communication": 90,
+   "strategy": 88
+  },
+  "salaryEur": 1500000,
+  "contractEnd": 2028,
+  "assignedDriverId": "max-verstappen"
+ },
+ {
+  "id": "richard-wood",
+  "firstName": "Richard",
+  "lastName": "Wood",
+  "nationality": "GBR",
+  "birthDate": "1982-01-01",
+  "role": "raceEngineer",
+  "teamId": "redbull",
+  "ratings": {
+   "setup": 80,
+   "communication": 80,
+   "strategy": 79
+  },
+  "salaryEur": 700000,
+  "contractEnd": 2027,
+  "assignedDriverId": "isack-hadjar"
+ },
+ {
+  "id": "rob-marshall",
+  "firstName": "Rob",
+  "lastName": "Marshall",
+  "nationality": "GBR",
+  "birthDate": "1969-09-01",
+  "role": "chiefDesigner",
+  "teamId": "mclaren",
+  "ratings": {
+   "chassisKnowledge": 90,
+   "innovation": 86,
+   "production": 85
+  },
+  "salaryEur": 3000000,
+  "contractEnd": 2028
+ },
+ {
+  "id": "peter-prodromou",
+  "firstName": "Peter",
+  "lastName": "Prodromou",
+  "nationality": "GBR",
+  "birthDate": "1965-01-14",
+  "role": "headOfAero",
+  "teamId": "mclaren",
+  "ratings": {
+   "aeroKnowledge": 91,
+   "innovation": 85,
+   "efficiency": 86
+  },
+  "salaryEur": 3000000,
+  "contractEnd": 2028
+ },
+ {
+  "id": "neil-houldey",
+  "firstName": "Neil",
+  "lastName": "Houldey",
+  "nationality": "GBR",
+  "birthDate": "1975-01-01",
+  "role": "technicalDirector",
+  "teamId": "mclaren",
+  "ratings": {
+   "leadership": 88,
+   "innovation": 86,
+   "efficiency": 87
+  },
+  "salaryEur": 3000000,
+  "contractEnd": 2028
+ },
+ {
+  "id": "randeep-singh",
+  "firstName": "Randeep",
+  "lastName": "Singh",
+  "nationality": "GBR",
+  "birthDate": "1978-01-01",
+  "role": "sportingDirector",
+  "teamId": "mclaren",
+  "ratings": {
+   "strategy": 86,
+   "pitCrewManagement": 88,
+   "regulations": 85
+  },
+  "salaryEur": 1500000,
+  "contractEnd": 2028
+ },
+ {
+  "id": "will-joseph",
+  "firstName": "Will",
+  "lastName": "Joseph",
+  "nationality": "GBR",
+  "birthDate": "1984-01-01",
+  "role": "raceEngineer",
+  "teamId": "mclaren",
+  "ratings": {
+   "setup": 86,
+   "communication": 86,
+   "strategy": 84
+  },
+  "salaryEur": 800000,
+  "contractEnd": 2028,
+  "assignedDriverId": "lando-norris"
+ },
+ {
+  "id": "tom-stallard",
+  "firstName": "Tom",
+  "lastName": "Stallard",
+  "nationality": "GBR",
+  "birthDate": "1978-01-01",
+  "role": "raceEngineer",
+  "teamId": "mclaren",
+  "ratings": {
+   "setup": 87,
+   "communication": 85,
+   "strategy": 85
+  },
+  "salaryEur": 800000,
+  "contractEnd": 2028,
+  "assignedDriverId": "oscar-piastri"
+ },
+ {
+  "id": "loic-serra",
+  "firstName": "Loic",
+  "lastName": "Serra",
+  "nationality": "FRA",
+  "birthDate": "1972-01-01",
+  "role": "technicalDirector",
+  "teamId": "ferrari",
+  "ratings": {
+   "leadership": 88,
+   "innovation": 85,
+   "efficiency": 86
+  },
+  "salaryEur": 4000000,
+  "contractEnd": 2028
+ },
+ {
+  "id": "diego-tondi",
+  "firstName": "Diego",
+  "lastName": "Tondi",
+  "nationality": "ITA",
+  "birthDate": "1978-01-01",
+  "role": "headOfAero",
+  "teamId": "ferrari",
+  "ratings": {
+   "aeroKnowledge": 85,
+   "innovation": 84,
+   "efficiency": 82
+  },
+  "salaryEur": 2000000,
+  "contractEnd": 2028
+ },
+ {
+  "id": "diego-ioverno",
+  "firstName": "Diego",
+  "lastName": "Ioverno",
+  "nationality": "ITA",
+  "birthDate": "1972-01-01",
+  "role": "sportingDirector",
+  "teamId": "ferrari",
+  "ratings": {
+   "strategy": 84,
+   "pitCrewManagement": 86,
+   "regulations": 87
+  },
+  "salaryEur": 1500000,
+  "contractEnd": 2028
+ },
+ {
+  "id": "bryan-bozzi",
+  "firstName": "Bryan",
+  "lastName": "Bozzi",
+  "nationality": "FRA",
+  "birthDate": "1988-01-01",
+  "role": "raceEngineer",
+  "teamId": "ferrari",
+  "ratings": {
+   "setup": 84,
+   "communication": 82,
+   "strategy": 82
+  },
+  "salaryEur": 800000,
+  "contractEnd": 2028,
+  "assignedDriverId": "charles-leclerc"
+ },
+ {
+  "id": "riccardo-adami",
+  "firstName": "Riccardo",
+  "lastName": "Adami",
+  "nationality": "ITA",
+  "birthDate": "1975-01-01",
+  "role": "raceEngineer",
+  "teamId": "ferrari",
+  "ratings": {
+   "setup": 82,
+   "communication": 78,
+   "strategy": 82
+  },
+  "salaryEur": 800000,
+  "contractEnd": 2027,
+  "assignedDriverId": "lewis-hamilton"
+ },
+ {
+  "id": "james-allison",
+  "firstName": "James",
+  "lastName": "Allison",
+  "nationality": "GBR",
+  "birthDate": "1968-02-22",
+  "role": "technicalDirector",
+  "teamId": "mercedes",
+  "ratings": {
+   "leadership": 92,
+   "innovation": 89,
+   "efficiency": 87
+  },
+  "salaryEur": 5000000,
+  "contractEnd": 2028
+ },
+ {
+  "id": "jarrod-murphy",
+  "firstName": "Jarrod",
+  "lastName": "Murphy",
+  "nationality": "AUS",
+  "birthDate": "1977-01-01",
+  "role": "headOfAero",
+  "teamId": "mercedes",
+  "ratings": {
+   "aeroKnowledge": 86,
+   "innovation": 85,
+   "efficiency": 84
+  },
+  "salaryEur": 2000000,
+  "contractEnd": 2028
+ },
+ {
+  "id": "ron-meadows",
+  "firstName": "Ron",
+  "lastName": "Meadows",
+  "nationality": "GBR",
+  "birthDate": "1963-01-01",
+  "role": "sportingDirector",
+  "teamId": "mercedes",
+  "ratings": {
+   "strategy": 85,
+   "pitCrewManagement": 90,
+   "regulations": 90
+  },
+  "salaryEur": 1500000,
+  "contractEnd": 2028
+ },
+ {
+  "id": "peter-bonnington",
+  "firstName": "Peter",
+  "lastName": "Bonnington",
+  "nationality": "GBR",
+  "birthDate": "1975-01-01",
+  "role": "raceEngineer",
+  "teamId": "mercedes",
+  "ratings": {
+   "setup": 90,
+   "communication": 88,
+   "strategy": 86
+  },
+  "salaryEur": 1000000,
+  "contractEnd": 2028,
+  "assignedDriverId": "kimi-antonelli"
+ },
+ {
+  "id": "marcus-dudley",
+  "firstName": "Marcus",
+  "lastName": "Dudley",
+  "nationality": "GBR",
+  "birthDate": "1980-01-01",
+  "role": "raceEngineer",
+  "teamId": "mercedes",
+  "ratings": {
+   "setup": 85,
+   "communication": 83,
+   "strategy": 84
+  },
+  "salaryEur": 800000,
+  "contractEnd": 2028,
+  "assignedDriverId": "george-russell"
+ },
+ {
+  "id": "adrian-newey",
+  "firstName": "Adrian",
+  "lastName": "Newey",
+  "nationality": "GBR",
+  "birthDate": "1958-12-26",
+  "role": "technicalDirector",
+  "teamId": "astonmartin",
+  "ratings": {
+   "leadership": 99,
+   "innovation": 97,
+   "efficiency": 80
+  },
+  "salaryEur": 20000000,
+  "contractEnd": 2030
+ },
+ {
+  "id": "enrico-cardile",
+  "firstName": "Enrico",
+  "lastName": "Cardile",
+  "nationality": "ITA",
+  "birthDate": "1975-01-01",
+  "role": "chiefDesigner",
+  "teamId": "astonmartin",
+  "ratings": {
+   "chassisKnowledge": 87,
+   "innovation": 84,
+   "production": 83
+  },
+  "salaryEur": 4000000,
+  "contractEnd": 2029
+ },
+ {
+  "id": "mike-krack",
+  "firstName": "Mike",
+  "lastName": "Krack",
+  "nationality": "LUX",
+  "birthDate": "1972-03-18",
+  "role": "sportingDirector",
+  "teamId": "astonmartin",
+  "ratings": {
+   "strategy": 80,
+   "pitCrewManagement": 82,
+   "regulations": 81
+  },
+  "salaryEur": 1500000,
+  "contractEnd": 2027
+ },
+ {
+  "id": "andrew-vizard",
+  "firstName": "Andrew",
+  "lastName": "Vizard",
+  "nationality": "GBR",
+  "birthDate": "1980-01-01",
+  "role": "raceEngineer",
+  "teamId": "astonmartin",
+  "ratings": {
+   "setup": 81,
+   "communication": 80,
+   "strategy": 80
+  },
+  "salaryEur": 700000,
+  "contractEnd": 2027,
+  "assignedDriverId": "fernando-alonso"
+ },
+ {
+  "id": "gary-gannon",
+  "firstName": "Gary",
+  "lastName": "Gannon",
+  "nationality": "IRL",
+  "birthDate": "1982-01-01",
+  "role": "raceEngineer",
+  "teamId": "astonmartin",
+  "ratings": {
+   "setup": 78,
+   "communication": 78,
+   "strategy": 78
+  },
+  "salaryEur": 700000,
+  "contractEnd": 2027,
+  "assignedDriverId": "lance-stroll"
+ },
+ {
+  "id": "pat-fry",
+  "firstName": "Pat",
+  "lastName": "Fry",
+  "nationality": "GBR",
+  "birthDate": "1964-03-17",
+  "role": "technicalDirector",
+  "teamId": "williams",
+  "ratings": {
+   "leadership": 85,
+   "innovation": 80,
+   "efficiency": 87
+  },
+  "salaryEur": 3000000,
+  "contractEnd": 2028
+ },
+ {
+  "id": "sven-smeets",
+  "firstName": "Sven",
+  "lastName": "Smeets",
+  "nationality": "BEL",
+  "birthDate": "1968-01-01",
+  "role": "sportingDirector",
+  "teamId": "williams",
+  "ratings": {
+   "strategy": 80,
+   "pitCrewManagement": 84,
+   "regulations": 84
+  },
+  "salaryEur": 1200000,
+  "contractEnd": 2028
+ },
+ {
+  "id": "james-urwin",
+  "firstName": "James",
+  "lastName": "Urwin",
+  "nationality": "GBR",
+  "birthDate": "1981-01-01",
+  "role": "raceEngineer",
+  "teamId": "williams",
+  "ratings": {
+   "setup": 80,
+   "communication": 80,
+   "strategy": 79
+  },
+  "salaryEur": 600000,
+  "contractEnd": 2027,
+  "assignedDriverId": "alexander-albon"
+ },
+ {
+  "id": "gaetan-jego",
+  "firstName": "Gaetan",
+  "lastName": "Jego",
+  "nationality": "FRA",
+  "birthDate": "1984-01-01",
+  "role": "raceEngineer",
+  "teamId": "williams",
+  "ratings": {
+   "setup": 81,
+   "communication": 80,
+   "strategy": 80
+  },
+  "salaryEur": 600000,
+  "contractEnd": 2027,
+  "assignedDriverId": "carlos-sainz"
+ },
+ {
+  "id": "david-sanchez",
+  "firstName": "David",
+  "lastName": "Sanchez",
+  "nationality": "FRA",
+  "birthDate": "1976-01-01",
+  "role": "technicalDirector",
+  "teamId": "alpine",
+  "ratings": {
+   "leadership": 83,
+   "innovation": 82,
+   "efficiency": 82
+  },
+  "salaryEur": 2500000,
+  "contractEnd": 2027
+ },
+ {
+  "id": "dirk-de-beer",
+  "firstName": "Dirk",
+  "lastName": "de Beer",
+  "nationality": "RSA",
+  "birthDate": "1968-01-01",
+  "role": "headOfAero",
+  "teamId": "alpine",
+  "ratings": {
+   "aeroKnowledge": 80,
+   "innovation": 80,
+   "efficiency": 79
+  },
+  "salaryEur": 1500000,
+  "contractEnd": 2027
+ },
+ {
+  "id": "julien-simon-chautemps",
+  "firstName": "Julien",
+  "lastName": "Simon-Chautemps",
+  "nationality": "FRA",
+  "birthDate": "1979-01-01",
+  "role": "sportingDirector",
+  "teamId": "alpine",
+  "ratings": {
+   "strategy": 80,
+   "pitCrewManagement": 81,
+   "regulations": 80
+  },
+  "salaryEur": 1000000,
+  "contractEnd": 2027
+ },
+ {
+  "id": "josh-peckett",
+  "firstName": "Josh",
+  "lastName": "Peckett",
+  "nationality": "GBR",
+  "birthDate": "1985-01-01",
+  "role": "raceEngineer",
+  "teamId": "alpine",
+  "ratings": {
+   "setup": 79,
+   "communication": 79,
+   "strategy": 78
+  },
+  "salaryEur": 600000,
+  "contractEnd": 2027,
+  "assignedDriverId": "pierre-gasly"
+ },
+ {
+  "id": "stuart-barlow",
+  "firstName": "Stuart",
+  "lastName": "Barlow",
+  "nationality": "GBR",
+  "birthDate": "1983-01-01",
+  "role": "raceEngineer",
+  "teamId": "alpine",
+  "ratings": {
+   "setup": 76,
+   "communication": 77,
+   "strategy": 77
+  },
+  "salaryEur": 500000,
+  "contractEnd": 2027,
+  "assignedDriverId": "franco-colapinto"
+ },
+ {
+  "id": "james-key",
+  "firstName": "James",
+  "lastName": "Key",
+  "nationality": "GBR",
+  "birthDate": "1972-01-14",
+  "role": "technicalDirector",
+  "teamId": "audi",
+  "ratings": {
+   "leadership": 84,
+   "innovation": 84,
+   "efficiency": 83
+  },
+  "salaryEur": 3000000,
+  "contractEnd": 2028
+ },
+ {
+  "id": "mattia-binotto",
+  "firstName": "Mattia",
+  "lastName": "Binotto",
+  "nationality": "SUI",
+  "birthDate": "1969-11-03",
+  "role": "chiefDesigner",
+  "teamId": "audi",
+  "ratings": {
+   "chassisKnowledge": 86,
+   "innovation": 82,
+   "production": 87
+  },
+  "salaryEur": 4000000,
+  "contractEnd": 2028
+ },
+ {
+  "id": "inaki-rueda",
+  "firstName": "Inaki",
+  "lastName": "Rueda",
+  "nationality": "ESP",
+  "birthDate": "1972-01-01",
+  "role": "sportingDirector",
+  "teamId": "audi",
+  "ratings": {
+   "strategy": 80,
+   "pitCrewManagement": 80,
+   "regulations": 81
+  },
+  "salaryEur": 1000000,
+  "contractEnd": 2027
+ },
+ {
+  "id": "steven-petrik",
+  "firstName": "Steven",
+  "lastName": "Petrik",
+  "nationality": "CRO",
+  "birthDate": "1980-01-01",
+  "role": "raceEngineer",
+  "teamId": "audi",
+  "ratings": {
+   "setup": 79,
+   "communication": 79,
+   "strategy": 78
+  },
+  "salaryEur": 500000,
+  "contractEnd": 2027,
+  "assignedDriverId": "nico-hulkenberg"
+ },
+ {
+  "id": "jose-manuel-lopez",
+  "firstName": "Jose Manuel",
+  "lastName": "Lopez",
+  "nationality": "ESP",
+  "birthDate": "1982-01-01",
+  "role": "raceEngineer",
+  "teamId": "audi",
+  "ratings": {
+   "setup": 78,
+   "communication": 78,
+   "strategy": 78
+  },
+  "salaryEur": 500000,
+  "contractEnd": 2027,
+  "assignedDriverId": "gabriel-bortoleto"
+ },
+ {
+  "id": "nick-chester",
+  "firstName": "Nick",
+  "lastName": "Chester",
+  "nationality": "GBR",
+  "birthDate": "1972-01-01",
+  "role": "technicalDirector",
+  "teamId": "cadillac",
+  "ratings": {
+   "leadership": 82,
+   "innovation": 80,
+   "efficiency": 81
+  },
+  "salaryEur": 2500000,
+  "contractEnd": 2028
+ },
+ {
+  "id": "pat-symonds",
+  "firstName": "Pat",
+  "lastName": "Symonds",
+  "nationality": "GBR",
+  "birthDate": "1953-06-11",
+  "role": "chiefDesigner",
+  "teamId": "cadillac",
+  "ratings": {
+   "chassisKnowledge": 85,
+   "innovation": 82,
+   "production": 86
+  },
+  "salaryEur": 2000000,
+  "contractEnd": 2027
+ },
+ {
+  "id": "hugh-bird",
+  "firstName": "Hugh",
+  "lastName": "Bird",
+  "nationality": "GBR",
+  "birthDate": "1980-01-01",
+  "role": "raceEngineer",
+  "teamId": "cadillac",
+  "ratings": {
+   "setup": 80,
+   "communication": 79,
+   "strategy": 79
+  },
+  "salaryEur": 600000,
+  "contractEnd": 2027,
+  "assignedDriverId": "sergio-perez"
+ },
+ {
+  "id": "tim-goss",
+  "firstName": "Tim",
+  "lastName": "Goss",
+  "nationality": "GBR",
+  "birthDate": "1963-01-01",
+  "role": "technicalDirector",
+  "teamId": "racingbulls",
+  "ratings": {
+   "leadership": 83,
+   "innovation": 80,
+   "efficiency": 82
+  },
+  "salaryEur": 2000000,
+  "contractEnd": 2027
+ },
+ {
+  "id": "guillaume-cattelani",
+  "firstName": "Guillaume",
+  "lastName": "Cattelani",
+  "nationality": "FRA",
+  "birthDate": "1976-01-01",
+  "role": "chiefDesigner",
+  "teamId": "racingbulls",
+  "ratings": {
+   "chassisKnowledge": 80,
+   "innovation": 79,
+   "production": 80
+  },
+  "salaryEur": 1200000,
+  "contractEnd": 2027
+ },
+ {
+  "id": "alan-permane",
+  "firstName": "Alan",
+  "lastName": "Permane",
+  "nationality": "GBR",
+  "birthDate": "1967-01-01",
+  "role": "sportingDirector",
+  "teamId": "racingbulls",
+  "ratings": {
+   "strategy": 84,
+   "pitCrewManagement": 84,
+   "regulations": 84
+  },
+  "salaryEur": 1500000,
+  "contractEnd": 2028
+ },
+ {
+  "id": "pierre-hamelin",
+  "firstName": "Pierre",
+  "lastName": "Hamelin",
+  "nationality": "FRA",
+  "birthDate": "1982-01-01",
+  "role": "raceEngineer",
+  "teamId": "racingbulls",
+  "ratings": {
+   "setup": 78,
+   "communication": 78,
+   "strategy": 78
+  },
+  "salaryEur": 500000,
+  "contractEnd": 2027,
+  "assignedDriverId": "liam-lawson"
+ },
+ {
+  "id": "ernesto-desiderio",
+  "firstName": "Ernesto",
+  "lastName": "Desiderio",
+  "nationality": "ITA",
+  "birthDate": "1981-01-01",
+  "role": "raceEngineer",
+  "teamId": "racingbulls",
+  "ratings": {
+   "setup": 78,
+   "communication": 77,
+   "strategy": 77
+  },
+  "salaryEur": 500000,
+  "contractEnd": 2027,
+  "assignedDriverId": "arvid-lindblad"
+ },
+ {
+  "id": "ayao-komatsu",
+  "firstName": "Ayao",
+  "lastName": "Komatsu",
+  "nationality": "JPN",
+  "birthDate": "1976-01-01",
+  "role": "sportingDirector",
+  "teamId": null,
+  "ratings": {
+   "strategy": 84,
+   "pitCrewManagement": 82,
+   "regulations": 82
+  },
+  "salaryEur": 1500000,
+  "contractEnd": null
+ },
+ {
+  "id": "andrea-de-zordo",
+  "firstName": "Andrea",
+  "lastName": "De Zordo",
+  "nationality": "ITA",
+  "birthDate": "1975-01-01",
+  "role": "technicalDirector",
+  "teamId": null,
+  "ratings": {
+   "leadership": 80,
+   "innovation": 80,
+   "efficiency": 81
+  },
+  "salaryEur": 2000000,
+  "contractEnd": null
+ },
+ {
+  "id": "laura-muller",
+  "firstName": "Laura",
+  "lastName": "Muller",
+  "nationality": "GER",
+  "birthDate": "1990-01-01",
+  "role": "raceEngineer",
+  "teamId": null,
+  "ratings": {
+   "setup": 80,
+   "communication": 82,
+   "strategy": 79
+  },
+  "salaryEur": 500000,
+  "contractEnd": null
+ },
+ {
+  "id": "ronan-o-hare",
+  "firstName": "Ronan",
+  "lastName": "O'Hare",
+  "nationality": "IRL",
+  "birthDate": "1982-01-01",
+  "role": "raceEngineer",
+  "teamId": null,
+  "ratings": {
+   "setup": 79,
+   "communication": 79,
+   "strategy": 78
+  },
+  "salaryEur": 500000,
+  "contractEnd": null
+ },
+ {
+  "id": "mike-elliott",
+  "firstName": "Mike",
+  "lastName": "Elliott",
+  "nationality": "GBR",
+  "birthDate": "1974-01-01",
+  "role": "technicalDirector",
+  "teamId": null,
+  "ratings": {
+   "leadership": 84,
+   "innovation": 82,
+   "efficiency": 80
+  },
+  "salaryEur": 3000000,
+  "contractEnd": null
+ },
+ {
+  "id": "dan-fallows",
+  "firstName": "Dan",
+  "lastName": "Fallows",
+  "nationality": "GBR",
+  "birthDate": "1974-01-01",
+  "role": "headOfAero",
+  "teamId": null,
+  "ratings": {
+   "aeroKnowledge": 86,
+   "innovation": 84,
+   "efficiency": 80
+  },
+  "salaryEur": 3000000,
+  "contractEnd": null
+ },
+ {
+  "id": "simone-resta",
+  "firstName": "Simone",
+  "lastName": "Resta",
+  "nationality": "ITA",
+  "birthDate": "1970-01-01",
+  "role": "chiefDesigner",
+  "teamId": null,
+  "ratings": {
+   "chassisKnowledge": 82,
+   "innovation": 79,
+   "production": 83
+  },
+  "salaryEur": 2000000,
+  "contractEnd": null
+ },
+ {
+  "id": "marcin-budkowski",
+  "firstName": "Marcin",
+  "lastName": "Budkowski",
+  "nationality": "POL",
+  "birthDate": "1977-01-01",
+  "role": "technicalDirector",
+  "teamId": null,
+  "ratings": {
+   "leadership": 80,
+   "innovation": 80,
+   "efficiency": 82
+  },
+  "salaryEur": 2000000,
+  "contractEnd": null
+ },
+ {
+  "id": "ben-agathangelou",
+  "firstName": "Ben",
+  "lastName": "Agathangelou",
+  "nationality": "GBR",
+  "birthDate": "1971-01-01",
+  "role": "headOfAero",
+  "teamId": null,
+  "ratings": {
+   "aeroKnowledge": 80,
+   "innovation": 80,
+   "efficiency": 79
+  },
+  "salaryEur": 1500000,
+  "contractEnd": null
+ },
+ {
+  "id": "guenther-steiner",
+  "firstName": "Guenther",
+  "lastName": "Steiner",
+  "nationality": "ITA",
+  "birthDate": "1965-04-07",
+  "role": "sportingDirector",
+  "teamId": null,
+  "ratings": {
+   "strategy": 78,
+   "pitCrewManagement": 76,
+   "regulations": 80
+  },
+  "salaryEur": 1500000,
+  "contractEnd": null
+ },
+ {
+  "id": "otmar-szafnauer",
+  "firstName": "Otmar",
+  "lastName": "Szafnauer",
+  "nationality": "USA",
+  "birthDate": "1964-08-13",
+  "role": "sportingDirector",
+  "teamId": null,
+  "ratings": {
+   "strategy": 79,
+   "pitCrewManagement": 77,
+   "regulations": 81
+  },
+  "salaryEur": 1500000,
+  "contractEnd": null
+ },
+ {
+  "id": "rob-smedley",
+  "firstName": "Rob",
+  "lastName": "Smedley",
+  "nationality": "GBR",
+  "birthDate": "1973-01-01",
+  "role": "raceEngineer",
+  "teamId": null,
+  "ratings": {
+   "setup": 84,
+   "communication": 86,
+   "strategy": 82
+  },
+  "salaryEur": 900000,
+  "contractEnd": null
+ },
+ {
+  "id": "xevi-pujolar",
+  "firstName": "Xevi",
+  "lastName": "Pujolar",
+  "nationality": "ESP",
+  "birthDate": "1971-01-01",
+  "role": "raceEngineer",
+  "teamId": null,
+  "ratings": {
+   "setup": 82,
+   "communication": 80,
+   "strategy": 83
+  },
+  "salaryEur": 700000,
+  "contractEnd": null
+ },
+ {
+  "id": "jody-egginton",
+  "firstName": "Jody",
+  "lastName": "Egginton",
+  "nationality": "GBR",
+  "birthDate": "1975-01-01",
+  "role": "technicalDirector",
+  "teamId": null,
+  "ratings": {
+   "leadership": 81,
+   "innovation": 79,
+   "efficiency": 81
+  },
+  "salaryEur": 2000000,
+  "contractEnd": null
+ },
+ {
+  "id": "jonathan-eddolls",
+  "firstName": "Jonathan",
+  "lastName": "Eddolls",
+  "nationality": "GBR",
+  "birthDate": "1983-01-01",
+  "role": "raceEngineer",
+  "teamId": null,
+  "ratings": {
+   "setup": 79,
+   "communication": 80,
+   "strategy": 80
+  },
+  "salaryEur": 600000,
+  "contractEnd": null
+ },
+ {
+  "id": "andy-green",
+  "firstName": "Andy",
+  "lastName": "Green",
+  "nationality": "GBR",
+  "birthDate": "1966-01-01",
+  "role": "chiefDesigner",
+  "teamId": null,
+  "ratings": {
+   "chassisKnowledge": 80,
+   "innovation": 78,
+   "production": 82
+  },
+  "salaryEur": 1500000,
+  "contractEnd": null
+ },
+ {
+  "id": "matt-harman",
+  "firstName": "Matt",
+  "lastName": "Harman",
+  "nationality": "GBR",
+  "birthDate": "1975-01-01",
+  "role": "chiefDesigner",
+  "teamId": null,
+  "ratings": {
+   "chassisKnowledge": 81,
+   "innovation": 80,
+   "production": 81
+  },
+  "salaryEur": 1600000,
+  "contractEnd": null
+ }
+]

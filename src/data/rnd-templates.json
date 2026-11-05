@@ -1,0 +1,15 @@
+[
+ {"id":"frontWing","area":"aero","name":"Aileron avant","dp":420,"designCostEur":1800000,"unitCostEur":180000,"units":4,"gain":1.2,"productionWeeks":2},
+ {"id":"rearWing","area":"aero","name":"Aileron arrière","dp":380,"designCostEur":1600000,"unitCostEur":150000,"units":4,"gain":1.0,"productionWeeks":2},
+ {"id":"floor","area":"aero","name":"Fond plat","dp":650,"designCostEur":2800000,"unitCostEur":350000,"units":3,"gain":1.9,"productionWeeks":3},
+ {"id":"sidepods","area":"aero","name":"Pontons & capot moteur","dp":520,"designCostEur":2200000,"unitCostEur":260000,"units":3,"gain":1.4,"productionWeeks":3},
+ {"id":"suspension","area":"chassis","name":"Suspension","dp":480,"designCostEur":2000000,"unitCostEur":220000,"units":3,"gain":1.3,"productionWeeks":3},
+ {"id":"weight","area":"chassis","name":"Allègement du châssis","dp":560,"designCostEur":2600000,"unitCostEur":300000,"units":2,"gain":1.5,"productionWeeks":4},
+ {"id":"brakes","area":"chassis","name":"Système de freinage","dp":300,"designCostEur":1200000,"unitCostEur":120000,"units":4,"gain":0.8,"productionWeeks":2},
+ {"id":"cooling","area":"powertrain","name":"Refroidissement & intégration","dp":420,"designCostEur":1800000,"unitCostEur":160000,"units":3,"gain":1.1,"productionWeeks":2},
+ {"id":"ersSoftware","area":"powertrain","name":"Logiciel de déploiement ERS","dp":350,"designCostEur":1400000,"unitCostEur":20000,"units":1,"gain":1.0,"productionWeeks":1},
+ {"id":"exhaust","area":"powertrain","name":"Échappement & installation moteur","dp":380,"designCostEur":1500000,"unitCostEur":140000,"units":3,"gain":0.9,"productionWeeks":2},
+ {"id":"gearbox","area":"reliability","name":"Boîte de vitesses","dp":400,"designCostEur":1600000,"unitCostEur":200000,"units":3,"gain":1.4,"productionWeeks":3},
+ {"id":"hydraulics","area":"reliability","name":"Hydraulique & électronique","dp":300,"designCostEur":1100000,"unitCostEur":100000,"units":3,"gain":1.1,"productionWeeks":2},
+ {"id":"qualityControl","area":"reliability","name":"Contrôle qualité & tests banc","dp":250,"designCostEur":900000,"unitCostEur":10000,"units":1,"gain":1.0,"productionWeeks":1}
+]

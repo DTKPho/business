@@ -1,0 +1,10 @@
+[
+ {"id":"hy-constructors","by":"hyundai","kind":"constructorPosition","op":"<=","value":"expectedPos","weight":3,"description":"Terminer {value}e ou mieux au championnat constructeurs"},
+ {"id":"hy-points","by":"hyundai","kind":"pointsFinishes","op":">=","value":"expectedPointsFinishes","weight":2,"description":"Marquer des points lors d'au moins {value} course(s) (visibilité de la marque)"},
+ {"id":"hy-program","by":"hyundai","kind":"hyundaiProgress","op":">=","value":"programTarget","weight":2,"description":"Programme moteur Namyang : atteindre {value} % d'avancement"},
+ {"id":"rb-sponsors","by":"redbird","kind":"sponsorIncome","op":">=","value":"sponsorTarget","weight":3,"description":"Revenus sponsors annuels d'au moins {value} M€"},
+ {"id":"rb-valuation","by":"redbird","kind":"valuation","op":">=","value":"valuationTarget","weight":2,"description":"Valorisation d'au moins {value} Md€ en fin de saison"},
+ {"id":"ar-costcap","by":"arctos","kind":"costCapRespected","op":">=","value":1,"weight":3,"description":"Respecter le plafond de dépenses"},
+ {"id":"ar-cash","by":"arctos","kind":"cashAbove","op":">=","value":"cashTarget","weight":2,"description":"Trésorerie d'au moins {value} M€ en fin de saison"},
+ {"id":"ar-best","by":"arctos","kind":"bestRaceResult","op":"<=","value":"expectedBest","weight":1,"description":"Meilleur résultat en course : {value}e place ou mieux"}
+]

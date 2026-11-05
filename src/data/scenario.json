@@ -1,0 +1,32 @@
+{
+ "startDate": "2027-01-04",
+ "player": {"firstName": "Liam", "lastName": "Robert", "birthDate": "1984-09-12", "title": "Executive Chairman & CEO", "reputation": 50, "boardTrust": 60},
+ "playerTeamId": "genesis",
+ "cashEur": 250000000,
+ "valuationEur": 3000000000,
+ "hyundaiAnnualContributionEur": 110000000,
+ "equity": {
+  "stakes": {"hyundai": 58, "redbird": 19, "arctos": 14, "liam": 9},
+  "hyundaiFloor": 51,
+  "purchased": {"pct": 5, "paidEur": 150000000},
+  "founder": {"pct": 4, "vestingStart": "2027-01-01", "cliffMonths": 12, "durationMonths": 48},
+  "sweat": [
+   {"id": "firstPodium", "label": "Premier podium de l'écurie", "pct": 2},
+   {"id": "top5Constructors", "label": "Top 5 au championnat constructeurs", "pct": 2},
+   {"id": "firstWin", "label": "Première victoire en Grand Prix", "pct": 2},
+   {"id": "top3Constructors", "label": "Top 3 au championnat constructeurs", "pct": 2}
+  ],
+  "earnOuts": [{"thresholdEur": 6000000000, "pct": 2}, {"thresholdEur": 10000000000, "pct": 2}]
+ },
+ "hyundaiProgram": {
+  "startSeason": 2027, "debutSeason": 2030, "budgetEur": 400000000, "engineers": 120, "secondedAtFerrari": 4,
+  "milestones": [
+   {"id": "dyno", "label": "Premier moteur monocylindre au banc à Namyang", "at": 15},
+   {"id": "fullDyno", "label": "Premier V6 complet au banc", "at": 40},
+   {"id": "mguk", "label": "Système ERS 350 kW validé", "at": 60},
+   {"id": "mule", "label": "Premiers tours en voiture laboratoire", "at": 80},
+   {"id": "homologation", "label": "Homologation FIA du groupe propulseur", "at": 100}
+  ]
+ },
+ "genesisStaffBudgetNote": "Genesis démarre sans pilote ni staff clé : à recruter en pré-saison."
+}

@@ -1,0 +1,6 @@
+{
+ "note": "Noms utilisés pour générer le personnel secondaire (personnages fictifs, marqués generated).",
+ "first": ["James","Thomas","Marco","Luca","Pierre","Julien","Hannes","Stefan","Kenji","Daniel","Oliver","Sam","Matteo","Nicolas","Ben","Chris","Paolo","Andreas","Ji-ho","Min-jun","Sophie","Hannah","Claire","Elena","Laura","Sara","Martina","Emma","Rachel","Yuki"],
+ "last": ["Harper","Collins","Rossi","Bianchi","Moreau","Lefèvre","Bauer","Schneider","Tanaka","Walsh","Price","Turner","Ricci","Fontaine","Hughes","Barker","Conti","Weber","Kim","Park","Lee","Choi","Dubois","Ferrara","Novak","Lindqvist","Morgan","Fletcher","Reyes","Kowalski"],
+ "nat": ["GBR","GBR","GBR","ITA","FRA","GER","JPN","KOR","ESP","NED","AUS","USA","BEL","SUI"]
+}

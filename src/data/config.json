@@ -1,0 +1,16 @@
+{
+ "eurPerUsd": 0.92,
+ "costCapUsd": 215000000,
+ "costCapMinorBreachPct": 5,
+ "pointsRace": [25, 18, 15, 12, 10, 8, 6, 4, 2, 1],
+ "pointsSprint": [8, 7, 6, 5, 4, 3, 2, 1],
+ "fomPrizeUsdByPosition": [140000000, 130000000, 120000000, 110000000, 100000000, 92000000, 84000000, 76000000, 70000000, 64000000, 60000000],
+ "baseWorkforceWeeklyEur": 1100000,
+ "raceLogisticsEur": 1200000,
+ "windTunnelRentalWeeklyEur": 320000,
+ "puAllocation": {"ICE": 4, "TC": 4, "MGUK": 4, "ES": 3, "CE": 3, "EX": 4},
+ "puWearPerRace": {"ICE": 24, "TC": 25, "MGUK": 24, "ES": 30, "CE": 30, "EX": 25},
+ "atrWindTunnelByPosition": [0.70, 0.75, 0.80, 0.85, 0.90, 0.95, 1.00, 1.05, 1.10, 1.15, 1.15],
+ "maxWeeksWithoutDrivers": 0,
+ "designPointsBase": 60
+}
