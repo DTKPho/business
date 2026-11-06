@@ -16,6 +16,28 @@ npm test         # tests du moteur (Vitest)
 npm run build    # version statique dans dist/ (ouvrable depuis n'importe quel hébergement statique)
 ```
 
+## Application de bureau (double-clic)
+
+Le jeu peut être installé comme une vraie application (Windows, macOS, Linux) grâce à Electron.
+Sur l'ordinateur où vous voulez jouer, une seule fois :
+
+```bash
+npm install
+npm run desktop:build
+```
+
+L'installeur apparaît dans le dossier `release/` :
+
+- **Windows** : `Genesis Magma F1 Setup 1.0.0.exe` → l'installation crée un raccourci sur le bureau ;
+- **macOS** : `Genesis Magma F1-1.0.0.dmg` → glisser l'application dans Applications
+  (au premier lancement : clic droit → Ouvrir, l'application n'étant pas signée) ;
+- **Linux** : `Genesis Magma F1-1.0.0.AppImage` → rendre exécutable puis double-cliquer.
+
+`npm run desktop` lance l'application sans l'installer. L'installeur se fabrique pour le système
+sur lequel la commande est lancée. Les sauvegardes de l'application de bureau sont stockées dans
+son propre dossier de données (indépendant du navigateur) ; utilisez l'export / import JSON pour
+transférer une carrière.
+
 ## Fonctionnalités
 
 - **Pré-saison** : Genesis démarre sans pilote ni encadrement. Recrutez deux titulaires (obligatoire
