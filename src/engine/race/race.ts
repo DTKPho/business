@@ -93,6 +93,7 @@ export function startRace(state: GameState, kind: 'race' | 'sprint', startCompou
       penaltySec: 0,
       autoStrategy: true,
       plannedStops: [],
+      prevTotal: i * 0.28,
     }
     planRace(state, car, circuit, race, rng)
     if (startCompounds[id]) car.tyre.compound = startCompounds[id]
@@ -159,6 +160,7 @@ export function stepLap(state: GameState): void {
   const running = race.cars.filter((c) => c.status === 'running').sort((a, b) => a.position - b.position)
   const fuelPerLap = (race.kind === 'race' ? 100 : 38) / race.totalLaps
   const newTotals = new Map<RaceCar, number>()
+  for (const car of running) car.prevTotal = car.totalTime
 
   for (const car of running) {
     autoModes(car, race)
@@ -212,7 +214,10 @@ export function stepLap(state: GameState): void {
       const h = carObj.pu[car.driverId][t].health
       if (h < 25) pFail += ((25 - h) / 25) * 0.004
     }
-    if (state.teams[car.teamId].isPlayer) pFail *= 1 - Math.min(0.4, facilityValue(state, 'reliabilityOps'))
+    if (state.teams[car.teamId].isPlayer) {
+      pFail *= 1 - Math.min(0.4, facilityValue(state, 'reliabilityOps'))
+      if (state.meta.cheats?.noFailures) pFail = 0
+    }
     if (rng.chance(pFail)) {
       const parts = ['Moteur', 'Boîte de vitesses', 'Hydraulique', 'MGU-K', 'Électronique', 'Freins', 'Turbo']
       const part = rng.pick(parts)

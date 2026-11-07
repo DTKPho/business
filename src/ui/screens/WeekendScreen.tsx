@@ -4,7 +4,7 @@ import { useGameState } from '../hooks'
 import { Badge, Button, Card, Empty, PageTitle, Select, Tabs, cx } from '../components/ui'
 import { ResultTable } from '../components/ResultTable'
 import { PuPanel } from '../components/PuPanel'
-import { SESSION_LABEL, closeWeekend, completeRace, currentSession, nextEvent, runCurrentSession, setPracticeProgram } from '../../engine/season/weekend'
+import { SESSION_LABEL, closeWeekend, completeRace, currentSession, nextEvent, runAndCommitSession, runCurrentSession, setPracticeProgram } from '../../engine/season/weekend'
 import { buildGrid } from '../../engine/race/race'
 import { stintLength, COMPOUND_LABEL } from '../../engine/race/performance'
 import type { Compound, PracticeProgram, SessionId } from '../../engine/model/types'
@@ -50,7 +50,7 @@ export function WeekendScreen() {
   const run = (mode: 'live' | 'sim' | 'session') => {
     const sc = Object.fromEntries(Object.entries(compounds).filter(([, v]) => v)) as Record<string, Compound>
     if (mode === 'session') {
-      const r = act((s) => runCurrentSession(s), { save: 'now' })
+      const r = act((s) => runAndCommitSession(s), { save: 'now' })
       if (r) setTab(r.session)
       return
     }

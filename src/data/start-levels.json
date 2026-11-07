@@ -1,0 +1,62 @@
+[
+ {
+  "id": "garage",
+  "name": "Écurie de garage",
+  "tagline": "Difficile",
+  "description": "Budget serré, voiture en retard, campus minimal. Hyundai attend de voir avant d'investir davantage.",
+  "cashEur": 120000000,
+  "valuationEur": 2500000000,
+  "reputation": 35,
+  "hyundaiAnnualContributionEur": 80000000,
+  "car": {"aero": 63, "chassis": 64, "powertrain": 66, "reliability": 64},
+  "facilityLevels": {"designCentre": 1, "factory": 2, "simulator": 0, "puLab": 0, "wellbeing": 1, "campus": 1, "logistics": 1, "mission": 1, "hospitality": 1},
+  "pitCrew": {"speed": 58, "consistency": 58},
+  "boardSatisfaction": 55,
+  "autoStaff": 0
+ },
+ {
+  "id": "zero",
+  "name": "Partir de zéro",
+  "tagline": "Scénario original",
+  "description": "Le scénario de base : campus de Brackley neuf, 250 M€, ni pilotes ni encadrement. Tout est à construire.",
+  "cashEur": 250000000,
+  "valuationEur": 3000000000,
+  "reputation": 45,
+  "hyundaiAnnualContributionEur": 110000000,
+  "car": {"aero": 68, "chassis": 69, "powertrain": 70, "reliability": 70},
+  "facilityLevels": {},
+  "pitCrew": {"speed": 62, "consistency": 62},
+  "boardSatisfaction": 60,
+  "autoStaff": 0
+ },
+ {
+  "id": "solid",
+  "name": "Écurie structurée",
+  "tagline": "Équilibré",
+  "description": "Genesis récupère l'organisation de l'ex-Haas : encadrement en place, soufflerie en propre, voiture de milieu de grille et 400 M€.",
+  "cashEur": 400000000,
+  "valuationEur": 3800000000,
+  "reputation": 60,
+  "hyundaiAnnualContributionEur": 140000000,
+  "car": {"aero": 76, "chassis": 76, "powertrain": 77, "reliability": 76},
+  "facilityLevels": {"windTunnel": 1, "cfd": 2, "designCentre": 3, "factory": 4, "simulator": 2, "puLab": 2, "wellbeing": 3, "academy": 1, "campus": 3, "logistics": 2, "mission": 2, "pitTraining": 2, "hospitality": 2},
+  "pitCrew": {"speed": 74, "consistency": 74},
+  "boardSatisfaction": 65,
+  "autoStaff": 72
+ },
+ {
+  "id": "top",
+  "name": "Superpuissance",
+  "tagline": "Facile",
+  "description": "Hyundai sort le grand jeu : 750 M€, campus haut de gamme, encadrement de haut niveau et une voiture capable de jouer les podiums.",
+  "cashEur": 750000000,
+  "valuationEur": 5000000000,
+  "reputation": 78,
+  "hyundaiAnnualContributionEur": 200000000,
+  "car": {"aero": 84, "chassis": 84, "powertrain": 84, "reliability": 83},
+  "facilityLevels": {"windTunnel": 2, "cfd": 3, "designCentre": 4, "factory": 5, "simulator": 3, "puLab": 3, "wellbeing": 4, "academy": 2, "campus": 4, "logistics": 3, "mission": 3, "pitTraining": 3, "hospitality": 3},
+  "pitCrew": {"speed": 84, "consistency": 82},
+  "boardSatisfaction": 70,
+  "autoStaff": 84
+ }
+]

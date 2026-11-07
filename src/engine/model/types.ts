@@ -228,6 +228,12 @@ export interface Circuit {
     pitLossSec: number
   }
   rainChance: number // 0–1
+  flag?: string
+  turns?: number
+  firstGp?: number
+  accent?: [string, string]
+  tags?: string[]
+  description?: string
 }
 
 export interface CalendarEvent {
@@ -274,6 +280,28 @@ export interface WeekendState {
   results: Partial<Record<SessionId, SessionResult>>
   weatherBias: number // humidité du week-end (0–1)
   form: Record<string, number> // forme du week-end (s/tour) par écurie et par pilote
+  /** Séance simulée mais pas encore « regardée » : rejouée en direct puis validée. */
+  pending?: PendingSession | null
+}
+
+/** Un tour en piste (lancé ou non) pendant une séance d'essais ou de qualifications. */
+export interface LiveLap {
+  driverId: PersonId
+  start: number // secondes depuis le début de la séance
+  end: number
+  lapTime: number
+  timed: boolean
+  compound: Compound
+  segment?: 1 | 2 | 3
+}
+
+export interface PendingSession {
+  session: SessionId
+  result: SessionResult
+  laps: LiveLap[]
+  duration: number
+  wetness: number
+  segments?: { seg: 1 | 2 | 3; start: number; end: number; eliminated: PersonId[] }[]
 }
 
 export type PaceMode = 'push' | 'standard' | 'conserve'
@@ -308,6 +336,7 @@ export interface RaceCar {
   penaltySec: number
   autoStrategy: boolean
   plannedStops: number[] // tours prévus pour s'arrêter
+  prevTotal: number // temps cumulé au début du dernier tour (animation du radar)
 }
 
 export interface RaceLogEntry {
@@ -552,6 +581,8 @@ export interface GameState {
     createdAt: string
     saveName: string
     idCounter: number
+    startLevel?: string
+    cheats?: { used: boolean; alwaysAccept: boolean; noFailures: boolean }
   }
   clock: { date: string; season: number; phase: SeasonPhase }
   player: PlayerProfile

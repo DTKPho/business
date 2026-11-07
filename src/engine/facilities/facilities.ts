@@ -46,6 +46,49 @@ export function startUpgrade(state: GameState, id: string): { ok: boolean; reaso
   return { ok: true }
 }
 
+/** Remboursement en cas de revente d'un niveau (30 % du coût de construction). */
+export function sellValue(f: Facility): number {
+  return f.level > 0 ? Math.round(f.levels[f.level - 1].upgradeCostEur * 0.3) : 0
+}
+
+/** Rétrograde une installation d'un niveau : économise les coûts de fonctionnement. */
+export function downgrade(state: GameState, id: string): { ok: boolean; reason?: string } {
+  const f = state.facilities[id]
+  if (!f) return { ok: false, reason: 'Installation inconnue' }
+  if (f.upgrade) return { ok: false, reason: 'Travaux en cours' }
+  if (f.level <= 0) return { ok: false, reason: 'Rien à revendre' }
+  const refund = sellValue(f)
+  f.level -= 1
+  addTx(state, refund, 'facilityUpgrade', `Revente : ${f.name} (niveau ${f.level + 1})`, false)
+  return { ok: true }
+}
+
+/** Coût pour diviser par deux le temps de travaux restant. */
+export function rushCost(f: Facility): number {
+  if (!f.upgrade) return 0
+  return Math.round((f.levels[f.level].upgradeCostEur * 0.35) / 100000) * 100000
+}
+
+export function rushUpgrade(state: GameState, id: string): { ok: boolean; reason?: string } {
+  const f = state.facilities[id]
+  if (!f?.upgrade) return { ok: false, reason: 'Aucun chantier en cours' }
+  if (f.upgrade.weeksLeft <= 1) return { ok: false, reason: 'Les travaux sont presque terminés' }
+  const cost = rushCost(f)
+  if (state.finances.cashEur < cost) return { ok: false, reason: 'Trésorerie insuffisante' }
+  addTx(state, -cost, 'facilityUpgrade', `Accélération des travaux : ${f.name}`, false)
+  f.upgrade.weeksLeft = Math.ceil(f.upgrade.weeksLeft / 2)
+  return { ok: true }
+}
+
+/** Annule un chantier : 50 % du coût est remboursé. */
+export function cancelUpgrade(state: GameState, id: string): { ok: boolean; reason?: string } {
+  const f = state.facilities[id]
+  if (!f?.upgrade) return { ok: false, reason: 'Aucun chantier en cours' }
+  addTx(state, Math.round(f.levels[f.level].upgradeCostEur * 0.5), 'facilityUpgrade', `Annulation des travaux : ${f.name}`, false)
+  f.upgrade = undefined
+  return { ok: true }
+}
+
 export function tickFacilities(state: GameState, weeks: number): void {
   for (const f of Object.values(state.facilities)) {
     if (!f.upgrade) continue

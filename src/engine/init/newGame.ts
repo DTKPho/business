@@ -1,9 +1,11 @@
 import type { Car, Driver, Facility, GameState, Sponsor, StaffMember, StaffRole, Team } from '../model/types'
 import { CAR_AREAS } from '../model/types'
 import { DATA } from './data'
+import type { StartLevel } from './data'
 import { Rng, createRngState } from '../core/rng'
 import { ensurePu } from '../car/car'
-import { generateStaff } from '../people/generate'
+import { driverAskingSalary, generateStaff, staffAskingSalary } from '../people/generate'
+import { driverOverall, staffOverall } from '../people/ratings'
 import { generateBoardObjectives } from '../board/objectives'
 import { recomputeStakes } from '../board/equity'
 import { pushMessage } from '../inbox/messages'
@@ -15,7 +17,16 @@ export const SCHEMA_VERSION = 1
 
 const AI_ROLES: StaffRole[] = ['technicalDirector', 'headOfAero', 'chiefDesigner', 'sportingDirector', 'raceEngineer', 'raceEngineer', 'headOfScouting']
 
-export function createNewGame(opts: { seed?: string; saveName?: string } = {}): GameState {
+export interface NewGameOptions {
+  seed?: string
+  saveName?: string
+  startLevel?: string
+  /** Recrute automatiquement un encadrement (et des pilotes si demandé) au départ. */
+  autoStaff?: boolean
+  autoDrivers?: boolean
+}
+
+export function createNewGame(opts: NewGameOptions = {}): GameState {
   const seed = opts.seed && opts.seed.trim() ? opts.seed.trim() : Math.random().toString(36).slice(2, 10)
   const rngState = createRngState(seed)
   const rng = new Rng(rngState)
@@ -193,6 +204,9 @@ export function createNewGame(opts: { seed?: string; saveName?: string } = {}): 
   }
   for (const sp of Object.values(state.sponsors)) if (sp.status === 'active') sp.objectives = generateSponsorObjectives(state, sp, rng)
 
+  const level = DATA.startLevels.find((l) => l.id === (opts.startLevel ?? 'zero')) ?? DATA.startLevels.find((l) => l.id === 'zero')!
+  applyStartLevel(state, level, rng, opts)
+
   recomputeStakes(state.equity)
   generateBoardObjectives(state)
 
@@ -201,9 +215,10 @@ export function createNewGame(opts: { seed?: string; saveName?: string } = {}): 
     title: 'Bienvenue à Brackley, Liam',
     body:
       `Genesis Magma F1 Team reprend la place de Haas sur la grille ${season}. ` +
-      `Le campus de Brackley est opérationnel, mais l'écurie n'a encore ni pilotes ni encadrement technique.\n\n` +
-      `Priorités de la pré-saison :\n• Recruter deux pilotes titulaires (marché des transferts)\n• Nommer un directeur technique, un responsable aéro, un chef du bureau d'études, un directeur sportif, deux ingénieurs de course et un responsable du scouting\n• Lancer les premiers projets de R&D\n\n` +
-      `Trésorerie : 250 M€. Plafond de dépenses : 215 M$. Premier Grand Prix : Bahreïn, le 14 mars.`,
+      `Niveau de départ : ${level.name}. ` +
+      (state.teams[sc.playerTeamId].driverIds.length < 2 ? `L'écurie doit encore recruter ses pilotes titulaires.\n\n` : `\n\n`) +
+      `Priorités de la pré-saison :\n• Recruter deux pilotes titulaires (marché des transferts)\n• Compléter l'encadrement : directeur technique, responsable aéro, chef du bureau d'études, directeur sportif, deux ingénieurs de course, responsable du scouting\n• Lancer les premiers projets de R&D\n\n` +
+      `Trésorerie : ${Math.round(state.finances.cashEur / 1e6)} M€. Plafond de dépenses : 215 M$. Premier Grand Prix : Bahreïn, le 14 mars.`,
   })
   pushMessage(state, {
     category: 'car',
@@ -211,4 +226,51 @@ export function createNewGame(opts: { seed?: string; saveName?: string } = {}): 
     body: `Hyundai engage 400 M€ sur 3 ans pour développer son propre groupe propulseur, avec 120 ingénieurs à Namyang et 4 ingénieurs détachés chez Ferrari. Genesis roulera avec un moteur Ferrari client de 2027 à 2029, puis avec le moteur Hyundai à partir de 2030.`,
   })
   return state
+}
+
+const PLAYER_ROLES: StaffRole[] = ['technicalDirector', 'headOfAero', 'chiefDesigner', 'sportingDirector', 'raceEngineer', 'raceEngineer', 'headOfScouting']
+
+function applyStartLevel(state: GameState, level: StartLevel, rng: Rng, opts: NewGameOptions): void {
+  const id = state.playerTeamId
+  const team = state.teams[id]
+  const season = state.clock.season
+  state.meta.startLevel = level.id
+  state.finances.cashEur = level.cashEur
+  state.board.valuationEur = level.valuationEur
+  state.board.valuationHistory = [{ date: state.clock.date, valueEur: level.valuationEur }]
+  state.board.annualContributionEur = level.hyundaiAnnualContributionEur
+  state.board.satisfaction = { hyundai: level.boardSatisfaction + 2, redbird: level.boardSatisfaction, arctos: level.boardSatisfaction }
+  team.reputation = level.reputation
+  team.pitCrew.speed = level.pitCrew.speed
+  team.pitCrew.consistency = level.pitCrew.consistency
+  state.cars[id].ratings = { ...level.car }
+  for (const [fid, lvl] of Object.entries(level.facilityLevels)) {
+    const f = state.facilities[fid]
+    if (f) f.level = Math.min(f.maxLevel, lvl)
+  }
+  const staffQuality = level.autoStaff || 74
+  if (opts.autoStaff ?? level.autoStaff > 0) {
+    for (const role of PLAYER_ROLES) {
+      const pool = Object.values(state.staff)
+        .filter((s) => !s.teamId && !s.retired && s.role === role && staffOverall(s) >= staffQuality - 6)
+        .sort((a, b) => staffOverall(b) - staffOverall(a))
+      const s = pool[0] ?? generateStaff(state, rng, role, null, staffQuality, season)
+      s.teamId = id
+      s.contract = { teamId: id, startSeason: season, endSeason: season + rng.int(1, 2), salaryEur: staffAskingSalary(staffOverall(s), role), inCostCap: role !== 'technicalDirector' }
+    }
+  }
+  if (opts.autoDrivers) {
+    const pool = Object.values(state.drivers)
+      .filter((d) => !d.teamId && !d.retired && (d.series === 'FA' || d.series === 'F2'))
+      .sort((a, b) => driverOverall(b) - driverOverall(a))
+    for (const d of pool.slice(0, 2 - team.driverIds.length)) {
+      d.teamId = id
+      d.series = 'F1'
+      d.contract = { teamId: id, startSeason: season, endSeason: season + 1, salaryEur: driverAskingSalary(driverOverall(d), 25), role: team.driverIds.length === 0 ? 'first' : 'second', inCostCap: false }
+      team.driverIds.push(d.id)
+      ensurePu(state.cars[id], d.id)
+    }
+  }
+  const engineers = Object.values(state.staff).filter((s) => s.teamId === id && s.role === 'raceEngineer')
+  engineers.forEach((e, i) => (e.assignedDriverId = team.driverIds[i] ?? null))
 }

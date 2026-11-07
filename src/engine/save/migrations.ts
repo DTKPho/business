@@ -21,5 +21,6 @@ export function migrate(state: GameState, fromVersion: number): GameState {
   s.meta.schemaVersion = SCHEMA_VERSION
   s.finances.extraDesignPoints ??= 0
   if (s.weekend) s.weekend.form ??= {}
+  if (s.race) for (const c of s.race.cars) c.prevTotal ??= c.totalTime
   return s
 }

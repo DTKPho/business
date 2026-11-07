@@ -1,7 +1,7 @@
 import type { Compound, GameState, PracticeProgram, SessionId, SessionResult } from '../model/types'
 import { Rng } from '../core/rng'
 import { addDays } from '../core/time'
-import { runPractice, runQualifying } from '../race/sessions'
+import { recordPole, runPractice, runQualifying } from '../race/sessions'
 import { finishRace, startRace } from '../race/race'
 import { engineerSetupBonus } from '../race/performance'
 import { aiPuManagement } from '../car/powerUnit'
@@ -74,28 +74,52 @@ export function setPracticeProgram(state: GameState, driverId: string, p: Practi
   if (state.weekend) state.weekend.practiceProgram[driverId] = p
 }
 
-/** Lance la séance en cours. Pour une course, crée l'état de course (à jouer en direct ou simuler). */
+/**
+ * Lance la séance en cours. Essais et qualifications sont simulés en entier puis
+ * placés dans `weekend.pending` pour être regardés en direct ; une course crée l'état
+ * de course (à jouer en direct ou simuler).
+ */
 export function runCurrentSession(state: GameState, startCompounds: Record<string, Compound> = {}): SessionResult | null {
   const w = state.weekend
   const s = currentSession(state)
   if (!w || !s || state.race) return null
+  if (w.pending) return w.pending.result
   const event = state.calendar.find((e) => e.round === w.round)!
   const dayOffset: Record<SessionId, number> = { FP1: -2, FP2: -2, FP3: -1, SQ: -2, SPRINT: -1, Q: -1, RACE: 0 }
   state.clock.date = addDays(event.date, dayOffset[s])
   if (s === 'FP1' || s === 'FP2' || s === 'FP3') {
-    const r = runPractice(state, s)
-    w.results[s] = r
-    w.sessionIndex++
-    return r
+    w.pending = runPractice(state, s)
+    return w.pending.result
   }
   if (s === 'Q' || s === 'SQ') {
-    const r = runQualifying(state, s)
-    w.results[s] = r
-    w.sessionIndex++
-    return r
+    w.pending = runQualifying(state, s)
+    return w.pending.result
   }
   startRace(state, s === 'SPRINT' ? 'sprint' : 'race', startCompounds)
   return null
+}
+
+/** Valide la séance regardée (ou passée) : le classement devient officiel. */
+export function commitPendingSession(state: GameState): SessionResult | null {
+  const w = state.weekend
+  const p = w?.pending
+  if (!w || !p) return null
+  w.results[p.session] = p.result
+  if (p.session === 'Q') {
+    const event = state.calendar.find((e) => e.round === w.round)!
+    recordPole(state, w.round, event.circuitId, p.result.rows[0].driverId)
+  }
+  w.pending = null
+  w.sessionIndex++
+  return p.result
+}
+
+/** Lance et valide immédiatement une séance (mode rapide). */
+export function runAndCommitSession(state: GameState): SessionResult | null {
+  const s = currentSession(state)
+  if (!s || s === 'RACE' || s === 'SPRINT') return null
+  runCurrentSession(state)
+  return commitPendingSession(state)
 }
 
 /** Termine la course en cours (simule les tours restants si besoin) et enregistre le résultat. */
@@ -124,7 +148,7 @@ export function formatLap(t: number): string {
 /** Clôture du week-end : moral, sponsors, conseil, parts de Liam, rapport. */
 export function closeWeekend(state: GameState): void {
   const w = state.weekend
-  if (!w || currentSession(state) !== null) return
+  if (!w || currentSession(state) !== null || w.pending) return
   const event = state.calendar.find((e) => e.round === w.round)!
   event.completed = true
   state.clock.date = event.date

@@ -1,26 +1,746 @@
 [
- {"id":"bahrain","name":"Bahrain International Circuit","gpName":"Grand Prix de Bahreïn","country":"Bahreïn","city":"Sakhir","lengthKm":5.412,"laps":57,"baseLapSec":92.5,"traits":{"downforce":0.5,"powerSensitivity":0.6,"tyreWear":0.85,"overtaking":0.8,"safetyCarProb":0.35,"pitLossSec":22},"rainChance":0.01},
- {"id":"jeddah","name":"Jeddah Corniche Circuit","gpName":"Grand Prix d'Arabie saoudite","country":"Arabie saoudite","city":"Djeddah","lengthKm":6.174,"laps":50,"baseLapSec":90.0,"traits":{"downforce":0.35,"powerSensitivity":0.8,"tyreWear":0.4,"overtaking":0.7,"safetyCarProb":0.7,"pitLossSec":20},"rainChance":0.01},
- {"id":"albertpark","name":"Albert Park Circuit","gpName":"Grand Prix d'Australie","country":"Australie","city":"Melbourne","lengthKm":5.278,"laps":58,"baseLapSec":80.5,"traits":{"downforce":0.55,"powerSensitivity":0.55,"tyreWear":0.45,"overtaking":0.55,"safetyCarProb":0.6,"pitLossSec":19},"rainChance":0.18},
- {"id":"suzuka","name":"Suzuka International Racing Course","gpName":"Grand Prix du Japon","country":"Japon","city":"Suzuka","lengthKm":5.807,"laps":53,"baseLapSec":91.0,"traits":{"downforce":0.8,"powerSensitivity":0.55,"tyreWear":0.7,"overtaking":0.35,"safetyCarProb":0.35,"pitLossSec":22},"rainChance":0.25},
- {"id":"shanghai","name":"Shanghai International Circuit","gpName":"Grand Prix de Chine","country":"Chine","city":"Shanghai","lengthKm":5.451,"laps":56,"baseLapSec":94.5,"traits":{"downforce":0.6,"powerSensitivity":0.6,"tyreWear":0.65,"overtaking":0.75,"safetyCarProb":0.35,"pitLossSec":23},"rainChance":0.2},
- {"id":"miami","name":"Miami International Autodrome","gpName":"Grand Prix de Miami","country":"États-Unis","city":"Miami","lengthKm":5.412,"laps":57,"baseLapSec":90.5,"traits":{"downforce":0.5,"powerSensitivity":0.65,"tyreWear":0.55,"overtaking":0.6,"safetyCarProb":0.45,"pitLossSec":21},"rainChance":0.15},
- {"id":"montreal","name":"Circuit Gilles-Villeneuve","gpName":"Grand Prix du Canada","country":"Canada","city":"Montréal","lengthKm":4.361,"laps":70,"baseLapSec":75.0,"traits":{"downforce":0.35,"powerSensitivity":0.75,"tyreWear":0.4,"overtaking":0.7,"safetyCarProb":0.65,"pitLossSec":19},"rainChance":0.25},
- {"id":"monaco","name":"Circuit de Monaco","gpName":"Grand Prix de Monaco","country":"Monaco","city":"Monte-Carlo","lengthKm":3.337,"laps":78,"baseLapSec":73.5,"traits":{"downforce":1.0,"powerSensitivity":0.1,"tyreWear":0.15,"overtaking":0.05,"safetyCarProb":0.55,"pitLossSec":20},"rainChance":0.12},
- {"id":"portimao","name":"Autódromo Internacional do Algarve","gpName":"Grand Prix du Portugal","country":"Portugal","city":"Portimão","lengthKm":4.653,"laps":66,"baseLapSec":80.0,"traits":{"downforce":0.6,"powerSensitivity":0.55,"tyreWear":0.6,"overtaking":0.55,"safetyCarProb":0.3,"pitLossSec":20},"rainChance":0.08},
- {"id":"madrid","name":"Madring","gpName":"Grand Prix d'Espagne","country":"Espagne","city":"Madrid","lengthKm":5.47,"laps":57,"baseLapSec":88.0,"traits":{"downforce":0.6,"powerSensitivity":0.55,"tyreWear":0.55,"overtaking":0.5,"safetyCarProb":0.5,"pitLossSec":21},"rainChance":0.08},
- {"id":"redbullring","name":"Red Bull Ring","gpName":"Grand Prix d'Autriche","country":"Autriche","city":"Spielberg","lengthKm":4.318,"laps":71,"baseLapSec":67.0,"traits":{"downforce":0.4,"powerSensitivity":0.7,"tyreWear":0.6,"overtaking":0.8,"safetyCarProb":0.3,"pitLossSec":20},"rainChance":0.25},
- {"id":"silverstone","name":"Silverstone Circuit","gpName":"Grand Prix de Grande-Bretagne","country":"Royaume-Uni","city":"Silverstone","lengthKm":5.891,"laps":52,"baseLapSec":89.5,"traits":{"downforce":0.75,"powerSensitivity":0.55,"tyreWear":0.8,"overtaking":0.6,"safetyCarProb":0.35,"pitLossSec":21},"rainChance":0.35},
- {"id":"spa","name":"Circuit de Spa-Francorchamps","gpName":"Grand Prix de Belgique","country":"Belgique","city":"Stavelot","lengthKm":7.004,"laps":44,"baseLapSec":106.5,"traits":{"downforce":0.4,"powerSensitivity":0.8,"tyreWear":0.6,"overtaking":0.75,"safetyCarProb":0.4,"pitLossSec":19},"rainChance":0.4},
- {"id":"hungaroring","name":"Hungaroring","gpName":"Grand Prix de Hongrie","country":"Hongrie","city":"Budapest","lengthKm":4.381,"laps":70,"baseLapSec":79.0,"traits":{"downforce":0.85,"powerSensitivity":0.3,"tyreWear":0.6,"overtaking":0.3,"safetyCarProb":0.3,"pitLossSec":21},"rainChance":0.15},
- {"id":"monza","name":"Autodromo Nazionale Monza","gpName":"Grand Prix d'Italie","country":"Italie","city":"Monza","lengthKm":5.793,"laps":53,"baseLapSec":82.0,"traits":{"downforce":0.1,"powerSensitivity":1.0,"tyreWear":0.45,"overtaking":0.75,"safetyCarProb":0.35,"pitLossSec":24},"rainChance":0.12},
- {"id":"baku","name":"Baku City Circuit","gpName":"Grand Prix d'Azerbaïdjan","country":"Azerbaïdjan","city":"Bakou","lengthKm":6.003,"laps":51,"baseLapSec":104.0,"traits":{"downforce":0.35,"powerSensitivity":0.85,"tyreWear":0.35,"overtaking":0.75,"safetyCarProb":0.7,"pitLossSec":20},"rainChance":0.05},
- {"id":"istanbul","name":"Istanbul Park","gpName":"Grand Prix de Turquie","country":"Turquie","city":"Istanbul","lengthKm":5.338,"laps":58,"baseLapSec":87.0,"traits":{"downforce":0.65,"powerSensitivity":0.6,"tyreWear":0.7,"overtaking":0.65,"safetyCarProb":0.3,"pitLossSec":21},"rainChance":0.2},
- {"id":"singapore","name":"Marina Bay Street Circuit","gpName":"Grand Prix de Singapour","country":"Singapour","city":"Singapour","lengthKm":4.927,"laps":62,"baseLapSec":94.0,"traits":{"downforce":0.95,"powerSensitivity":0.25,"tyreWear":0.45,"overtaking":0.3,"safetyCarProb":0.85,"pitLossSec":27},"rainChance":0.25},
- {"id":"austin","name":"Circuit of the Americas","gpName":"Grand Prix des États-Unis","country":"États-Unis","city":"Austin","lengthKm":5.513,"laps":56,"baseLapSec":96.0,"traits":{"downforce":0.65,"powerSensitivity":0.6,"tyreWear":0.65,"overtaking":0.7,"safetyCarProb":0.35,"pitLossSec":21},"rainChance":0.08},
- {"id":"mexico","name":"Autódromo Hermanos Rodríguez","gpName":"Grand Prix de Mexico","country":"Mexique","city":"Mexico","lengthKm":4.304,"laps":71,"baseLapSec":79.0,"traits":{"downforce":0.85,"powerSensitivity":0.65,"tyreWear":0.45,"overtaking":0.55,"safetyCarProb":0.4,"pitLossSec":22},"rainChance":0.08},
- {"id":"interlagos","name":"Autódromo José Carlos Pace","gpName":"Grand Prix de São Paulo","country":"Brésil","city":"São Paulo","lengthKm":4.309,"laps":71,"baseLapSec":72.0,"traits":{"downforce":0.6,"powerSensitivity":0.65,"tyreWear":0.55,"overtaking":0.8,"safetyCarProb":0.6,"pitLossSec":21},"rainChance":0.35},
- {"id":"lasvegas","name":"Las Vegas Strip Circuit","gpName":"Grand Prix de Las Vegas","country":"États-Unis","city":"Las Vegas","lengthKm":6.201,"laps":50,"baseLapSec":95.0,"traits":{"downforce":0.25,"powerSensitivity":0.9,"tyreWear":0.35,"overtaking":0.8,"safetyCarProb":0.5,"pitLossSec":20},"rainChance":0.02},
- {"id":"lusail","name":"Lusail International Circuit","gpName":"Grand Prix du Qatar","country":"Qatar","city":"Lusail","lengthKm":5.419,"laps":57,"baseLapSec":84.0,"traits":{"downforce":0.7,"powerSensitivity":0.5,"tyreWear":0.9,"overtaking":0.5,"safetyCarProb":0.3,"pitLossSec":25},"rainChance":0.01},
- {"id":"yasmarina","name":"Yas Marina Circuit","gpName":"Grand Prix d'Abou Dabi","country":"Émirats arabes unis","city":"Abou Dabi","lengthKm":5.281,"laps":58,"baseLapSec":86.0,"traits":{"downforce":0.55,"powerSensitivity":0.6,"tyreWear":0.45,"overtaking":0.55,"safetyCarProb":0.3,"pitLossSec":21},"rainChance":0.01}
+ {
+  "id": "bahrain",
+  "name": "Bahrain International Circuit",
+  "gpName": "Grand Prix de Bahreïn",
+  "country": "Bahreïn",
+  "city": "Sakhir",
+  "lengthKm": 5.412,
+  "laps": 57,
+  "baseLapSec": 92.5,
+  "traits": {
+   "downforce": 0.5,
+   "powerSensitivity": 0.6,
+   "tyreWear": 0.85,
+   "overtaking": 0.8,
+   "safetyCarProb": 0.35,
+   "pitLossSec": 22
+  },
+  "rainChance": 0.01,
+  "flag": "🇧🇭",
+  "turns": 15,
+  "firstGp": 2004,
+  "accent": [
+   "#ce1126",
+   "#f4e4c1"
+  ],
+  "tags": [
+   "Nocturne",
+   "Désert"
+  ],
+  "description": "Course de nuit sous les projecteurs de Sakhir. Asphalte abrasif, vent de sable et gros freinages : un tracé qui use les pneus arrière."
+ },
+ {
+  "id": "jeddah",
+  "name": "Jeddah Corniche Circuit",
+  "gpName": "Grand Prix d'Arabie saoudite",
+  "country": "Arabie saoudite",
+  "city": "Djeddah",
+  "lengthKm": 6.174,
+  "laps": 50,
+  "baseLapSec": 90.0,
+  "traits": {
+   "downforce": 0.35,
+   "powerSensitivity": 0.8,
+   "tyreWear": 0.4,
+   "overtaking": 0.7,
+   "safetyCarProb": 0.7,
+   "pitLossSec": 20
+  },
+  "rainChance": 0.01,
+  "flag": "🇸🇦",
+  "turns": 27,
+  "firstGp": 2021,
+  "accent": [
+   "#006c35",
+   "#ffffff"
+  ],
+  "tags": [
+   "Nocturne",
+   "Urbain",
+   "Ultra-rapide"
+  ],
+  "description": "Le circuit urbain le plus rapide du calendrier, le long de la mer Rouge. Murs proches, enchaînements à plus de 250 km/h et voitures de sécurité fréquentes."
+ },
+ {
+  "id": "albertpark",
+  "name": "Albert Park Circuit",
+  "gpName": "Grand Prix d'Australie",
+  "country": "Australie",
+  "city": "Melbourne",
+  "lengthKm": 5.278,
+  "laps": 58,
+  "baseLapSec": 80.5,
+  "traits": {
+   "downforce": 0.55,
+   "powerSensitivity": 0.55,
+   "tyreWear": 0.45,
+   "overtaking": 0.55,
+   "safetyCarProb": 0.6,
+   "pitLossSec": 19
+  },
+  "rainChance": 0.18,
+  "flag": "🇦🇺",
+  "turns": 14,
+  "firstGp": 1996,
+  "accent": [
+   "#00843d",
+   "#ffcd00"
+  ],
+  "tags": [
+   "Semi-urbain",
+   "Parc"
+  ],
+  "description": "Autour du lac d'Albert Park, à Melbourne. Piste semi-permanente, grip qui évolue tout le week-end et météo changeante."
+ },
+ {
+  "id": "suzuka",
+  "name": "Suzuka International Racing Course",
+  "gpName": "Grand Prix du Japon",
+  "country": "Japon",
+  "city": "Suzuka",
+  "lengthKm": 5.807,
+  "laps": 53,
+  "baseLapSec": 91.0,
+  "traits": {
+   "downforce": 0.8,
+   "powerSensitivity": 0.55,
+   "tyreWear": 0.7,
+   "overtaking": 0.35,
+   "safetyCarProb": 0.35,
+   "pitLossSec": 22
+  },
+  "rainChance": 0.25,
+  "flag": "🇯🇵",
+  "turns": 18,
+  "firstGp": 1987,
+  "accent": [
+   "#bc002d",
+   "#ffffff"
+  ],
+  "tags": [
+   "Technique",
+   "Légendaire"
+  ],
+  "description": "Le seul grand huit du calendrier. Les « S » du premier secteur et 130R récompensent une voiture équilibrée et un pilote précis."
+ },
+ {
+  "id": "shanghai",
+  "name": "Shanghai International Circuit",
+  "gpName": "Grand Prix de Chine",
+  "country": "Chine",
+  "city": "Shanghai",
+  "lengthKm": 5.451,
+  "laps": 56,
+  "baseLapSec": 94.5,
+  "traits": {
+   "downforce": 0.6,
+   "powerSensitivity": 0.6,
+   "tyreWear": 0.65,
+   "overtaking": 0.75,
+   "safetyCarProb": 0.35,
+   "pitLossSec": 23
+  },
+  "rainChance": 0.2,
+  "flag": "🇨🇳",
+  "turns": 16,
+  "firstGp": 2004,
+  "accent": [
+   "#de2910",
+   "#ffde00"
+  ],
+  "tags": [
+   "Moderne"
+  ],
+  "description": "Un tracé dessiné autour du caractère 上. Virage 1 interminable et longue ligne droite arrière propice aux dépassements."
+ },
+ {
+  "id": "miami",
+  "name": "Miami International Autodrome",
+  "gpName": "Grand Prix de Miami",
+  "country": "États-Unis",
+  "city": "Miami",
+  "lengthKm": 5.412,
+  "laps": 57,
+  "baseLapSec": 90.5,
+  "traits": {
+   "downforce": 0.5,
+   "powerSensitivity": 0.65,
+   "tyreWear": 0.55,
+   "overtaking": 0.6,
+   "safetyCarProb": 0.45,
+   "pitLossSec": 21
+  },
+  "rainChance": 0.15,
+  "flag": "🇺🇸",
+  "turns": 19,
+  "firstGp": 2022,
+  "accent": [
+   "#00a6b6",
+   "#ff5fa2"
+  ],
+  "tags": [
+   "Urbain",
+   "Show"
+  ],
+  "description": "Autour du Hard Rock Stadium. Chaleur, humidité et section lente et sinueuse entre de longues lignes droites."
+ },
+ {
+  "id": "montreal",
+  "name": "Circuit Gilles-Villeneuve",
+  "gpName": "Grand Prix du Canada",
+  "country": "Canada",
+  "city": "Montréal",
+  "lengthKm": 4.361,
+  "laps": 70,
+  "baseLapSec": 75.0,
+  "traits": {
+   "downforce": 0.35,
+   "powerSensitivity": 0.75,
+   "tyreWear": 0.4,
+   "overtaking": 0.7,
+   "safetyCarProb": 0.65,
+   "pitLossSec": 19
+  },
+  "rainChance": 0.25,
+  "flag": "🇨🇦",
+  "turns": 14,
+  "firstGp": 1978,
+  "accent": [
+   "#d52b1e",
+   "#ffffff"
+  ],
+  "tags": [
+   "Semi-urbain",
+   "Freinages"
+  ],
+  "description": "Sur l'île Notre-Dame. Chicanes, gros freinages, le célèbre « Mur des champions » et des voitures de sécurité régulières."
+ },
+ {
+  "id": "monaco",
+  "name": "Circuit de Monaco",
+  "gpName": "Grand Prix de Monaco",
+  "country": "Monaco",
+  "city": "Monte-Carlo",
+  "lengthKm": 3.337,
+  "laps": 78,
+  "baseLapSec": 73.5,
+  "traits": {
+   "downforce": 1.0,
+   "powerSensitivity": 0.1,
+   "tyreWear": 0.15,
+   "overtaking": 0.05,
+   "safetyCarProb": 0.55,
+   "pitLossSec": 20
+  },
+  "rainChance": 0.12,
+  "flag": "🇲🇨",
+  "turns": 19,
+  "firstGp": 1950,
+  "accent": [
+   "#ce1126",
+   "#ffffff"
+  ],
+  "tags": [
+   "Urbain",
+   "Prestige"
+  ],
+  "description": "Le joyau de la couronne. Dépasser est presque impossible : la qualification fait la course. Glamour, rails et précision au millimètre."
+ },
+ {
+  "id": "portimao",
+  "name": "Autódromo Internacional do Algarve",
+  "gpName": "Grand Prix du Portugal",
+  "country": "Portugal",
+  "city": "Portimão",
+  "lengthKm": 4.653,
+  "laps": 66,
+  "baseLapSec": 80.0,
+  "traits": {
+   "downforce": 0.6,
+   "powerSensitivity": 0.55,
+   "tyreWear": 0.6,
+   "overtaking": 0.55,
+   "safetyCarProb": 0.3,
+   "pitLossSec": 20
+  },
+  "rainChance": 0.08,
+  "flag": "🇵🇹",
+  "turns": 15,
+  "firstGp": 2020,
+  "accent": [
+   "#006600",
+   "#ff0000"
+  ],
+  "tags": [
+   "Montagnes russes"
+  ],
+  "description": "L'Algarve et ses dénivelés spectaculaires : crêtes aveugles et virages en dévers qui piègent les voitures."
+ },
+ {
+  "id": "madrid",
+  "name": "Madring",
+  "gpName": "Grand Prix d'Espagne",
+  "country": "Espagne",
+  "city": "Madrid",
+  "lengthKm": 5.47,
+  "laps": 57,
+  "baseLapSec": 88.0,
+  "traits": {
+   "downforce": 0.6,
+   "powerSensitivity": 0.55,
+   "tyreWear": 0.55,
+   "overtaking": 0.5,
+   "safetyCarProb": 0.5,
+   "pitLossSec": 21
+  },
+  "rainChance": 0.08,
+  "flag": "🇪🇸",
+  "turns": 22,
+  "firstGp": 2026,
+  "accent": [
+   "#aa151b",
+   "#f1bf00"
+  ],
+  "tags": [
+   "Semi-urbain",
+   "Nouveau"
+  ],
+  "description": "Le Madring, autour du parc des expositions IFEMA, avec son virage relevé « La Monumental ». Un des tracés les plus récents du championnat."
+ },
+ {
+  "id": "redbullring",
+  "name": "Red Bull Ring",
+  "gpName": "Grand Prix d'Autriche",
+  "country": "Autriche",
+  "city": "Spielberg",
+  "lengthKm": 4.318,
+  "laps": 71,
+  "baseLapSec": 67.0,
+  "traits": {
+   "downforce": 0.4,
+   "powerSensitivity": 0.7,
+   "tyreWear": 0.6,
+   "overtaking": 0.8,
+   "safetyCarProb": 0.3,
+   "pitLossSec": 20
+  },
+  "rainChance": 0.25,
+  "flag": "🇦🇹",
+  "turns": 10,
+  "firstGp": 1970,
+  "accent": [
+   "#ed2939",
+   "#ffffff"
+  ],
+  "tags": [
+   "Court",
+   "Altitude"
+  ],
+  "description": "Un tour court dans les montagnes de Styrie : trois zones de freinage pour dépasser et des limites de piste très surveillées."
+ },
+ {
+  "id": "silverstone",
+  "name": "Silverstone Circuit",
+  "gpName": "Grand Prix de Grande-Bretagne",
+  "country": "Royaume-Uni",
+  "city": "Silverstone",
+  "lengthKm": 5.891,
+  "laps": 52,
+  "baseLapSec": 89.5,
+  "traits": {
+   "downforce": 0.75,
+   "powerSensitivity": 0.55,
+   "tyreWear": 0.8,
+   "overtaking": 0.6,
+   "safetyCarProb": 0.35,
+   "pitLossSec": 21
+  },
+  "rainChance": 0.35,
+  "flag": "🇬🇧",
+  "turns": 18,
+  "firstGp": 1950,
+  "accent": [
+   "#012169",
+   "#c8102e"
+  ],
+  "tags": [
+   "Historique",
+   "Rapide"
+  ],
+  "description": "Berceau du championnat du monde. Maggotts-Becketts-Chapel, Copse, vent et pluie anglaise : le GP à domicile de Genesis."
+ },
+ {
+  "id": "spa",
+  "name": "Circuit de Spa-Francorchamps",
+  "gpName": "Grand Prix de Belgique",
+  "country": "Belgique",
+  "city": "Stavelot",
+  "lengthKm": 7.004,
+  "laps": 44,
+  "baseLapSec": 106.5,
+  "traits": {
+   "downforce": 0.4,
+   "powerSensitivity": 0.8,
+   "tyreWear": 0.6,
+   "overtaking": 0.75,
+   "safetyCarProb": 0.4,
+   "pitLossSec": 19
+  },
+  "rainChance": 0.4,
+  "flag": "🇧🇪",
+  "turns": 19,
+  "firstGp": 1950,
+  "accent": [
+   "#000000",
+   "#fdda24"
+  ],
+  "tags": [
+   "Légendaire",
+   "Météo"
+  ],
+  "description": "7 km dans les Ardennes, l'Eau Rouge-Raidillon et un microclimat imprévisible : il peut pleuvoir sur un secteur et pas sur l'autre."
+ },
+ {
+  "id": "hungaroring",
+  "name": "Hungaroring",
+  "gpName": "Grand Prix de Hongrie",
+  "country": "Hongrie",
+  "city": "Budapest",
+  "lengthKm": 4.381,
+  "laps": 70,
+  "baseLapSec": 79.0,
+  "traits": {
+   "downforce": 0.85,
+   "powerSensitivity": 0.3,
+   "tyreWear": 0.6,
+   "overtaking": 0.3,
+   "safetyCarProb": 0.3,
+   "pitLossSec": 21
+  },
+  "rainChance": 0.15,
+  "flag": "🇭🇺",
+  "turns": 14,
+  "firstGp": 1986,
+  "accent": [
+   "#ce2939",
+   "#477050"
+  ],
+  "tags": [
+   "Sinueux",
+   "Chaleur"
+  ],
+  "description": "Le « Monaco sans murs » : virolos, chaleur écrasante et très peu de dépassements. L'appui maximal est roi."
+ },
+ {
+  "id": "monza",
+  "name": "Autodromo Nazionale Monza",
+  "gpName": "Grand Prix d'Italie",
+  "country": "Italie",
+  "city": "Monza",
+  "lengthKm": 5.793,
+  "laps": 53,
+  "baseLapSec": 82.0,
+  "traits": {
+   "downforce": 0.1,
+   "powerSensitivity": 1.0,
+   "tyreWear": 0.45,
+   "overtaking": 0.75,
+   "safetyCarProb": 0.35,
+   "pitLossSec": 24
+  },
+  "rainChance": 0.12,
+  "flag": "🇮🇹",
+  "turns": 11,
+  "firstGp": 1950,
+  "accent": [
+   "#009246",
+   "#ce2b37"
+  ],
+  "tags": [
+   "Temple de la vitesse"
+  ],
+  "description": "Le temple de la vitesse. Appui minimal, aspiration, chicanes et la passion des tifosi."
+ },
+ {
+  "id": "baku",
+  "name": "Baku City Circuit",
+  "gpName": "Grand Prix d'Azerbaïdjan",
+  "country": "Azerbaïdjan",
+  "city": "Bakou",
+  "lengthKm": 6.003,
+  "laps": 51,
+  "baseLapSec": 104.0,
+  "traits": {
+   "downforce": 0.35,
+   "powerSensitivity": 0.85,
+   "tyreWear": 0.35,
+   "overtaking": 0.75,
+   "safetyCarProb": 0.7,
+   "pitLossSec": 20
+  },
+  "rainChance": 0.05,
+  "flag": "🇦🇿",
+  "turns": 20,
+  "firstGp": 2016,
+  "accent": [
+   "#0092bc",
+   "#00b04f"
+  ],
+  "tags": [
+   "Urbain",
+   "Ultra-rapide"
+  ],
+  "description": "Une ligne droite de 2,2 km et une section étroite au pied de la vieille ville. Le chaos y est fréquent."
+ },
+ {
+  "id": "istanbul",
+  "name": "Istanbul Park",
+  "gpName": "Grand Prix de Turquie",
+  "country": "Turquie",
+  "city": "Istanbul",
+  "lengthKm": 5.338,
+  "laps": 58,
+  "baseLapSec": 87.0,
+  "traits": {
+   "downforce": 0.65,
+   "powerSensitivity": 0.6,
+   "tyreWear": 0.7,
+   "overtaking": 0.65,
+   "safetyCarProb": 0.3,
+   "pitLossSec": 21
+  },
+  "rainChance": 0.2,
+  "flag": "🇹🇷",
+  "turns": 14,
+  "firstGp": 2005,
+  "accent": [
+   "#e30a17",
+   "#ffffff"
+  ],
+  "tags": [
+   "Technique",
+   "Retour"
+  ],
+  "description": "Retour d'un tracé adoré des pilotes, avec le mythique virage 8 à quatre cordes."
+ },
+ {
+  "id": "singapore",
+  "name": "Marina Bay Street Circuit",
+  "gpName": "Grand Prix de Singapour",
+  "country": "Singapour",
+  "city": "Singapour",
+  "lengthKm": 4.927,
+  "laps": 62,
+  "baseLapSec": 94.0,
+  "traits": {
+   "downforce": 0.95,
+   "powerSensitivity": 0.25,
+   "tyreWear": 0.45,
+   "overtaking": 0.3,
+   "safetyCarProb": 0.85,
+   "pitLossSec": 27
+  },
+  "rainChance": 0.25,
+  "flag": "🇸🇬",
+  "turns": 19,
+  "firstGp": 2008,
+  "accent": [
+   "#ef3340",
+   "#ffffff"
+  ],
+  "tags": [
+   "Nocturne",
+   "Urbain",
+   "Chaleur"
+  ],
+  "description": "La course de nuit originelle. Chaleur, humidité, murs partout : une épreuve d'endurance pour les pilotes."
+ },
+ {
+  "id": "austin",
+  "name": "Circuit of the Americas",
+  "gpName": "Grand Prix des États-Unis",
+  "country": "États-Unis",
+  "city": "Austin",
+  "lengthKm": 5.513,
+  "laps": 56,
+  "baseLapSec": 96.0,
+  "traits": {
+   "downforce": 0.65,
+   "powerSensitivity": 0.6,
+   "tyreWear": 0.65,
+   "overtaking": 0.7,
+   "safetyCarProb": 0.35,
+   "pitLossSec": 21
+  },
+  "rainChance": 0.08,
+  "flag": "🇺🇸",
+  "turns": 20,
+  "firstGp": 2012,
+  "accent": [
+   "#3c3b6e",
+   "#b22234"
+  ],
+  "tags": [
+   "Moderne",
+   "Dénivelé"
+  ],
+  "description": "La montée vers le virage 1 et un premier secteur inspiré de Silverstone. Une piste bosselée qui malmène les voitures."
+ },
+ {
+  "id": "mexico",
+  "name": "Autódromo Hermanos Rodríguez",
+  "gpName": "Grand Prix de Mexico",
+  "country": "Mexique",
+  "city": "Mexico",
+  "lengthKm": 4.304,
+  "laps": 71,
+  "baseLapSec": 79.0,
+  "traits": {
+   "downforce": 0.85,
+   "powerSensitivity": 0.65,
+   "tyreWear": 0.45,
+   "overtaking": 0.55,
+   "safetyCarProb": 0.4,
+   "pitLossSec": 22
+  },
+  "rainChance": 0.08,
+  "flag": "🇲🇽",
+  "turns": 17,
+  "firstGp": 1963,
+  "accent": [
+   "#006847",
+   "#ce1126"
+  ],
+  "tags": [
+   "Altitude",
+   "Stade"
+  ],
+  "description": "À 2 200 m d'altitude : air raréfié, moteurs et refroidissement à la peine, et le passage dans le stade Foro Sol."
+ },
+ {
+  "id": "interlagos",
+  "name": "Autódromo José Carlos Pace",
+  "gpName": "Grand Prix de São Paulo",
+  "country": "Brésil",
+  "city": "São Paulo",
+  "lengthKm": 4.309,
+  "laps": 71,
+  "baseLapSec": 72.0,
+  "traits": {
+   "downforce": 0.6,
+   "powerSensitivity": 0.65,
+   "tyreWear": 0.55,
+   "overtaking": 0.8,
+   "safetyCarProb": 0.6,
+   "pitLossSec": 21
+  },
+  "rainChance": 0.35,
+  "flag": "🇧🇷",
+  "turns": 15,
+  "firstGp": 1973,
+  "accent": [
+   "#009c3b",
+   "#ffdf00"
+  ],
+  "tags": [
+   "Historique",
+   "Météo"
+  ],
+  "description": "Le circuit tourne à l'envers, la pluie arrive sans prévenir et le public est en feu : souvent la course de l'année."
+ },
+ {
+  "id": "lasvegas",
+  "name": "Las Vegas Strip Circuit",
+  "gpName": "Grand Prix de Las Vegas",
+  "country": "États-Unis",
+  "city": "Las Vegas",
+  "lengthKm": 6.201,
+  "laps": 50,
+  "baseLapSec": 95.0,
+  "traits": {
+   "downforce": 0.25,
+   "powerSensitivity": 0.9,
+   "tyreWear": 0.35,
+   "overtaking": 0.8,
+   "safetyCarProb": 0.5,
+   "pitLossSec": 20
+  },
+  "rainChance": 0.02,
+  "flag": "🇺🇸",
+  "turns": 17,
+  "firstGp": 2023,
+  "accent": [
+   "#c9a227",
+   "#8a2be2"
+  ],
+  "tags": [
+   "Nocturne",
+   "Urbain",
+   "Froid"
+  ],
+  "description": "Sur le Strip, la nuit, par des températures fraîches : difficile de chauffer les pneus, longues lignes droites."
+ },
+ {
+  "id": "lusail",
+  "name": "Lusail International Circuit",
+  "gpName": "Grand Prix du Qatar",
+  "country": "Qatar",
+  "city": "Lusail",
+  "lengthKm": 5.419,
+  "laps": 57,
+  "baseLapSec": 84.0,
+  "traits": {
+   "downforce": 0.7,
+   "powerSensitivity": 0.5,
+   "tyreWear": 0.9,
+   "overtaking": 0.5,
+   "safetyCarProb": 0.3,
+   "pitLossSec": 25
+  },
+  "rainChance": 0.01,
+  "flag": "🇶🇦",
+  "turns": 16,
+  "firstGp": 2021,
+  "accent": [
+   "#8a1538",
+   "#ffffff"
+  ],
+  "tags": [
+   "Nocturne",
+   "Rapide"
+  ],
+  "description": "Un tracé de MotoGP fait de grandes courbes rapides : les pneus souffrent énormément."
+ },
+ {
+  "id": "yasmarina",
+  "name": "Yas Marina Circuit",
+  "gpName": "Grand Prix d'Abou Dabi",
+  "country": "Émirats arabes unis",
+  "city": "Abou Dabi",
+  "lengthKm": 5.281,
+  "laps": 58,
+  "baseLapSec": 86.0,
+  "traits": {
+   "downforce": 0.55,
+   "powerSensitivity": 0.6,
+   "tyreWear": 0.45,
+   "overtaking": 0.55,
+   "safetyCarProb": 0.3,
+   "pitLossSec": 21
+  },
+  "rainChance": 0.01,
+  "flag": "🇦🇪",
+  "turns": 16,
+  "firstGp": 2009,
+  "accent": [
+   "#00732f",
+   "#ff0000"
+  ],
+  "tags": [
+   "Crépuscule",
+   "Finale"
+  ],
+  "description": "La finale au crépuscule, à côté de la marina et sous l'hôtel illuminé. Le titre se joue souvent ici."
+ }
 ]

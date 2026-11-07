@@ -46,6 +46,7 @@ function seasonStart(state: GameState): number {
 
 /** Évalue l'offre : salaire, attractivité de Genesis, situation actuelle, mentalité. */
 export function evaluateOffer(state: GameState, p: Person, offer: Offer): NegotiationResult {
+  if (state.meta.cheats?.alwaysAccept) return { accepted: true, message: `${fullName(p)} accepte votre proposition (triche).` }
   const asking = askingSalary(state, p)
   const ratio = offer.salaryEur / Math.max(1, asking)
   const attract = teamAttractiveness(state)
@@ -132,6 +133,7 @@ export function signWithPlayer(state: GameState, personId: string, offer: Offer)
 }
 
 function evaluateExtension(state: GameState, p: Person, offer: Offer): NegotiationResult {
+  if (state.meta.cheats?.alwaysAccept) return { accepted: true, message: `${fullName(p)} prolonge son contrat (triche).` }
   const asking = askingSalary(state, p)
   const ratio = offer.salaryEur / Math.max(1, asking)
   const score = (ratio - 1) * 120 + (p.morale - 55) * 0.6 + (p.mentality.loyalty - 60) * 0.3

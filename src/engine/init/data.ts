@@ -13,6 +13,8 @@ import namesJson from '../../data/names.json'
 import eventsJson from '../../data/events/random-events.json'
 import configJson from '../../data/config.json'
 import scenarioJson from '../../data/scenario.json'
+import startLevelsJson from '../../data/start-levels.json'
+import tracksJson from '../../data/tracks.json'
 import type {
   CarArea,
   Circuit,
@@ -164,6 +166,22 @@ export interface ScenarioData {
   }
 }
 
+export interface StartLevel {
+  id: string
+  name: string
+  tagline: string
+  description: string
+  cashEur: number
+  valuationEur: number
+  reputation: number
+  hyundaiAnnualContributionEur: number
+  car: Record<CarArea, number>
+  facilityLevels: Record<string, number>
+  pitCrew: { speed: number; consistency: number }
+  boardSatisfaction: number
+  autoStaff: number // 0 = aucun encadrement au départ, sinon niveau visé
+}
+
 export const DATA = {
   teams: teamsJson as TeamData[],
   drivers: driversJson as DriverData[],
@@ -179,6 +197,8 @@ export const DATA = {
   events: eventsJson as EventTemplate[],
   config: configJson as GameConfig,
   scenario: scenarioJson as ScenarioData,
+  startLevels: startLevelsJson as StartLevel[],
+  tracks: tracksJson as { source: string; viewBox: number; tracks: Record<string, number[][]> },
 }
 
 export const CONFIG = DATA.config

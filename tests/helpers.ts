@@ -3,7 +3,7 @@ import type { GameState, StaffRole } from '../src/engine/model/types'
 import { askingSalary, signWithPlayer } from '../src/engine/people/contracts'
 import { driverOverall, staffOverall } from '../src/engine/people/ratings'
 import { advance } from '../src/engine/season/loop'
-import { closeWeekend, completeRace, currentSession, runCurrentSession } from '../src/engine/season/weekend'
+import { closeWeekend, commitPendingSession, completeRace, currentSession, runCurrentSession } from '../src/engine/season/weekend'
 
 /** Recrute automatiquement deux pilotes et un staff complet (pour les tests). */
 export function autoRecruit(state: GameState): void {
@@ -34,6 +34,7 @@ export function playWeekend(state: GameState): void {
   while (currentSession(state)) {
     runCurrentSession(state)
     if (state.race) completeRace(state)
+    else commitPendingSession(state)
   }
   closeWeekend(state)
 }
