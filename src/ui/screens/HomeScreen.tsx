@@ -3,7 +3,9 @@ import { useGame } from '../../store/gameStore'
 import { deleteSlot, lastSlot, listSlots, loadSlot } from '../../persistence/idb'
 import type { SlotMeta } from '../../persistence/idb'
 import { exportToFile, importFromFile } from '../../persistence/exportImport'
-import { Button, Card, Empty } from '../components/ui'
+import { Badge, Button, Card, Empty, cx } from '../components/ui'
+import { SceneBackdrop } from '../components/Scene'
+import { DATA } from '../../engine/init/data'
 import { formatDate } from '../../engine/core/time'
 import { fmtEur } from '../../engine/core/money'
 
@@ -16,6 +18,11 @@ export function HomeScreen() {
   const [name, setName] = useState('Carrière Genesis')
   const [seed, setSeed] = useState('')
   const [busy, setBusy] = useState(false)
+  const [level, setLevel] = useState('zero')
+  const lvl = DATA.startLevels.find((l) => l.id === level)!
+  const [autoStaff, setAutoStaff] = useState<boolean | null>(null)
+  const [autoDrivers, setAutoDrivers] = useState(false)
+  const staffOn = autoStaff ?? lvl.autoStaff > 0
   const fileRef = useRef<HTMLInputElement>(null)
   const last = lastSlot()
 
@@ -42,8 +49,9 @@ export function HomeScreen() {
   }
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(ellipse_at_top,_#2a1208_0%,_#0b0b0d_55%)]">
-      <div className="mx-auto max-w-5xl px-4 py-10 sm:py-16">
+    <div className="relative min-h-screen">
+      <SceneBackdrop scene="home" />
+      <div className="relative z-10 mx-auto max-w-6xl px-4 py-10 sm:py-14">
         <div className="mb-10 flex items-center gap-4">
           <img src="./favicon.svg" alt="" className="h-14 w-14" />
           <div>
@@ -51,7 +59,7 @@ export function HomeScreen() {
             <p className="text-sm tracking-[0.25em] text-copper-400">JEU DE GESTION · BRACKLEY · DEPUIS 2027</p>
           </div>
         </div>
-        <div className="grid gap-5 md:grid-cols-[1.2fr_1fr]">
+        <div className="grid gap-5 lg:grid-cols-[1fr_1.25fr]">
           <Card title="Parties sauvegardées">
             {slots === null ? (
               <p className="text-sm text-ink-400">Chargement…</p>
@@ -129,7 +137,43 @@ export function HomeScreen() {
                 <span className="text-xs text-ink-400">Graine aléatoire (facultatif — même graine = même partie)</span>
                 <input value={seed} onChange={(e) => setSeed(e.target.value)} placeholder="aléatoire" className="mt-1 w-full rounded-lg border border-ink-600 bg-ink-800 px-3 py-2 outline-none focus:border-copper-400" />
               </label>
-              <Button variant="primary" className="w-full" disabled={busy} onClick={() => run(() => newGame(name, seed))}>
+              <div>
+                <span className="text-xs text-ink-400">Niveau de départ de l'écurie</span>
+                <div className="mt-1 grid gap-2 sm:grid-cols-2">
+                  {DATA.startLevels.map((l) => (
+                    <button
+                      key={l.id}
+                      onClick={() => {
+                        setLevel(l.id)
+                        setAutoStaff(null)
+                      }}
+                      className={cx('rounded-xl border p-3 text-left', level === l.id ? 'border-magma-500 bg-magma-500/10' : 'border-ink-700 hover:border-ink-600')}
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="font-semibold">{l.name}</span>
+                        <Badge tone={l.id === 'garage' ? 'bad' : l.id === 'top' ? 'good' : l.id === 'solid' ? 'copper' : 'magma'}>{l.tagline}</Badge>
+                      </div>
+                      <div className="mt-1 text-xs text-ink-400">{l.description}</div>
+                      <div className="mt-2 flex flex-wrap gap-x-3 text-[11px] text-ink-300">
+                        <span>{fmtEur(l.cashEur, 0)}</span>
+                        <span>Voiture ≈ {Math.round((l.car.aero + l.car.chassis + l.car.powertrain + l.car.reliability) / 4)}</span>
+                        <span>Réputation {l.reputation}</span>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div className="space-y-1.5 text-sm">
+                <label className="flex items-center gap-2">
+                  <input type="checkbox" checked={staffOn} onChange={(e) => setAutoStaff(e.target.checked)} />
+                  Fournir un encadrement technique de départ
+                </label>
+                <label className="flex items-center gap-2">
+                  <input type="checkbox" checked={autoDrivers} onChange={(e) => setAutoDrivers(e.target.checked)} />
+                  Recruter automatiquement deux pilotes
+                </label>
+              </div>
+              <Button variant="primary" className="w-full" disabled={busy} onClick={() => run(() => newGame(name, seed, { startLevel: level, autoStaff: staffOn, autoDrivers }))}>
                 Lancer la carrière
               </Button>
               <p className="text-[11px] text-ink-600">Données de pilotes et staff réelles, statistiques estimées et non officielles. Usage personnel.</p>

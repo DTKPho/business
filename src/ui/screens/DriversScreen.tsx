@@ -1,6 +1,6 @@
 import { useGame } from '../../store/gameStore'
 import { useGameState, useAction } from '../hooks'
-import { Badge, Bar, Button, Card, Empty, PageTitle, RatingRow } from '../components/ui'
+import { Badge, Bar, Button, Card, Disclosure, Empty, PageTitle, RatingRow } from '../components/ui'
 import { RATING_LABEL, driverOverall, fullName, personAge, raceEngineerFor } from '../../engine/people/ratings'
 import { promoteReserve } from '../../engine/people/contracts'
 import { moraleLabel } from '../../engine/people/morale'
@@ -15,7 +15,7 @@ export function DriversScreen() {
   const reserve = team.reserveDriverId ? game.drivers[team.reserveDriverId] : null
   return (
     <div className="space-y-5">
-      <PageTitle title="Pilotes" sub="Titulaires et réserviste de Genesis" actions={<Button onClick={() => setScreen('market')}>Marché des pilotes ▸</Button>} />
+      <PageTitle eyebrow="Équipe" title="Pilotes" sub="Titulaires et réserviste de Genesis" actions={<Button onClick={() => setScreen('market')}>Marché des pilotes ▸</Button>} />
       {team.driverIds.length === 0 && <Empty>Aucun pilote titulaire. Recrutez-en deux sur le marché avant le premier Grand Prix.</Empty>}
       <div className="grid gap-5 lg:grid-cols-2">
         {team.driverIds.map((id) => (
@@ -45,13 +45,15 @@ function DriverCard({ d, reserve }: { d: Driver; reserve?: boolean }) {
       }
       actions={<Badge tone="copper">{Math.round(driverOverall(d))}</Badge>}
     >
-      <div className="grid gap-4 sm:grid-cols-2">
-        <div className="space-y-1.5">
-          {(Object.keys(d.ratings) as (keyof Driver['ratings'])[]).map((k) => (
-            <RatingRow key={k} label={RATING_LABEL[k]} value={d.ratings[k]} />
-          ))}
-          <RatingRow label="Potentiel" value={d.potential} />
-        </div>
+      <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+        <Disclosure title="Notes détaillées" summary={`potentiel ${Math.round(d.potential)}`}>
+          <div className="space-y-1.5">
+            {(Object.keys(d.ratings) as (keyof Driver['ratings'])[]).map((k) => (
+              <RatingRow key={k} label={RATING_LABEL[k]} value={d.ratings[k]} />
+            ))}
+            <RatingRow label="Potentiel" value={d.potential} />
+          </div>
+        </Disclosure>
         <div className="space-y-3 text-sm">
           <div>
             <div className="mb-1 flex justify-between text-xs">

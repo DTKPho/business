@@ -1,5 +1,7 @@
 import type { ReactNode } from 'react'
 import { useEffect } from 'react'
+import { useGame } from '../../store/gameStore'
+import { PageHero } from './PageHero'
 
 export function cx(...c: (string | false | null | undefined)[]): string {
   return c.filter(Boolean).join(' ')
@@ -7,10 +9,10 @@ export function cx(...c: (string | false | null | undefined)[]): string {
 
 export function Card({ title, actions, children, className, pad = true }: { title?: ReactNode; actions?: ReactNode; children: ReactNode; className?: string; pad?: boolean }) {
   return (
-    <section className={cx('rounded-xl border border-ink-700 bg-ink-900', className)}>
+    <section className={cx('glass rounded-2xl border border-ink-700/70 shadow-[0_8px_30px_-12px_rgb(0_0_0/0.25)]', className)}>
       {(title || actions) && (
-        <header className="flex items-center justify-between gap-3 border-b border-ink-700 px-4 py-2.5">
-          <h2 className="text-sm font-semibold tracking-wide text-ink-100 uppercase">{title}</h2>
+        <header className="flex items-center justify-between gap-3 border-b border-ink-700/70 px-4 py-3">
+          <h2 className="text-[13px] font-semibold tracking-wide text-ink-100">{title}</h2>
           {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}
         </header>
       )}
@@ -132,12 +134,12 @@ export function Modal({ open, onClose, title, children, wide }: { open: boolean;
   }, [open, onClose])
   if (!open) return null
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 p-0 sm:items-center sm:p-4" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/45 p-0 backdrop-blur-sm sm:items-center sm:p-4" onClick={onClose}>
       <div
-        className={cx('max-h-[92vh] w-full overflow-y-auto rounded-t-2xl border border-ink-700 bg-ink-900 sm:rounded-2xl', wide ? 'sm:max-w-3xl' : 'sm:max-w-lg')}
+        className={cx('max-h-[92vh] w-full overflow-y-auto rounded-t-2xl border border-ink-700 bg-ink-950 shadow-2xl sm:rounded-2xl', wide ? 'sm:max-w-4xl' : 'sm:max-w-lg')}
         onClick={(e) => e.stopPropagation()}
       >
-        <header className="sticky top-0 z-10 flex items-center justify-between border-b border-ink-700 bg-ink-900 px-4 py-3">
+        <header className="sticky top-0 z-10 flex items-center justify-between border-b border-ink-700 bg-ink-950 px-4 py-3">
           <h3 className="font-semibold">{title}</h3>
           <button className="rounded p-1 text-ink-400 hover:text-ink-100" onClick={onClose} aria-label="Fermer">
             ✕
@@ -151,12 +153,12 @@ export function Modal({ open, onClose, title, children, wide }: { open: boolean;
 
 export function Tabs<T extends string>({ tabs, value, onChange }: { tabs: { id: T; label: ReactNode }[]; value: T; onChange: (v: T) => void }) {
   return (
-    <div className="flex gap-1 overflow-x-auto rounded-lg border border-ink-700 bg-ink-900 p-1">
+    <div className="glass inline-flex max-w-full gap-1 overflow-x-auto rounded-xl border border-ink-700/70 p-1">
       {tabs.map((t) => (
         <button
           key={t.id}
           onClick={() => onChange(t.id)}
-          className={cx('rounded-md px-3 py-1.5 text-sm whitespace-nowrap transition-colors', value === t.id ? 'bg-ink-700 text-ink-100' : 'text-ink-400 hover:text-ink-100')}
+          className={cx('rounded-lg px-3.5 py-1.5 text-sm font-medium whitespace-nowrap transition-colors', value === t.id ? 'bg-magma-500 text-white shadow-sm' : 'text-ink-300 hover:bg-ink-800 hover:text-ink-100')}
         >
           {t.label}
         </button>
@@ -165,15 +167,13 @@ export function Tabs<T extends string>({ tabs, value, onChange }: { tabs: { id: 
   )
 }
 
-export function PageTitle({ title, sub, actions }: { title: ReactNode; sub?: ReactNode; actions?: ReactNode }) {
+/** Titre de page : bandeau illustré avec le décor de l'onglet en cours. */
+export function PageTitle({ title, sub, actions, eyebrow, children }: { title: ReactNode; sub?: ReactNode; actions?: ReactNode; eyebrow?: ReactNode; children?: ReactNode }) {
+  const screen = useGame((s) => s.screen)
   return (
-    <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">{title}</h1>
-        {sub && <p className="mt-0.5 text-sm text-ink-400">{sub}</p>}
-      </div>
-      {actions && <div className="flex flex-wrap gap-2">{actions}</div>}
-    </div>
+    <PageHero scene={screen} title={title} sub={sub} actions={actions} eyebrow={eyebrow}>
+      {children}
+    </PageHero>
   )
 }
 
@@ -203,3 +203,33 @@ export function Table({ children, className }: { children: ReactNode; className?
 
 export const th = 'px-2 py-2 text-left text-[11px] font-medium tracking-wide text-ink-400 uppercase whitespace-nowrap'
 export const td = 'px-2 py-1.5 border-t border-ink-800 whitespace-nowrap'
+
+/** Ligne cliquable qui ouvre / ferme un contenu détaillé. */
+export function Disclosure({ title, summary, children, defaultOpen = false }: { title: ReactNode; summary?: ReactNode; children: ReactNode; defaultOpen?: boolean }) {
+  return (
+    <details open={defaultOpen} className="group rounded-xl border border-ink-700/70 bg-ink-850">
+      <summary className="flex cursor-pointer list-none items-center gap-3 px-4 py-3 select-none">
+        <span className="min-w-0 flex-1 font-medium">{title}</span>
+        {summary && <span className="text-xs text-ink-400">{summary}</span>}
+        <span className="text-ink-400 transition-transform group-open:rotate-90">›</span>
+      </summary>
+      <div className="border-t border-ink-700/70 px-4 py-3">{children}</div>
+    </details>
+  )
+}
+
+/** Tuile cliquable (menus de l'accueil, installations…). */
+export function Tile({ onClick, children, className, active }: { onClick?: () => void; children: ReactNode; className?: string; active?: boolean }) {
+  return (
+    <button
+      onClick={onClick}
+      className={cx(
+        'glass group w-full overflow-hidden rounded-2xl border text-left shadow-[0_8px_30px_-14px_rgb(0_0_0/0.3)] transition-all hover:-translate-y-0.5 hover:border-magma-500/60 hover:shadow-[0_14px_34px_-14px_rgb(0_0_0/0.35)]',
+        active ? 'border-magma-500' : 'border-ink-700/70',
+        className,
+      )}
+    >
+      {children}
+    </button>
+  )
+}

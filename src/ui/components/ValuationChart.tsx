@@ -33,30 +33,30 @@ export function ValuationChart({ points, thresholds = [] }: { points: { date: st
       <svg ref={ref} viewBox={`0 0 ${W} ${H}`} className="w-full touch-none" role="img" aria-label="Évolution de la valorisation de l'écurie" onPointerMove={onMove} onPointerLeave={() => setHover(null)}>
         {ticks.map((t, i) => (
           <g key={i}>
-            <line x1={pad.l} x2={W - pad.r} y1={y(t)} y2={y(t)} stroke="#2a2a31" strokeWidth={1} />
-            <text x={pad.l - 6} y={y(t) + 4} textAnchor="end" fontSize={11} fill="#8a8a96">
+            <line x1={pad.l} x2={W - pad.r} y1={y(t)} y2={y(t)} stroke="var(--chart-grid)" strokeWidth={1} />
+            <text x={pad.l - 6} y={y(t) + 4} textAnchor="end" fontSize={11} fill="var(--chart-text)">
               {(t / 1e9).toFixed(2).replace('.', ',')} Md€
             </text>
           </g>
         ))}
         {visibleThresholds.map((t) => (
           <g key={t}>
-            <line x1={pad.l} x2={W - pad.r} y1={y(t)} y2={y(t)} stroke="#b4b4bf" strokeDasharray="4 4" strokeWidth={1} />
-            <text x={W - pad.r} y={y(t) - 4} textAnchor="end" fontSize={11} fill="#b4b4bf">
+            <line x1={pad.l} x2={W - pad.r} y1={y(t)} y2={y(t)} stroke="var(--chart-text)" strokeDasharray="4 4" strokeWidth={1} />
+            <text x={W - pad.r} y={y(t) - 4} textAnchor="end" fontSize={11} fill="var(--chart-text)">
               Earn-out {(t / 1e9).toFixed(0)} Md€
             </text>
           </g>
         ))}
         {years.map((yy) => (
-          <text key={yy.i} x={x(yy.i)} y={H - 8} fontSize={11} fill="#8a8a96" textAnchor={yy.i === 0 ? 'start' : 'middle'}>
+          <text key={yy.i} x={x(yy.i)} y={H - 8} fontSize={11} fill="var(--chart-text)" textAnchor={yy.i === 0 ? 'start' : 'middle'}>
             {yy.y}
           </text>
         ))}
         <path d={path} fill="none" stroke="#e8541a" strokeWidth={2} strokeLinejoin="round" />
         {hp && hover !== null && (
           <g>
-            <line x1={x(hover)} x2={x(hover)} y1={pad.t} y2={H - pad.b} stroke="#8a8a96" strokeWidth={1} />
-            <circle cx={x(hover)} cy={y(hp.valueEur)} r={5} fill="#e8541a" stroke="#121215" strokeWidth={2} />
+            <line x1={x(hover)} x2={x(hover)} y1={pad.t} y2={H - pad.b} stroke="var(--chart-text)" strokeWidth={1} />
+            <circle cx={x(hover)} cy={y(hp.valueEur)} r={5} fill="#e8541a" stroke="var(--track-casing)" strokeWidth={2} />
           </g>
         )}
       </svg>

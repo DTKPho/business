@@ -1,20 +1,25 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useGame } from '../../store/gameStore'
 import { useGameState } from '../hooks'
 import { Badge, Bar, Button, Card, Select, Table, TeamDot, cx, td, th } from '../components/ui'
 import { setRaceOrders, simulateToEnd, stepLap } from '../../engine/race/race'
 import type { RaceOrders } from '../../engine/race/race'
 import { completeRace, SESSION_LABEL } from '../../engine/season/weekend'
-import { COMPOUND_COLOR, COMPOUND_LABEL } from '../../engine/race/performance'
+import { COMPOUND_LABEL } from '../../engine/race/performance'
 import type { Compound, EngineMode, ErsMode, PaceMode, RaceCar, TeamOrder } from '../../engine/model/types'
 import { fullName } from '../../engine/people/ratings'
+import { TrackMap } from '../components/TrackMap'
+import type { TrackDot } from '../components/TrackMap'
+import { TyreIcon } from '../components/TyreIcon'
+import { GpHero } from '../components/GpHero'
+
 
 const SPEEDS = [
   { id: 'pause', label: '❚❚', ms: 0 },
-  { id: '1', label: '1×', ms: 1400 },
-  { id: '2', label: '2×', ms: 650 },
-  { id: '4', label: '4×', ms: 280 },
-  { id: '8', label: '8×', ms: 90 },
+  { id: '1', label: '1×', ms: 4000 },
+  { id: '2', label: '2×', ms: 2000 },
+  { id: '4', label: '4×', ms: 900 },
+  { id: '8', label: '8×', ms: 350 },
 ] as const
 
 export function RaceScreen() {
@@ -23,28 +28,62 @@ export function RaceScreen() {
   const setScreen = useGame((s) => s.setScreen)
   const toast = useGame((s) => s.toast)
   const [speed, setSpeed] = useState<(typeof SPEEDS)[number]['id']>('pause')
+  const [p, setP] = useState(1)
+  const last = useRef<number | null>(null)
+  const pRef = useRef(1)
   const race = game.race
   const ms = SPEEDS.find((s) => s.id === speed)!.ms
-
   const running = !!race && !race.finished
+
+  // Animation : on anime le tour qui vient d'être calculé, puis on calcule le suivant.
   useEffect(() => {
     if (!ms || !running) return
-    const t = setInterval(() => {
-      const g = useGame.getState().game
-      if (!g?.race || g.race.finished) return
-      const lap = g.race.lap + 1
-      useGame.getState().act((s) => stepLap(s), { save: lap % 10 === 0 })
-    }, ms)
-    return () => clearInterval(t)
+    let raf = 0
+    const loop = (now: number) => {
+      if (last.current !== null) {
+        let nx = pRef.current + (now - last.current) / ms
+        if (nx >= 1) {
+          const g = useGame.getState().game
+          if (g?.race && !g.race.finished) {
+            useGame.getState().act((st) => stepLap(st), { save: (g.race.lap + 1) % 10 === 0 })
+            nx = 0
+          } else nx = 1
+        }
+        pRef.current = nx
+        setP(nx)
+      }
+      last.current = now
+      raf = requestAnimationFrame(loop)
+    }
+    raf = requestAnimationFrame(loop)
+    return () => {
+      cancelAnimationFrame(raf)
+      last.current = null
+    }
   }, [ms, running])
 
   if (!race) return null
   const circuit = game.circuits[race.circuitId]
+  const event = game.calendar.find((e) => e.round === race.round)!
+  const accent = circuit.accent?.[0] ?? '#ff5a1f'
   const cars = [...race.cars].sort((a, b) => a.position - b.position)
   const mine = cars.filter((c) => c.teamId === game.playerTeamId)
   const avgLap = circuit.baseLapSec + 2
   const wet = race.weather.wetness
   const order = (id: string, o: RaceOrders) => act((s) => setRaceOrders(s, id, o), { save: false })
+
+  const leader = cars.find((c) => c.status !== 'dnf')
+  const lp = leader ? leader.prevTotal : 0
+  const lt = leader ? leader.totalTime : 0
+  const vt = lp + Math.min(1, p) * (lt - lp)
+  const dots: TrackDot[] = cars
+    .filter((c) => c.status !== 'dnf')
+    .map((c) => {
+      const dur = c.totalTime - c.prevTotal
+      const f = race.lap === 0 || dur <= 0 ? -0.004 * (c.position - 1) : Math.max(0, Math.min(1, (vt - c.prevTotal) / dur))
+      const team = game.teams[c.teamId]
+      return { id: c.driverId, f, color: team.colors.primary, label: game.drivers[c.driverId].lastName.slice(0, 3).toUpperCase(), highlight: team.isPlayer }
+    })
 
   const finish = () => {
     const r = act((s) => completeRace(s), { save: 'now' })
@@ -54,72 +93,132 @@ export function RaceScreen() {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-bold">
-            {race.kind === 'sprint' ? 'Course sprint' : circuit.gpName}
-          </h1>
-          <div className="text-sm text-ink-400">
-            Tour <span className="font-semibold text-ink-100 tabular">{Math.min(race.lap, race.totalLaps)}</span> / {race.totalLaps} · {circuit.name}
+      <GpHero
+        event={event}
+        circuit={circuit}
+        total={game.calendar.length}
+        right={
+          <div className="text-right">
+            <div className="text-[11px] tracking-widest text-white/70 uppercase">{race.kind === 'sprint' ? 'Course sprint' : 'Grand Prix'}</div>
+            <div className="text-4xl font-bold tabular">
+              {Math.min(race.lap, race.totalLaps)}
+              <span className="text-xl text-white/60">/{race.totalLaps}</span>
+            </div>
+          </div>
+        }
+      />
+      <Card>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex flex-wrap items-center gap-2">
+            {race.neutral.mode !== 'none' && <Badge tone="warn">{race.neutral.mode === 'sc' ? '🚨 VOITURE DE SÉCURITÉ' : 'VSC'}</Badge>}
+            <Badge tone={wet > 0.6 ? 'bad' : wet > 0.15 ? 'warn' : 'neutral'}>
+              {race.weather.rain > 0 ? '🌧 Pluie' : wet > 0.1 ? '☁ Piste humide' : '☀ Sec'} · humidité {Math.round(wet * 100)} %
+            </Badge>
+            {race.fastestLap && (
+              <Badge tone="copper">
+                Meilleur tour : {game.drivers[race.fastestLap.driverId].lastName} {race.fastestLap.time.toFixed(3)}
+              </Badge>
+            )}
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            {!race.finished ? (
+              <>
+                <div className="flex rounded-xl border border-ink-700 bg-ink-850 p-0.5">
+                  {SPEEDS.map((s) => (
+                    <button key={s.id} onClick={() => setSpeed(s.id)} className={cx('rounded-lg px-2.5 py-1 text-xs font-medium', speed === s.id ? 'bg-magma-500 text-white' : 'text-ink-300 hover:text-ink-100')}>
+                      {s.label}
+                    </button>
+                  ))}
+                </div>
+                <Button
+                  size="sm"
+                  disabled={speed !== 'pause'}
+                  onClick={() => {
+                    act((s) => stepLap(s), { save: false })
+                    pRef.current = 1
+                    setP(1)
+                  }}
+                >
+                  +1 tour
+                </Button>
+                <Button size="sm" onClick={() => act((s) => simulateToEnd(s), { save: 'now' })}>
+                  ⏩ Simuler la fin
+                </Button>
+              </>
+            ) : (
+              <Button variant="primary" onClick={finish}>
+                Voir le classement ▸
+              </Button>
+            )}
           </div>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
-          {race.neutral.mode !== 'none' && <Badge tone="warn">{race.neutral.mode === 'sc' ? 'VOITURE DE SÉCURITÉ' : 'VSC'}</Badge>}
-          <Badge tone={wet > 0.6 ? 'bad' : wet > 0.15 ? 'warn' : 'neutral'}>
-            {race.weather.rain > 0 ? '🌧 Pluie' : wet > 0.1 ? '☁ Piste humide' : '☀ Sec'} · humidité {Math.round(wet * 100)} %
-          </Badge>
-          {!race.finished ? (
-            <>
-              <div className="flex rounded-lg border border-ink-600 bg-ink-800 p-0.5">
-                {SPEEDS.map((s) => (
-                  <button key={s.id} onClick={() => setSpeed(s.id)} className={cx('rounded-md px-2.5 py-1 text-xs', speed === s.id ? 'bg-magma-500 text-white' : 'text-ink-300 hover:text-ink-100')}>
-                    {s.label}
-                  </button>
-                ))}
-              </div>
-              <Button size="sm" onClick={() => act((s) => stepLap(s), { save: false })} disabled={speed !== 'pause'}>
-                +1 tour
-              </Button>
-              <Button size="sm" onClick={() => act((s) => simulateToEnd(s), { save: 'now' })}>
-                ⏩ Simuler la fin
-              </Button>
-            </>
-          ) : (
-            <Button variant="primary" onClick={finish}>
-              Voir le classement ▸
-            </Button>
-          )}
-        </div>
-      </div>
+        {race.lap === 0 && !race.finished && <p className="mt-2 text-xs text-ink-400">Les voitures sont sur la grille. Choisissez une vitesse pour donner le départ.</p>}
+      </Card>
 
-      <div className="grid gap-4 xl:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]">
-        <Card pad={false}>
-          <Table>
-            <thead>
-              <tr>
-                <th className={th}>P</th>
-                <th className={th}>Pilote</th>
-                <th className={cx(th, 'text-right')}>Écart</th>
-                <th className={cx(th, 'text-right')}>Interv.</th>
-                <th className={th}>Pneus</th>
-                <th className={cx(th, 'text-right')}>Arrêts</th>
-                <th className={cx(th, 'text-right')}>Dernier tour</th>
-              </tr>
-            </thead>
-            <tbody>
-              {cars.map((c) => timingRow(c))}
-            </tbody>
-          </Table>
-        </Card>
+      <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(0,1.25fr)]">
         <div className="space-y-4">
+          <Card title="Radar du circuit">
+            <TrackMap circuitId={circuit.id} dots={dots} accent={accent} className="mx-auto aspect-square w-full max-w-[520px]" />
+          </Card>
           {mine.map((c) => (
             <DriverControls key={c.driverId} car={c} onOrder={(o) => order(c.driverId, o)} disabled={race.finished} />
           ))}
+        </div>
+        <div className="space-y-4">
+          <Card title="Classement en direct" pad={false}>
+            <Table>
+              <thead>
+                <tr>
+                  <th className={th}>P</th>
+                  <th className={th}>Pilote</th>
+                  <th className={cx(th, 'text-right')}>Écart</th>
+                  <th className={cx(th, 'text-right')}>Interv.</th>
+                  <th className={th}>Pneus</th>
+                  <th className={cx(th, 'text-right')}>Arr.</th>
+                </tr>
+              </thead>
+              <tbody>
+                {cars.map((car) => {
+                  const team = game.teams[car.teamId]
+                  const mineRow = team.isPlayer
+                  const laps = Math.floor(car.gapToLeader / avgLap)
+                  const gained = car.startPos - car.position
+                  return (
+                    <tr key={car.driverId} className={cx(mineRow && 'bg-magma-500/10', car.status === 'dnf' && 'opacity-45')}>
+                      <td className={cx(td, 'tabular')}>
+                        {car.status === 'dnf' ? 'ABD' : car.position}
+                        {car.status !== 'dnf' && gained !== 0 && <span className={cx('ml-1 text-[10px]', gained > 0 ? 'text-good' : 'text-bad')}>{gained > 0 ? `▲${gained}` : `▼${-gained}`}</span>}
+                      </td>
+                      <td className={td}>
+                        <span className="flex items-center gap-1.5">
+                          <TeamDot color={team.colors.primary} />
+                          <span className={mineRow ? 'font-semibold' : ''}>{fullName(game.drivers[car.driverId])}</span>
+                        </span>
+                      </td>
+                      <td className={cx(td, 'text-right tabular')}>{car.status === 'dnf' ? car.dnfReason : car.position === 1 ? 'Leader' : laps >= 1 ? `+${laps} T` : `+${car.gapToLeader.toFixed(1)}`}</td>
+                      <td className={cx(td, 'text-right tabular')}>{car.status === 'dnf' || car.position === 1 ? '' : car.interval.toFixed(1)}</td>
+                      <td className={td}>
+                        {car.status !== 'dnf' && (
+                          <span className="flex items-center gap-1.5">
+                            <TyreIcon c={car.tyre.compound} />
+                            <span className="text-[11px] text-ink-400 tabular">
+                              {car.tyre.age}T · {Math.round(car.tyre.wear)}%
+                            </span>
+                          </span>
+                        )}
+                      </td>
+                      <td className={cx(td, 'text-right tabular')}>{car.pitStops}</td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </Table>
+          </Card>
           <Card title="Direction de course">
-            <ul className="max-h-80 space-y-1 overflow-y-auto text-xs">
+            <ul className="max-h-72 space-y-1 overflow-y-auto text-xs">
               {[...race.log].reverse().slice(0, 60).map((l, i) => (
-                <li key={i} className={cx(l.teamId === game.playerTeamId && 'text-magma-400', l.type === 'sc' && 'text-warn', l.type === 'dnf' && 'text-bad', l.type === 'weather' && 'text-[#5b8cff]')}>
-                  <span className="mr-1.5 text-ink-600 tabular">T{l.lap}</span>
+                <li key={i} className={cx(l.teamId === game.playerTeamId && 'font-medium text-magma-500', l.type === 'sc' && 'text-warn', l.type === 'dnf' && 'text-bad', l.type === 'weather' && 'text-[#3b6fe0]')}>
+                  <span className="mr-1.5 text-ink-400 tabular">T{l.lap}</span>
                   {l.text}
                 </li>
               ))}
@@ -128,49 +227,6 @@ export function RaceScreen() {
         </div>
       </div>
     </div>
-  )
-
-  function timingRow(car: RaceCar) {
-    const team = game.teams[car.teamId]
-    const mineRow = car.teamId === game.playerTeamId
-    const laps = Math.floor(car.gapToLeader / avgLap)
-    const gained = car.startPos - car.position
-    return (
-      <tr key={car.driverId} className={cx(mineRow && 'bg-magma-500/10', car.status === 'dnf' && 'text-ink-600')}>
-        <td className={cx(td, 'tabular')}>
-          {car.status === 'dnf' ? 'ABD' : car.position}
-          {car.status !== 'dnf' && gained !== 0 && <span className={cx('ml-1 text-[10px]', gained > 0 ? 'text-good' : 'text-bad')}>{gained > 0 ? `▲${gained}` : `▼${-gained}`}</span>}
-        </td>
-        <td className={td}>
-          <span className="flex items-center gap-1.5">
-            <TeamDot color={team.colors.primary} />
-            <span className={mineRow ? 'font-semibold' : ''}>{fullName(game.drivers[car.driverId])}</span>
-          </span>
-        </td>
-        <td className={cx(td, 'text-right tabular')}>{car.status === 'dnf' ? car.dnfReason : car.position === 1 ? 'Leader' : laps >= 1 ? `+${laps} T` : `+${car.gapToLeader.toFixed(1)}`}</td>
-        <td className={cx(td, 'text-right tabular')}>{car.status === 'dnf' || car.position === 1 ? '' : car.interval.toFixed(1)}</td>
-        <td className={td}>
-          {car.status !== 'dnf' && (
-            <span className="flex items-center gap-1.5">
-              <TyreIcon c={car.tyre.compound} />
-              <span className="text-[11px] text-ink-400 tabular">
-                {car.tyre.age}T · {Math.round(car.tyre.wear)}%
-              </span>
-            </span>
-          )}
-        </td>
-        <td className={cx(td, 'text-right tabular')}>{car.pitStops}</td>
-        <td className={cx(td, 'text-right tabular text-ink-300')}>{car.lastLap ? car.lastLap.toFixed(3) : '—'}</td>
-      </tr>
-    )
-  }
-}
-
-export function TyreIcon({ c }: { c: Compound }) {
-  return (
-    <span className="inline-flex h-5 w-5 items-center justify-center rounded-full border-2 text-[10px] font-bold" style={{ borderColor: COMPOUND_COLOR[c], color: COMPOUND_COLOR[c] }} title={COMPOUND_LABEL[c]}>
-      {c}
-    </span>
   )
 }
 

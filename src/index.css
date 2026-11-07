@@ -1,25 +1,62 @@
 @import "tailwindcss";
 
+/* Thème « Jour » (par défaut) : les teintes ink sont inversées (950 = fond clair, 100 = texte sombre). */
 @theme {
-  --color-ink-950: #0b0b0d;
-  --color-ink-900: #121215;
-  --color-ink-850: #17171b;
-  --color-ink-800: #1d1d22;
-  --color-ink-700: #2a2a31;
-  --color-ink-600: #3a3a43;
-  --color-ink-400: #8a8a96;
-  --color-ink-300: #b4b4bf;
-  --color-ink-100: #ececf1;
-  --color-magma-400: #ff7a45;
+  --color-ink-950: #e6e9ee;
+  --color-ink-900: rgb(255 255 255 / 0.84);
+  --color-ink-850: rgb(246 247 250 / 0.92);
+  --color-ink-800: #eef0f4;
+  --color-ink-700: #d6dae2;
+  --color-ink-600: #b9bfca;
+  --color-ink-400: #687083;
+  --color-ink-300: #434a59;
+  --color-ink-100: #14171d;
+  --color-magma-400: #f2581b;
   --color-magma-500: #ff5a1f;
   --color-magma-600: #e04510;
+  --color-copper-300: #9a6634;
+  --color-copper-400: #b47a46;
+  --color-good: #15803d;
+  --color-warn: #b45309;
+  --color-bad: #c62828;
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+:root {
+  --scene-overlay: rgb(236 239 244 / 0.62);
+  --hero-overlay: linear-gradient(90deg, rgb(255 255 255 / 0.95) 35%, rgb(255 255 255 / 0.6));
+  --chart-grid: #d6dae2;
+  --chart-text: #687083;
+  --track-stroke: #3a404c;
+  --track-casing: #ffffff;
+  color-scheme: light;
+}
+
+/* Thème « Nuit » : nettement plus clair que l'ancienne interface. */
+:root[data-theme='dark'] {
+  --color-ink-950: #171a21;
+  --color-ink-900: rgb(34 38 47 / 0.86);
+  --color-ink-850: rgb(42 47 58 / 0.92);
+  --color-ink-800: #2d323d;
+  --color-ink-700: #3c4250;
+  --color-ink-600: #505767;
+  --color-ink-400: #9aa1b1;
+  --color-ink-300: #c3c8d3;
+  --color-ink-100: #f1f3f7;
+  --color-magma-400: #ff7a45;
   --color-copper-300: #dcb48c;
   --color-copper-400: #c08a5a;
   --color-good: #3ccf8e;
   --color-warn: #f2b33d;
   --color-bad: #f0524f;
-  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  --scene-overlay: rgb(23 26 33 / 0.66);
+  --hero-overlay: linear-gradient(90deg, rgb(28 32 40 / 0.95) 35%, rgb(28 32 40 / 0.55));
+  --chart-grid: #3c4250;
+  --chart-text: #9aa1b1;
+  --track-stroke: #d6dae2;
+  --track-casing: #171a21;
+  color-scheme: dark;
 }
 
 html,
@@ -39,12 +76,56 @@ body {
   font-variant-numeric: tabular-nums;
 }
 
+/* Décor flou du QG derrière chaque onglet */
+.scene-layer {
+  position: fixed;
+  inset: -40px;
+  z-index: 0;
+  background-size: cover;
+  background-position: center;
+  filter: blur(14px) saturate(1.1);
+  transform: scale(1.08);
+  transition: opacity 0.6s ease;
+}
+.scene-animate {
+  animation: scene-drift 38s ease-in-out infinite alternate;
+}
+.scene-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  background: var(--scene-overlay);
+}
+@keyframes scene-drift {
+  0% {
+    transform: scale(1.08) translate3d(0, 0, 0);
+  }
+  50% {
+    transform: scale(1.14) translate3d(-1.5%, -1%, 0);
+  }
+  100% {
+    transform: scale(1.1) translate3d(1.5%, 0.8%, 0);
+  }
+}
+
+.glass {
+  background: var(--color-ink-900);
+  backdrop-filter: blur(16px) saturate(1.2);
+  -webkit-backdrop-filter: blur(16px) saturate(1.2);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scene-animate {
+    animation: none;
+  }
+}
+
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
 ::-webkit-scrollbar-thumb {
-  background: var(--color-ink-700);
+  background: var(--color-ink-600);
   border-radius: 4px;
 }
 ::-webkit-scrollbar-track {
@@ -53,4 +134,14 @@ body {
 
 input[type='range'] {
   accent-color: var(--color-magma-500);
+}
+
+@keyframes pulse-dot {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
 }

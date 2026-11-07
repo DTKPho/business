@@ -1,6 +1,7 @@
 import { useGame } from '../../store/gameStore'
 import { useGameState } from '../hooks'
-import { Badge, Bar, Button, Card, PageTitle, Select, Stat } from '../components/ui'
+import { useState } from 'react'
+import { Badge, Bar, Button, Card, PageTitle, Select, Stat, Tabs } from '../components/ui'
 import { STAFF_ROLE_LABEL, fullName, personAge, staffOverall, teamStaffByRole, RATING_LABEL } from '../../engine/people/ratings'
 import { assignEngineer } from '../../engine/people/contracts'
 import { moraleLabel } from '../../engine/people/morale'
@@ -32,16 +33,30 @@ export function StaffScreen() {
   const setScreen = useGame((s) => s.setScreen)
   const team = game.teams[game.playerTeamId]
   const pc = team.pitCrew
+  const [tab, setTab] = useState<'staff' | 'crew'>('staff')
   const dp = designPoints(game)
   return (
     <div className="space-y-5">
-      <PageTitle title="Personnel" sub={`Encadrement technique et sportif · ${Math.round(dp.total)} points de design / semaine`} actions={<Button onClick={() => setScreen('market')}>Recruter ▸</Button>} />
+      <PageTitle eyebrow="Équipe" title="Personnel" sub={`Encadrement technique et sportif · ${Math.round(dp.total)} points de design / semaine`} actions={<Button onClick={() => setScreen('market')}>Recruter ▸</Button>} >
+        <Tabs
+          value={tab}
+          onChange={setTab}
+          tabs={[
+            { id: 'staff', label: 'Encadrement' },
+            { id: 'crew', label: 'Mécaniciens (pit crew)' },
+          ]}
+        />
+      </PageTitle>
+      {tab === 'staff' && (
+
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         {ROLES.flatMap(([role, n]) => {
           const people = teamStaffByRole(game, team.id, role)
           return Array.from({ length: Math.max(n, people.length) }, (_, i) => <StaffSlot key={`${role}-${i}`} role={role} s={people[i]} />)
         })}
       </div>
+      )}
+      {tab === 'crew' && (
       <Card title="Équipe de mécaniciens (pit crew)">
         <div className="grid gap-4 sm:grid-cols-4">
           <Stat label="Vitesse" value={pc.speed.toFixed(1)} />
@@ -65,6 +80,7 @@ export function StaffScreen() {
           </div>
         </div>
       </Card>
+      )}
     </div>
   )
 }

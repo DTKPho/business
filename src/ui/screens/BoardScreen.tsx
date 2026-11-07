@@ -1,5 +1,6 @@
 import { useGameState } from '../hooks'
-import { Badge, Bar, Card, PageTitle, Stat, Table, cx, td, th } from '../components/ui'
+import { useState } from 'react'
+import { Badge, Bar, Card, PageTitle, Stat, Table, Tabs, cx, td, th } from '../components/ui'
 import { ValuationChart } from '../components/ValuationChart'
 import { SHAREHOLDER_LABEL, objectiveProgress } from '../../engine/board/objectives'
 import { HOLDER_COLORS, leaverScenario, vestedFounderPct } from '../../engine/board/equity'
@@ -12,6 +13,7 @@ const ORDER: HolderId[] = ['hyundai', 'liam', 'redbird', 'arctos']
 export function BoardScreen() {
   const game = useGameState()
   const e = game.equity
+  const [tab, setTab] = useState<'overview' | 'objectives' | 'equity'>('overview')
   const b = game.board
   const vested = vestedFounderPct(e, game.clock.date)
   const months = monthsBetween(e.founder.vestingStart, game.clock.date)
@@ -21,7 +23,19 @@ export function BoardScreen() {
 
   return (
     <div className="space-y-5">
-      <PageTitle title="Conseil d'administration & actionnariat" sub={`${game.player.firstName} ${game.player.lastName}, ${ageAt(game.player.birthDate, game.clock.date)} ans · ${game.player.title}`} />
+      <PageTitle eyebrow="Direction" title="Conseil d'administration & actionnariat" sub={`${game.player.firstName} ${game.player.lastName}, ${ageAt(game.player.birthDate, game.clock.date)} ans · ${game.player.title}`} >
+        <Tabs
+          value={tab}
+          onChange={setTab}
+          tabs={[
+            { id: 'overview', label: 'Aperçu' },
+            { id: 'objectives', label: `Objectifs ${game.clock.season}` },
+            { id: 'equity', label: 'Actionnariat & parts de Liam' },
+          ]}
+        />
+      </PageTitle>
+      {tab === 'overview' && (
+        <>
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <Card>
           <Stat label="Valorisation" value={fmtEur(b.valuationEur)} />
@@ -36,24 +50,7 @@ export function BoardScreen() {
           <Stat label="Apport annuel des actionnaires" value={fmtEur(b.annualContributionEur)} sub="Indexé sur la satisfaction de Hyundai" />
         </Card>
       </div>
-      <Card title="Répartition du capital">
-        <div className="flex h-7 w-full gap-0.5 overflow-hidden rounded-md" role="img" aria-label="Répartition du capital">
-          {ORDER.map((h) => (
-            <div key={h} className="h-full first:rounded-l-md last:rounded-r-md" style={{ width: `${e.stakes[h]}%`, background: HOLDER_COLORS[h] }} title={`${SHAREHOLDER_LABEL[h]} : ${fmtPct(e.stakes[h])}`} />
-          ))}
-        </div>
-        <ul className="mt-3 grid gap-2 text-sm sm:grid-cols-2 lg:grid-cols-4">
-          {ORDER.map((h) => (
-            <li key={h} className="flex items-center gap-2">
-              <span className="h-3 w-3 shrink-0 rounded-sm" style={{ background: HOLDER_COLORS[h] }} />
-              <span className="flex-1 text-ink-300">{SHAREHOLDER_LABEL[h]}</span>
-              <span className="font-semibold tabular">{fmtPct(e.stakes[h])}</span>
-            </li>
-          ))}
-        </ul>
-        <p className="mt-2 text-xs text-ink-400">Les parts gagnées par Liam diluent les autres actionnaires au prorata ; Hyundai ne descend jamais sous {e.hyundaiFloor} %.</p>
-      </Card>
-      <div className="grid gap-5 lg:grid-cols-2">
+          <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)]">
         <Card title="Satisfaction des actionnaires">
           <div className="space-y-3">
             {(['hyundai', 'redbird', 'arctos'] as ShareholderId[]).map((s) => (
@@ -70,7 +67,10 @@ export function BoardScreen() {
         <Card title="Évolution de la valorisation">
           <ValuationChart points={b.valuationHistory} thresholds={e.earnOuts.map((x) => x.thresholdEur)} />
         </Card>
-      </div>
+          </div>
+        </>
+      )}
+      {tab === 'objectives' && (
       <Card title={`Objectifs de la saison ${game.clock.season}`} pad={false}>
         <Table>
           <thead>
@@ -96,7 +96,27 @@ export function BoardScreen() {
           </tbody>
         </Table>
       </Card>
-      <div className="grid gap-5 lg:grid-cols-2">
+      )}
+      {tab === 'equity' && (
+        <>
+      <Card title="Répartition du capital">
+        <div className="flex h-7 w-full gap-0.5 overflow-hidden rounded-md" role="img" aria-label="Répartition du capital">
+          {ORDER.map((h) => (
+            <div key={h} className="h-full first:rounded-l-md last:rounded-r-md" style={{ width: `${e.stakes[h]}%`, background: HOLDER_COLORS[h] }} title={`${SHAREHOLDER_LABEL[h]} : ${fmtPct(e.stakes[h])}`} />
+          ))}
+        </div>
+        <ul className="mt-3 grid gap-2 text-sm sm:grid-cols-2 lg:grid-cols-4">
+          {ORDER.map((h) => (
+            <li key={h} className="flex items-center gap-2">
+              <span className="h-3 w-3 shrink-0 rounded-sm" style={{ background: HOLDER_COLORS[h] }} />
+              <span className="flex-1 text-ink-300">{SHAREHOLDER_LABEL[h]}</span>
+              <span className="font-semibold tabular">{fmtPct(e.stakes[h])}</span>
+            </li>
+          ))}
+        </ul>
+        <p className="mt-2 text-xs text-ink-400">Les parts gagnées par Liam diluent les autres actionnaires au prorata ; Hyundai ne descend jamais sous {e.hyundaiFloor} %.</p>
+      </Card>
+          <div className="grid gap-5 lg:grid-cols-2">
         <Card title="Parts de Liam Robert">
           <div className="space-y-4 text-sm">
             <div className="flex justify-between">
@@ -160,7 +180,9 @@ export function BoardScreen() {
             <p className="text-xs text-ink-400">Une confiance du conseil durablement sous 20/100 déclenche un vote de défiance en fin de saison.</p>
           </div>
         </Card>
-      </div>
+          </div>
+        </>
+      )}
     </div>
   )
 }

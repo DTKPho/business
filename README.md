@@ -40,6 +40,34 @@ transférer une carrière.
 
 ## Fonctionnalités
 
+### Interface (version 1.1)
+
+- Thème **Jour** (clair, par défaut) ou **Nuit**, réglable dans *Menu → Paramètres d'affichage*.
+- Décors flous et animés propres à chaque onglet : hall du QG, garage, salle du conseil, campus,
+  salle des trophées, paddock… (désactivables). Les illustrations sont générées par
+  `node scripts/scenes.mjs` ; pour utiliser vos propres photos, placez-les dans `public/` et
+  modifiez `src/data/scenes.json`.
+- Menu latéral par sections repliables, menu déroulant « ☰ Menu », sous-onglets dans chaque écran
+  (Voiture, Finances, Conseil, Personnel…) et détails repliables : on n'affiche que l'essentiel,
+  le reste au clic.
+- **Installations** : chaque installation s'ouvre dans une fenêtre avec son illustration, ses effets
+  actuels et au niveau suivant, et les actions possibles (construire, améliorer, accélérer ou
+  annuler les travaux, revendre un niveau).
+- **Grands Prix uniques** : couleurs et drapeau du pays, fiche du circuit, **tracé réel** de chacun
+  des 24 circuits, carte dans le calendrier.
+- **Séances en direct** : essais libres et qualifications se regardent en entier (chronos qui
+  tombent, éliminations Q1/Q2/Q3, vitesse ×10 à ×150) ou se passent ; **radar** avec les voitures
+  qui roulent sur le tracé pendant les séances et la course.
+- **Menu de triche** (*Menu → Menu de triche*) : argent, plafond, valorisation, conseil, parts de
+  Liam, voiture, R&D, installations, moteurs, pilotes, staff, pit crew, signatures toujours
+  acceptées, aucune panne. Une carrière qui triche est signalée dans la barre du haut.
+- **Niveau de départ** au lancement d'une carrière : Écurie de garage (difficile), Partir de zéro
+  (scénario original), Écurie structurée, Superpuissance (facile) ; options pour fournir un
+  encadrement et deux pilotes de départ. Les niveaux sont modifiables dans
+  `src/data/start-levels.json`.
+
+### Jeu
+
 - **Pré-saison** : Genesis démarre sans pilote ni encadrement. Recrutez deux titulaires (obligatoire
   avant Bahreïn), un réserviste et le staff avec les 250 M€ de trésorerie.
 - **Saison 2027 réelle** : 24 manches, 10 week-ends sprint. Week-ends en 3 phases (essais avec
@@ -101,6 +129,9 @@ Tout est dans `src/data/` (fichiers JSON) :
 | `config.json` | équilibrage (plafond, taux €/$, barèmes de points et primes FOM, coûts) |
 | `scenario.json` | fiction de départ (Liam, actionnariat, trésorerie, programme Hyundai) |
 | `names.json` | noms utilisés pour générer le personnel secondaire (marqué « généré ») |
+| `start-levels.json` | niveaux de départ proposés à la création de carrière |
+| `scenes.json` | décors des onglets et images des installations |
+| `tracks.json` | tracés des circuits (données [bacinger/f1-circuits](https://github.com/bacinger/f1-circuits), licence MIT, non officielles) |
 
 Les JSON servent à **créer une nouvelle partie** : une carrière en cours n'est jamais modifiée
 par un changement de données.

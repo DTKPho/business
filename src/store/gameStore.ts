@@ -33,9 +33,11 @@ interface Store {
   saving: boolean
   lastSavedAt: string | null
   focusPersonId: string | null
+  overlay: 'settings' | 'cheats' | null
+  setOverlay: (o: 'settings' | 'cheats' | null) => void
   setScreen: (s: Screen) => void
   openPerson: (id: string | null) => void
-  newGame: (name: string, seed: string) => Promise<void>
+  newGame: (name: string, seed: string, opts?: { startLevel?: string; autoStaff?: boolean; autoDrivers?: boolean }) => Promise<void>
   loadGame: (slotId: string) => Promise<void>
   adoptGame: (state: GameState) => Promise<void>
   quit: () => void
@@ -56,13 +58,15 @@ export const useGame = create<Store>((set, get) => ({
   saving: false,
   lastSavedAt: null,
   focusPersonId: null,
+  overlay: null,
+  setOverlay: (overlay) => set({ overlay }),
   setScreen: (screen) => {
     set({ screen })
     window.scrollTo({ top: 0 })
   },
   openPerson: (id) => set({ focusPersonId: id }),
-  newGame: async (name, seed) => {
-    const game = createNewGame({ saveName: name || 'Carrière Genesis', seed })
+  newGame: async (name, seed, opts = {}) => {
+    const game = createNewGame({ saveName: name || 'Carrière Genesis', seed, ...opts })
     const slotId = newSlotId()
     set({ game, slotId, screen: 'dashboard' })
     rememberLastSlot(slotId)

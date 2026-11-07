@@ -1,0 +1,35 @@
+{
+ "note": "Décors des onglets et images des installations. Remplacez un chemin par votre propre photo (placée dans public/) pour la personnaliser.",
+ "screens": {
+  "home": "scenes/atrium.svg",
+  "dashboard": "scenes/atrium.svg",
+  "inbox": "scenes/office.svg",
+  "calendar": "scenes/travel.svg",
+  "weekend": "scenes/paddock.svg",
+  "race": "scenes/paddock.svg",
+  "standings": "scenes/trophies.svg",
+  "car": "scenes/garage.svg",
+  "drivers": "scenes/driverroom.svg",
+  "staff": "scenes/engineering.svg",
+  "market": "scenes/meeting.svg",
+  "facilities": "scenes/campus.svg",
+  "finances": "scenes/finance.svg",
+  "board": "scenes/boardroom.svg",
+  "saves": "scenes/archive.svg"
+ },
+ "facilities": {
+  "windTunnel": "facilities/windTunnel.svg",
+  "cfd": "facilities/cfd.svg",
+  "designCentre": "facilities/designCentre.svg",
+  "factory": "facilities/factory.svg",
+  "simulator": "facilities/simulator.svg",
+  "puLab": "facilities/puLab.svg",
+  "wellbeing": "facilities/wellbeing.svg",
+  "academy": "facilities/academy.svg",
+  "campus": "facilities/campus.svg",
+  "logistics": "facilities/logistics.svg",
+  "mission": "facilities/mission.svg",
+  "pitTraining": "facilities/pitTraining.svg",
+  "hospitality": "facilities/hospitality.svg"
+ }
+}

@@ -1,6 +1,7 @@
 import { useGame } from '../../store/gameStore'
 import { useGameState } from "../hooks"
-import { Badge, Bar, Button, Card, PageTitle, Stat, Table, cx, td, th } from '../components/ui'
+import { useState } from 'react'
+import { Badge, Bar, Button, Card, PageTitle, Stat, Table, Tabs, cx, td, th } from '../components/ui'
 import { TX_LABEL, seasonLedger, totalsByCategory } from '../../engine/finance/ledger'
 import { costCapProjection } from '../../engine/finance/weekly'
 import { TIER_LABEL, TIER_SLOTS, activeSponsors, approachSponsor, slotsUsed, sponsorIncomeAnnual } from '../../engine/finance/sponsors'
@@ -15,6 +16,7 @@ export function FinancesScreen() {
   const act = useGame((s) => s.act)
   const toast = useGame((s) => s.toast)
   const f = game.finances
+  const [tab, setTab] = useState<'summary' | 'cap' | 'sponsors' | 'ledger'>('summary')
   const proj = costCapProjection(game)
   const totals = totalsByCategory(game)
   const income = Object.values(totals).reduce((s, t) => s + t.income, 0)
@@ -26,7 +28,20 @@ export function FinancesScreen() {
 
   return (
     <div className="space-y-5">
-      <PageTitle title="Finances" sub={`Saison ${game.clock.season} · taux de conversion 1 $ = ${f.eurPerUsd.toFixed(2)} €`} />
+      <PageTitle eyebrow="Direction" title="Finances & sponsors" sub={`Saison ${game.clock.season} · taux de conversion 1 $ = ${f.eurPerUsd.toFixed(2)} €`}>
+        <Tabs
+          value={tab}
+          onChange={setTab}
+          tabs={[
+            { id: 'summary', label: 'Résumé' },
+            { id: 'cap', label: 'Plafond de dépenses' },
+            { id: 'sponsors', label: `Sponsors (${activeSponsors(game).length})` },
+            { id: 'ledger', label: 'Opérations' },
+          ]}
+        />
+      </PageTitle>
+      {tab === 'summary' && (
+        <>
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <Card>
           <Stat label="Trésorerie" value={fmtEur(f.cashEur)} tone={f.cashEur < 0 ? 'bad' : undefined} />
@@ -41,19 +56,7 @@ export function FinancesScreen() {
           <Stat label="Revenus sponsors annuels" value={fmtEur(sponsorIncomeAnnual(game))} />
         </Card>
       </div>
-      <Card title="Plafond de dépenses (cost cap)">
-        <div className="space-y-2 text-sm">
-          <div className="flex flex-wrap justify-between gap-2">
-            <span>
-              Dépensé : <strong className="tabular">{fmtUsd(f.costCap.spentUsd)}</strong> sur {fmtUsd(f.costCap.limitUsd)} ({capPct.toFixed(1)} %)
-            </span>
-            <span className={cx('tabular', proj > f.costCap.limitUsd ? 'text-warn' : 'text-good')}>Projection fin de saison : {fmtUsd(proj)}</span>
-          </div>
-          <Bar value={f.costCap.spentUsd} max={f.costCap.limitUsd} tone={capPct > 100 ? 'bad' : proj > f.costCap.limitUsd ? 'warn' : 'good'} height={10} marker={Math.min(proj, f.costCap.limitUsd)} />
-          <p className="text-xs text-ink-400">Hors plafond : salaires des pilotes et du directeur technique, investissements d'infrastructure, indemnités de transfert, programme moteur Hyundai. Dépassement &lt; 5 % : amende ; au-delà : amende et −15 % de capacité de développement.</p>
-        </div>
-      </Card>
-      <div className="grid gap-5 lg:grid-cols-2">
+          <div className="grid gap-5 lg:grid-cols-2">
         <Card title="Répartition par poste (saison)">
           <Table>
             <thead>
@@ -76,6 +79,53 @@ export function FinancesScreen() {
             </tbody>
           </Table>
         </Card>
+        <Card title="Bilans des saisons passées">
+          {f.seasonSummaries.length === 0 ? (
+            <p className="text-sm text-ink-400">Disponible après la première saison.</p>
+          ) : (
+            <Table>
+              <thead>
+                <tr>
+                  <th className={th}>Saison</th>
+                  <th className={cx(th, 'text-right')}>Recettes</th>
+                  <th className={cx(th, 'text-right')}>Dépenses</th>
+                  <th className={cx(th, 'text-right')}>Plafond</th>
+                </tr>
+              </thead>
+              <tbody>
+                {[...f.seasonSummaries].reverse().map((s) => (
+                  <tr key={s.season}>
+                    <td className={td}>{s.season}</td>
+                    <td className={cx(td, 'text-right tabular')}>{fmtEur(s.incomeEur)}</td>
+                    <td className={cx(td, 'text-right tabular')}>{fmtEur(s.expenseEur)}</td>
+                    <td className={cx(td, 'text-right tabular', s.breach !== 'none' && 'text-bad')}>
+                      {fmtUsd(s.capSpentUsd, 0)} / {fmtUsd(s.capLimitUsd, 0)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </Table>
+          )}
+        </Card>
+          </div>
+        </>
+      )}
+      {tab === 'cap' && (
+      <Card title="Plafond de dépenses (cost cap)">
+        <div className="space-y-2 text-sm">
+          <div className="flex flex-wrap justify-between gap-2">
+            <span>
+              Dépensé : <strong className="tabular">{fmtUsd(f.costCap.spentUsd)}</strong> sur {fmtUsd(f.costCap.limitUsd)} ({capPct.toFixed(1)} %)
+            </span>
+            <span className={cx('tabular', proj > f.costCap.limitUsd ? 'text-warn' : 'text-good')}>Projection fin de saison : {fmtUsd(proj)}</span>
+          </div>
+          <Bar value={f.costCap.spentUsd} max={f.costCap.limitUsd} tone={capPct > 100 ? 'bad' : proj > f.costCap.limitUsd ? 'warn' : 'good'} height={10} marker={Math.min(proj, f.costCap.limitUsd)} />
+          <p className="text-xs text-ink-400">Hors plafond : salaires des pilotes et du directeur technique, investissements d'infrastructure, indemnités de transfert, programme moteur Hyundai. Dépassement &lt; 5 % : amende ; au-delà : amende et −15 % de capacité de développement.</p>
+        </div>
+      </Card>
+      )}
+      {tab === 'sponsors' && (
+        <>
         <Card title="Sponsors actifs">
           <div className="mb-3 flex flex-wrap gap-2 text-xs">
             {(Object.keys(TIER_SLOTS) as (keyof typeof TIER_SLOTS)[]).map((t) => (
@@ -111,7 +161,6 @@ export function FinancesScreen() {
             ))}
           </ul>
         </Card>
-      </div>
       <Card title="Marques à démarcher">
         <Table>
           <thead>
@@ -153,7 +202,9 @@ export function FinancesScreen() {
         </Table>
         <p className="mt-2 text-xs text-ink-400">Réputation actuelle de Genesis : {Math.round(rep)}/100. Un refus bloque la marque jusqu'à la saison suivante.</p>
       </Card>
-      <div className="grid gap-5 lg:grid-cols-2">
+        </>
+      )}
+      {tab === 'ledger' && (
         <Card title="Dernières opérations">
           <ul className="max-h-96 divide-y divide-ink-800 overflow-y-auto text-xs">
             {ledger.map((t, i) => (
@@ -167,35 +218,7 @@ export function FinancesScreen() {
             ))}
           </ul>
         </Card>
-        <Card title="Bilans des saisons passées">
-          {f.seasonSummaries.length === 0 ? (
-            <p className="text-sm text-ink-400">Disponible après la première saison.</p>
-          ) : (
-            <Table>
-              <thead>
-                <tr>
-                  <th className={th}>Saison</th>
-                  <th className={cx(th, 'text-right')}>Recettes</th>
-                  <th className={cx(th, 'text-right')}>Dépenses</th>
-                  <th className={cx(th, 'text-right')}>Plafond</th>
-                </tr>
-              </thead>
-              <tbody>
-                {[...f.seasonSummaries].reverse().map((s) => (
-                  <tr key={s.season}>
-                    <td className={td}>{s.season}</td>
-                    <td className={cx(td, 'text-right tabular')}>{fmtEur(s.incomeEur)}</td>
-                    <td className={cx(td, 'text-right tabular')}>{fmtEur(s.expenseEur)}</td>
-                    <td className={cx(td, 'text-right tabular', s.breach !== 'none' && 'text-bad')}>
-                      {fmtUsd(s.capSpentUsd, 0)} / {fmtUsd(s.capLimitUsd, 0)}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </Table>
-          )}
-        </Card>
-      </div>
+      )}
     </div>
   )
 }
