@@ -1,0 +1,1406 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Néon Estate</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Rubik:ital,wght@0,400;0,500;0,700;0,900;1,900&display=swap">
+<style>
+/* Layout : écran de jeu nocturne. HUD néon en haut, carte de la Baie | dossiers à onglets | téléphone, barre de temps + flash info en bas. */
+:root{
+  --night:#0c0614;
+  --panel:#170c26;
+  --panel2:#22123a;
+  --line:#3a2152;
+  --text:#f8edff;
+  --mute:#ad96cb;
+  --pink:#ff2d95;
+  --orange:#ff8a3d;
+  --sun:#ffd23f;
+  --cyan:#2de2e6;
+  --green:#4dff9e;
+  --red:#ff3b5c;
+  --violet:#8b3dff;
+  --sunset:linear-gradient(180deg,#ffd23f 0%,#ff8a3d 32%,#ff2d95 66%,#8b3dff 100%);
+  --f-display:'Anton','Impact','Haettenschweiler','Arial Narrow Bold',sans-serif;
+  --f-body:'Rubik',system-ui,-apple-system,'Segoe UI',sans-serif;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{background:var(--night);color:var(--text)}
+body{
+  font-family:var(--f-body);font-size:14px;line-height:1.45;margin:0;min-height:100%;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
+  padding-block:0 calc(96px + env(safe-area-inset-bottom,0px));
+  background:
+    radial-gradient(1200px 500px at 70% -10%,rgba(255,45,149,.22),transparent 60%),
+    radial-gradient(900px 500px at 0% 110%,rgba(45,226,230,.10),transparent 60%),
+    var(--night);
+  background-attachment:fixed;
+  font-variant-numeric:tabular-nums;
+}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:40;background:#12081f}
+button{font-family:inherit;color:inherit;cursor:pointer}
+button:focus-visible,input:focus-visible,[tabindex]:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
+h1,h2,h3{margin:0;text-wrap:balance}
+.disp{font-family:var(--f-display);font-weight:400;letter-spacing:.02em;text-transform:uppercase}
+.mute{color:var(--mute)}
+.g{color:var(--green)} .r{color:var(--red)} .o{color:var(--orange)} .c{color:var(--cyan)} .p{color:var(--pink)} .y{color:var(--sun)}
+
+/* ---------- HUD ---------- */
+.hud{
+  position:sticky;top:env(safe-area-inset-top,0px);z-index:30;
+  margin-inline:calc(-1 * max(16px,env(safe-area-inset-left,0px)));
+  padding:10px max(16px,env(safe-area-inset-right,0px)) 10px max(16px,env(safe-area-inset-left,0px));
+  display:flex;align-items:center;gap:18px;flex-wrap:wrap;
+  background:linear-gradient(180deg,#12081f 0%,rgba(18,8,31,.92) 100%);
+  border-bottom:1px solid var(--line);
+  backdrop-filter:blur(8px);
+}
+.hud::after{content:"";position:absolute;left:0;right:0;bottom:-2px;height:2px;background:linear-gradient(90deg,var(--sun),var(--orange),var(--pink),var(--violet),var(--cyan))}
+.brand{display:flex;flex-direction:column;line-height:.86;transform:skew(-8deg)}
+.brand b{font-family:var(--f-display);font-size:30px;font-weight:400;letter-spacing:.01em;background:var(--sunset);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 0 10px rgba(255,45,149,.45))}
+.brand small{font-size:9.5px;letter-spacing:.32em;color:var(--cyan);font-weight:700;margin-top:3px}
+.hud-mid{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:3px;font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;border:1px solid var(--line);background:var(--panel)}
+.chip.green{color:var(--green);border-color:rgba(77,255,158,.45)}
+.chip.cyan{color:var(--cyan);border-color:rgba(45,226,230,.45)}
+.chip.orange{color:var(--orange);border-color:rgba(255,138,61,.5)}
+.chip.red{color:var(--red);border-color:rgba(255,59,92,.55);animation:blink 1s steps(2) infinite}
+.chip.pink{color:var(--pink);border-color:rgba(255,45,149,.5)}
+.chip.mute{color:var(--mute)}
+.date{font-family:var(--f-display);font-size:18px;letter-spacing:.04em}
+.hud-right{margin-left:auto;display:flex;align-items:center;gap:18px;flex-wrap:wrap;justify-content:flex-end}
+.stars{display:flex;gap:2px;font-size:20px;line-height:1}
+.stars span{color:#3b2a4e;text-shadow:none}
+.stars span.on{color:#fff;text-shadow:0 0 6px var(--red),0 0 14px var(--red);animation:blink .8s steps(2) infinite}
+.stars-wrap{display:flex;flex-direction:column;align-items:flex-end;gap:2px}
+.stars-wrap small{font-size:9px;letter-spacing:.2em;color:var(--mute);text-transform:uppercase}
+.money{display:flex;flex-direction:column;align-items:flex-end;position:relative}
+.cash{font-family:var(--f-display);font-size:32px;line-height:1;color:var(--green);text-shadow:0 0 12px rgba(77,255,158,.55),2px 2px 0 #062a17;letter-spacing:.02em}
+.cash.neg{color:var(--red);text-shadow:0 0 12px rgba(255,59,92,.6),2px 2px 0 #2a0610}
+.nw{font-size:11px;color:var(--mute);letter-spacing:.06em}
+.nw b{color:var(--text)}
+.rank{font-family:var(--f-display);font-size:14px;letter-spacing:.08em;color:var(--sun);text-align:right;line-height:1.1}
+.rank small{display:block;font-family:var(--f-body);font-size:9px;letter-spacing:.22em;color:var(--mute)}
+.float{position:absolute;right:0;top:-4px;font-family:var(--f-display);font-size:20px;pointer-events:none;animation:floatUp 1.6s ease-out forwards;white-space:nowrap}
+@keyframes floatUp{from{opacity:1;transform:translateY(0)}to{opacity:0;transform:translateY(34px)}}
+@keyframes blink{50%{opacity:.35}}
+
+/* ---------- LAYOUT ---------- */
+.layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.3fr) 300px;gap:16px;padding-top:16px;align-items:start}
+.card{background:linear-gradient(180deg,var(--panel2),var(--panel));border:1px solid var(--line);border-radius:6px;min-width:0}
+.card-h{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 14px;border-bottom:1px solid var(--line)}
+.card-h h2{font-family:var(--f-display);font-weight:400;font-size:20px;letter-spacing:.04em;text-transform:uppercase}
+.card-b{padding:14px}
+.left-col{display:flex;flex-direction:column;gap:16px;min-width:0}
+
+/* map */
+.map-wrap{position:relative;overflow:hidden;border-radius:0 0 6px 6px}
+#map{display:block;width:100%;height:auto;max-width:100%}
+#map .dist{cursor:pointer;transition:fill-opacity .15s}
+#map .dist:hover{fill-opacity:.42}
+#map .lbl{font-family:var(--f-display);font-size:13px;letter-spacing:.04em;pointer-events:none;paint-order:stroke;stroke:#0c0614;stroke-width:3px}
+#map .lbl2{font-family:var(--f-body);font-size:9.5px;font-weight:700;pointer-events:none;paint-order:stroke;stroke:#0c0614;stroke-width:3px}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:11px;color:var(--mute);padding:8px 14px;border-top:1px solid var(--line)}
+.legend i{display:inline-block;width:9px;height:9px;margin-right:5px;vertical-align:-1px}
+.dinfo h3{font-family:var(--f-display);font-weight:400;font-size:24px;letter-spacing:.03em;text-transform:uppercase}
+.kv{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:10px;margin-top:10px}
+.kv div{background:rgba(0,0,0,.25);border:1px solid var(--line);border-radius:4px;padding:8px 10px;min-width:0}
+.kv small{display:block;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--mute)}
+.kv b{font-size:16px}
+
+/* tabs */
+.tabs{display:flex;gap:2px;overflow-x:auto;border-bottom:1px solid var(--line);padding:0 6px;scrollbar-width:thin}
+.tab{background:none;border:0;padding:12px 12px 10px;font-family:var(--f-display);font-size:15px;letter-spacing:.06em;text-transform:uppercase;color:var(--mute);border-bottom:3px solid transparent;white-space:nowrap}
+.tab:hover{color:var(--text)}
+.tab.on{color:var(--text);border-bottom-color:var(--pink);text-shadow:0 0 10px rgba(255,45,149,.7)}
+.tab .n{font-family:var(--f-body);font-size:10px;font-weight:700;background:var(--pink);color:#fff;border-radius:8px;padding:1px 6px;margin-left:4px;vertical-align:2px}
+.panel{padding:14px;min-height:420px}
+.toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px}
+.empty{padding:40px 16px;text-align:center;color:var(--mute);border:1px dashed var(--line);border-radius:6px}
+.empty b{display:block;font-family:var(--f-display);font-weight:400;font-size:22px;color:var(--text);letter-spacing:.04em;margin-bottom:6px;text-transform:uppercase}
+
+/* listing card */
+.lc{position:relative;background:#140a22;border:1px solid var(--line);border-radius:6px;overflow:hidden;display:flex;flex-direction:column;cursor:pointer;transition:transform .12s,border-color .12s;text-align:left;padding:0}
+.lc:hover{transform:translateY(-2px);border-color:var(--pink)}
+.lc-top{height:54px;position:relative;padding:8px 10px;display:flex;justify-content:space-between;align-items:flex-start}
+.lc-top .ty{font-family:var(--f-display);font-size:17px;letter-spacing:.03em;text-transform:uppercase;line-height:1;color:#fff;text-shadow:1px 1px 0 rgba(0,0,0,.5)}
+.lc-top .dn{font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.9);margin-top:4px}
+.lc-b{padding:10px;display:flex;flex-direction:column;gap:7px;flex:1}
+.lc .addr{font-size:12px;color:var(--mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.price{font-family:var(--f-display);font-size:22px;letter-spacing:.02em;line-height:1}
+.tags{display:flex;gap:5px;flex-wrap:wrap}
+.tag{font-size:9.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:2px 6px;border-radius:2px;background:rgba(255,255,255,.07);color:var(--mute);white-space:nowrap}
+.tag.hot{background:var(--pink);color:#fff}
+.tag.deal{background:rgba(77,255,158,.14);color:var(--green)}
+.tag.warn{background:rgba(255,138,61,.16);color:var(--orange)}
+.tag.bad{background:rgba(255,59,92,.16);color:var(--red)}
+.tag.info{background:rgba(45,226,230,.13);color:var(--cyan)}
+.dpe{display:inline-grid;place-items:center;width:20px;height:20px;font-weight:900;font-size:12px;color:#111;border-radius:2px}
+.bar{height:5px;background:rgba(255,255,255,.08);border-radius:3px;overflow:hidden}
+.bar i{display:block;height:100%;background:linear-gradient(90deg,var(--red),var(--orange),var(--green))}
+.bar.prog i{background:linear-gradient(90deg,var(--cyan),var(--pink))}
+.sticker{position:absolute;top:30px;right:-26px;transform:rotate(35deg);background:var(--sun);color:#1a0b00;font-family:var(--f-display);font-size:12px;letter-spacing:.1em;padding:2px 30px;box-shadow:0 2px 8px rgba(0,0,0,.4)}
+.small{font-size:12px}
+
+/* buttons */
+.btn{border:0;border-radius:3px;padding:9px 14px;font-weight:700;font-size:12.5px;letter-spacing:.08em;text-transform:uppercase;background:var(--panel2);border:1px solid var(--line);color:var(--text);transition:filter .12s,transform .08s}
+.btn:hover:not(:disabled){filter:brightness(1.25)}
+.btn:active:not(:disabled){transform:translateY(1px)}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn.pri{background:linear-gradient(90deg,var(--pink),var(--orange));border-color:transparent;color:#fff;box-shadow:0 0 18px rgba(255,45,149,.35)}
+.btn.go{background:var(--green);border-color:transparent;color:#052114}
+.btn.cy{background:transparent;border-color:var(--cyan);color:var(--cyan)}
+.btn.dg{background:transparent;border-color:var(--red);color:var(--red)}
+.btn.sm{padding:6px 10px;font-size:11px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:3px;overflow:hidden}
+.seg button{background:transparent;border:0;padding:6px 10px;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--mute)}
+.seg button.on{background:var(--pink);color:#fff}
+
+/* tables */
+.tbl-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--mute);font-weight:700;padding:8px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:9px 8px;border-bottom:1px solid rgba(58,33,82,.6);white-space:nowrap}
+tr.me td{background:rgba(255,45,149,.12);font-weight:700}
+td.num,th.num{text-align:right}
+
+/* staff */
+.staff{display:grid;grid-template-columns:52px 1fr auto;gap:12px;align-items:center;padding:12px;border:1px solid var(--line);border-radius:6px;background:#140a22}
+.avatar{width:52px;height:52px;border-radius:4px;display:grid;place-items:center;font-family:var(--f-display);font-size:22px;color:#fff}
+.lvl{display:flex;gap:3px;margin-top:5px}
+.lvl i{width:16px;height:5px;background:rgba(255,255,255,.1);border-radius:1px}
+.lvl i.on{background:var(--cyan);box-shadow:0 0 6px var(--cyan)}
+.stack{display:flex;flex-direction:column;gap:10px}
+.section-t{font-family:var(--f-display);font-weight:400;font-size:17px;letter-spacing:.06em;text-transform:uppercase;margin:18px 0 10px;color:var(--sun)}
+.section-t:first-child{margin-top:0}
+
+/* missions */
+.mission{display:grid;grid-template-columns:34px 1fr auto;gap:12px;align-items:center;padding:10px 12px;border:1px solid var(--line);border-radius:6px;background:#140a22}
+.mission .ic{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-family:var(--f-display);font-size:15px;border:2px solid var(--line);color:var(--mute)}
+.mission.done{opacity:.55}
+.mission.done .ic{border-color:var(--green);color:var(--green)}
+.mission.cur{border-color:var(--sun);box-shadow:0 0 18px rgba(255,210,63,.18)}
+.mission.cur .ic{border-color:var(--sun);color:var(--sun)}
+.mission b{font-family:var(--f-display);font-weight:400;font-size:17px;letter-spacing:.04em;text-transform:uppercase}
+
+/* phone */
+.phone{position:sticky;top:calc(env(safe-area-inset-top,0px) + 90px);border-radius:28px;border:3px solid #2c1a40;background:#0a0512;box-shadow:0 0 0 1px #4b2c6b,0 20px 50px rgba(0,0,0,.6),0 0 40px rgba(139,61,255,.15);overflow:hidden;display:flex;flex-direction:column;max-height:calc(100vh - 200px);min-height:420px}
+.ph-top{padding:10px 18px 8px;display:flex;justify-content:space-between;font-size:11px;font-weight:700;color:var(--mute);position:relative}
+.ph-top::after{content:"";position:absolute;left:50%;top:7px;transform:translateX(-50%);width:70px;height:16px;border-radius:10px;background:#000}
+.ph-head{padding:6px 16px 10px;border-bottom:1px solid #22143a}
+.ph-head b{font-family:var(--f-display);font-weight:400;font-size:20px;letter-spacing:.05em;text-transform:uppercase}
+.ph-head small{display:block;font-size:10px;letter-spacing:.18em;color:var(--mute);text-transform:uppercase}
+.ph-body{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:10px;scrollbar-width:thin}
+.sms{background:#1d1130;border-radius:14px 14px 14px 4px;padding:9px 11px;font-size:12.5px;line-height:1.4;border:1px solid #2d1c47}
+.sms.new{border-color:var(--pink);box-shadow:0 0 12px rgba(255,45,149,.25)}
+.sms .who{display:flex;justify-content:space-between;gap:8px;font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;margin-bottom:3px}
+.sms .who span:last-child{color:var(--mute);font-weight:500;letter-spacing:.04em}
+.sms .acts{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+.ph-foot{height:20px;display:grid;place-items:center}
+.ph-foot::after{content:"";width:90px;height:4px;border-radius:3px;background:#3a2a50}
+
+/* bottom bar */
+.bottom{position:fixed;left:0;right:0;bottom:0;z-index:30;background:#0e0718;border-top:1px solid var(--line);padding:0 max(16px,env(safe-area-inset-right,0px)) env(safe-area-inset-bottom,0px) max(16px,env(safe-area-inset-left,0px))}
+.ctrl{display:flex;align-items:center;gap:12px;padding:10px 0}
+.next{font-family:var(--f-display);font-size:20px;letter-spacing:.06em;padding:10px 22px;border:0;border-radius:3px;background:var(--sunset);background-size:100% 300%;background-position:0 40%;color:#1a0618;box-shadow:0 0 22px rgba(255,138,61,.4);text-transform:uppercase}
+.next:hover{filter:brightness(1.1)}
+.ticker{flex:1;overflow:hidden;white-space:nowrap;position:relative;min-width:0;border-left:1px solid var(--line);padding-left:12px;display:flex;align-items:center;gap:10px}
+.ticker .lab{background:var(--red);color:#fff;font-weight:900;font-size:10px;letter-spacing:.14em;padding:3px 7px;border-radius:2px;flex:none}
+.ticker .run{display:inline-block;animation:tick 60s linear infinite;font-size:13px;color:var(--text)}
+.ticker .run span{margin-right:48px}
+.ticker .run span::before{content:"◆ ";color:var(--pink)}
+@keyframes tick{from{transform:translateX(30%)}to{transform:translateX(-100%)}}
+
+/* modal */
+.ov{position:fixed;inset:0;z-index:50;background:rgba(6,2,12,.78);backdrop-filter:blur(4px);display:grid;place-items:center;padding:calc(16px + env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) calc(16px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+.modal{width:min(760px,100%);max-height:100%;overflow-y:auto;background:linear-gradient(180deg,#1f1034,#140a22);border:1px solid var(--line);border-radius:8px;box-shadow:0 30px 80px rgba(0,0,0,.6),0 0 0 1px rgba(255,45,149,.2)}
+.m-hero{position:relative;padding:18px 20px 16px;overflow:hidden}
+.m-hero h2{font-family:var(--f-display);font-weight:400;font-size:34px;letter-spacing:.02em;text-transform:uppercase;line-height:1;color:#fff;text-shadow:2px 2px 0 rgba(0,0,0,.35)}
+.m-hero .sub{font-size:12px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.92);margin-top:6px}
+.m-x{position:absolute;right:12px;top:12px;width:34px;height:34px;border-radius:50%;border:0;background:rgba(0,0,0,.35);color:#fff;font-size:18px;line-height:1}
+.m-b{padding:16px 20px 20px;display:flex;flex-direction:column;gap:14px}
+.m-sec{border:1px solid var(--line);border-radius:6px;padding:12px;background:rgba(0,0,0,.18)}
+.m-sec h4{margin:0 0 10px;font-family:var(--f-display);font-weight:400;font-size:16px;letter-spacing:.08em;text-transform:uppercase;color:var(--sun)}
+.slider{display:flex;flex-direction:column;gap:6px}
+.slider label{display:flex;justify-content:space-between;gap:8px;font-size:12px;color:var(--mute)}
+.slider label b{color:var(--text);font-size:14px}
+input[type=range]{width:100%;accent-color:var(--pink)}
+.sum{display:grid;grid-template-columns:1fr auto;gap:4px 16px;font-size:13px;margin-top:10px}
+.sum .tot{font-weight:700;border-top:1px solid var(--line);padding-top:6px;margin-top:2px}
+.acts{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.why{font-size:12px;color:var(--orange)}
+.works{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px}
+.work{border:1px solid var(--line);border-radius:5px;padding:10px;display:flex;flex-direction:column;gap:6px;background:#140a22}
+.work b{font-size:13px}
+.work p{margin:0;font-size:11.5px;color:var(--mute)}
+.check{display:flex;gap:8px;align-items:center;font-size:12.5px;cursor:pointer}
+.check input{accent-color:var(--red);width:16px;height:16px}
+
+/* overlays */
+.banner{position:fixed;left:0;right:0;top:38%;z-index:70;pointer-events:none;text-align:center;padding:18px max(16px,env(safe-area-inset-right,0px)) 18px max(16px,env(safe-area-inset-left,0px));background:linear-gradient(90deg,transparent,rgba(0,0,0,.75) 20%,rgba(0,0,0,.75) 80%,transparent);animation:bannerIn 2.8s ease forwards}
+.banner h1{font-family:var(--f-display);font-weight:400;font-size:clamp(38px,7vw,78px);letter-spacing:.03em;text-transform:uppercase;line-height:1;transform:skew(-6deg)}
+.banner p{margin:8px 0 0;font-size:15px;font-weight:700;letter-spacing:.2em;text-transform:uppercase}
+@keyframes bannerIn{0%{opacity:0;transform:scale(1.25)}10%{opacity:1;transform:scale(1)}80%{opacity:1}100%{opacity:0}}
+.toasts{position:fixed;left:max(16px,env(safe-area-inset-left,0px));bottom:calc(env(safe-area-inset-bottom,0px) + 80px);z-index:60;display:flex;flex-direction:column;gap:8px;pointer-events:none;max-width:min(340px,calc(100vw - 32px))}
+.toast{background:#1c0f2e;border:1px solid var(--line);border-left:4px solid var(--cyan);padding:9px 12px;border-radius:4px;font-size:13px;box-shadow:0 8px 24px rgba(0,0,0,.5);animation:toastIn 4.5s ease forwards}
+.toast.g{border-left-color:var(--green);color:var(--text)} .toast.r{border-left-color:var(--red);color:var(--text)} .toast.y{border-left-color:var(--sun);color:var(--text)}
+@keyframes toastIn{0%{opacity:0;transform:translateX(-30px)}6%{opacity:1;transform:none}85%{opacity:1}100%{opacity:0}}
+
+/* title screen */
+.title{position:fixed;inset:0;z-index:80;overflow-y:auto;background:#0c0614}
+.t-sky{position:absolute;inset:0;overflow:hidden;background:linear-gradient(180deg,#1b0633 0%,#5b136a 30%,#c22a7a 52%,#ff7a3d 66%,#2a0c3a 66.2%,#0c0614 100%)}
+.t-sun{position:absolute;left:50%;top:32%;width:min(420px,70vw);aspect-ratio:1;max-width:100%;transform:translateX(-50%);border-radius:50%;background:linear-gradient(180deg,#ffe95c 0%,#ff9a3d 45%,#ff2d95 85%);-webkit-mask:repeating-linear-gradient(180deg,#000 0 14px,transparent 14px 20px);mask:repeating-linear-gradient(180deg,#000 0 14px,transparent 14px 20px);filter:drop-shadow(0 0 40px rgba(255,120,60,.6))}
+.t-grid{position:absolute;left:-50%;right:-50%;top:66%;bottom:-10%;background:linear-gradient(90deg,rgba(255,45,149,.55) 1px,transparent 1px) 0 0/60px 60px,linear-gradient(0deg,rgba(255,45,149,.55) 1px,transparent 1px) 0 0/60px 60px;transform:perspective(300px) rotateX(60deg);transform-origin:top;animation:grid 3s linear infinite}
+@keyframes grid{to{background-position:0 60px,0 60px}}
+.t-palms{position:absolute;bottom:34%;left:0;right:0;height:46%;display:flex;justify-content:space-between;pointer-events:none}
+.t-palms svg{height:100%;width:auto;fill:#14051f}
+.t-in{position:relative;min-height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;padding:calc(30px + env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) calc(30px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));text-align:center}
+.t-logo{transform:skew(-9deg) rotate(-3deg)}
+.t-logo b{display:block;font-family:var(--f-display);font-weight:400;font-size:clamp(64px,15vw,150px);line-height:.82;color:#fff;-webkit-text-stroke:3px #1b0633;text-shadow:6px 6px 0 var(--pink),12px 12px 0 #1b0633,0 0 50px rgba(255,45,149,.7)}
+.t-logo span{display:inline-block;margin-top:14px;background:var(--cyan);color:#0c0614;font-weight:900;font-size:clamp(11px,2.2vw,15px);letter-spacing:.35em;padding:6px 14px;text-transform:uppercase}
+.t-panels{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;max-width:780px}
+.t-panel{width:min(230px,100%);padding:14px 16px;font-family:var(--f-display);font-size:28px;letter-spacing:.03em;line-height:1;text-transform:uppercase;color:#fff;border:3px solid #0c0614;box-shadow:6px 6px 0 #0c0614}
+.t-panel small{display:block;font-family:var(--f-body);font-size:11px;font-weight:700;letter-spacing:.12em;margin-top:6px;opacity:.9}
+.t-btns{display:flex;flex-direction:column;gap:10px;width:min(360px,100%)}
+.t-btns .btn{font-family:var(--f-display);font-weight:400;font-size:22px;letter-spacing:.08em;padding:12px}
+.t-help{max-width:640px;background:rgba(12,6,20,.82);border:1px solid var(--line);border-radius:6px;padding:14px 18px;text-align:left;font-size:13px;color:var(--mute)}
+.t-help b{color:var(--text)}
+.t-help ul{margin:6px 0 0;padding-left:18px;display:flex;flex-direction:column;gap:3px}
+.end h1{font-family:var(--f-display);font-weight:400;font-size:clamp(60px,14vw,140px);line-height:.9;transform:skew(-8deg);letter-spacing:.02em}
+
+canvas#chart{width:100%;height:220px;display:block}
+
+@media (max-width:1180px){
+  .layout{grid-template-columns:minmax(0,1fr) minmax(0,1.2fr)}
+  .phone-col{grid-column:1 / -1}
+  .phone{position:relative;top:0;max-height:440px;min-height:0;border-radius:16px}
+  .ph-top{display:none}
+}
+@media (max-width:820px){
+  .layout{grid-template-columns:minmax(0,1fr)}
+  .hud{gap:10px}
+  .brand b{font-size:22px}
+  .cash{font-size:26px}
+  .hud-right{gap:12px}
+  .ticker{display:none}
+  .ctrl{justify-content:space-between;gap:8px}
+  .next{font-size:16px;padding:10px 14px;white-space:nowrap}
+  .seg button{padding:6px 8px}
+  .hud{padding-block:8px;gap:6px 10px}
+  .hud-mid .chip{display:none}
+  .hud-mid .chip:first-of-type{display:inline-flex}
+  .date{font-size:15px}
+  .rank,.stars-wrap small{display:none}
+  .stars{font-size:15px}
+  .toasts{bottom:calc(env(safe-area-inset-bottom,0px) + 70px)}
+  .m-hero h2{font-size:26px}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition:none!important}
+  .ticker .run{animation:none}
+}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="palm" viewBox="0 0 120 200">
+      <path d="M58 200 C56 160 52 120 57 82 L63 82 C60 120 64 160 68 200 Z"/>
+      <path d="M60 84 C40 60 14 58 0 74 C18 66 38 68 58 88 Z"/>
+      <path d="M60 84 C80 58 106 58 120 72 C102 66 82 68 62 88 Z"/>
+      <path d="M60 82 C52 52 30 34 10 36 C30 44 46 58 57 86 Z"/>
+      <path d="M60 82 C70 50 92 34 112 38 C92 44 76 58 63 86 Z"/>
+      <path d="M60 80 C58 52 62 30 74 16 C68 36 66 56 63 82 Z"/>
+      <path d="M60 86 C44 86 28 98 22 118 C34 104 46 96 60 92 Z"/>
+      <path d="M61 86 C78 86 94 98 100 118 C88 104 76 96 62 92 Z"/>
+    </symbol>
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="2.4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+    <linearGradient id="sea" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#14204a"/><stop offset="1" stop-color="#0a0e2a"/></linearGradient>
+    <linearGradient id="sunG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffe95c"/><stop offset=".5" stop-color="#ff8a3d"/><stop offset="1" stop-color="#ff2d95"/></linearGradient>
+    <pattern id="stripes" width="6" height="6" patternUnits="userSpaceOnUse"><rect width="6" height="4" fill="#fff"/></pattern>
+    <mask id="sunMask"><rect x="0" y="0" width="600" height="420" fill="url(#stripes)"/></mask>
+  </defs>
+</svg>
+
+<header class="hud" id="hud"></header>
+
+<main class="layout">
+  <div class="left-col">
+    <section class="card" aria-label="Carte de la Baie de Solaris">
+      <div class="card-h"><h2>Baie de Solaris</h2><span class="chip mute" id="mapHint">Cliquez un quartier</span></div>
+      <div class="map-wrap"><svg id="map" viewBox="0 0 600 420" role="img" aria-label="Carte des quartiers"></svg></div>
+      <div class="legend"><span><i style="background:var(--cyan);transform:rotate(45deg)"></i>Annonce</span><span><i style="background:var(--pink);border-radius:50%"></i>Votre bien</span><span><i style="background:var(--green)"></i>Quartier en hausse</span><span><i style="background:var(--red)"></i>En baisse</span></div>
+    </section>
+    <section class="card"><div class="card-b dinfo" id="dinfo"></div></section>
+  </div>
+
+  <section class="card" style="min-width:0">
+    <nav class="tabs" id="tabs" aria-label="Sections"></nav>
+    <div class="panel" id="panel"></div>
+  </section>
+
+  <aside class="phone-col">
+    <div class="phone" aria-label="Téléphone">
+      <div class="ph-top"><span id="phTime">21:47</span><span>5G ▮▮▮</span></div>
+      <div class="ph-head"><small>Messages</small><b>Contacts</b></div>
+      <div class="ph-body" id="phone"></div>
+      <div class="ph-foot"></div>
+    </div>
+  </aside>
+</main>
+
+<footer class="bottom">
+  <div class="ctrl">
+    <button class="next" id="nextBtn" data-act="next">Semaine suivante ▸</button>
+    <div class="seg" id="speed" role="group" aria-label="Vitesse">
+      <button data-act="speed" data-arg="0" aria-label="Pause">❚❚</button>
+      <button data-act="speed" data-arg="1" aria-label="Lecture">▶</button>
+      <button data-act="speed" data-arg="2" aria-label="Rapide">▶▶</button>
+    </div>
+    <button class="btn sm" data-act="sound" id="sndBtn">Son : off</button>
+    <div class="ticker"><span class="lab">FLASH INFO</span><div class="run" id="ticker"></div></div>
+  </div>
+</footer>
+
+<div class="toasts" id="toasts" aria-live="polite"></div>
+<div id="ovRoot"></div>
+<div id="bannerRoot"></div>
+
+<script>
+"use strict";
+/* =========================================================
+   NÉON ESTATE — Marchand de biens dans la Baie de Solaris
+   ========================================================= */
+const $ = s => document.querySelector(s);
+const rnd = (a,b) => a + Math.random()*(b-a);
+const rint = (a,b) => Math.floor(rnd(a,b+1));
+const pick = a => a[Math.floor(Math.random()*a.length)];
+const clamp = (v,a,b) => Math.max(a,Math.min(b,v));
+const gauss = () => (Math.random()+Math.random()+Math.random()-1.5)/1.5;
+const wpick = items => { let t = items.reduce((s,i)=>s+i[1],0), r = Math.random()*t; for (const [it,w] of items){ r -= w; if (r <= 0) return it; } return items[items.length-1][0]; };
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function fmt(n){
+  const a = Math.abs(n), s = n < 0 ? '−' : '';
+  if (a >= 1e9) return s + (a/1e9).toFixed(2).replace('.',',') + ' Md€';
+  if (a >= 1e6) return s + (a/1e6).toFixed(2).replace('.',',') + ' M€';
+  if (a >= 1e4) return s + Math.round(a/1e3).toLocaleString('fr-FR') + ' k€';
+  return s + Math.round(a).toLocaleString('fr-FR') + ' €';
+}
+const fmtFull = n => (n < 0 ? '−' : '') + Math.round(Math.abs(n)).toLocaleString('fr-FR') + ' €';
+const pct = (n,d=1) => (n >= 0 ? '+' : '−') + Math.abs(n*100).toFixed(d).replace('.',',') + ' %';
+
+/* ---------------- DONNÉES ---------------- */
+const DISTRICTS = [
+  {id:'marais',  name:'Les Marais',        base:1900,  trend:.0006, vol:.006, yld:.078, liq:.55, hue:'#7dff6b', poly:'0,0 165,0 180,195 145,420 0,420', desc:"Bayous, terrains vagues et mobil-homes. Foncier bradé, acheteurs rares."},
+  {id:'flamant', name:'Quartier Flamant',  base:4600,  trend:.0008, vol:.005, yld:.058, liq:.95, hue:'#ff7ac8', poly:'165,0 300,0 290,150 180,195', desc:"Rues pastel, écoles et familles. Le marché le plus liquide de la Baie."},
+  {id:'affaires',name:"Centre d'Affaires", base:7600,  trend:.0006, vol:.007, yld:.063, liq:.8,  hue:'#8b9bff', poly:'300,0 400,0 410,140 290,150', desc:"Tours de verre et plateaux de bureaux. Gros tickets, bons rendements."},
+  {id:'ocean',   name:'Boulevard Océan',   base:11800, trend:.0008, vol:.008, yld:.04,  liq:.8,  hue:'#ff8a3d', poly:'400,0 455,0 466,90 478,180 480,240 470,290 440,282 410,140', desc:"Front de mer, néons et hôtels Art déco. Le décor des cartes postales."},
+  {id:'vieux',   name:'Vieux-Carré',       base:6400,  trend:.0007, vol:.005, yld:.05,  liq:1,   hue:'#ffd23f', poly:'180,195 290,150 330,262 240,305', desc:"Façades Art déco classées et touristes. Valeur refuge."},
+  {id:'marina',  name:'Marina Solaris',    base:9400,  trend:.0009, vol:.007, yld:.045, liq:.85, hue:'#3dffb5', poly:'290,150 410,140 440,282 330,262', desc:"Yachts, rooftops et lofts vue mer."},
+  {id:'port',    name:'Port Néon',         base:3300,  trend:.0013, vol:.008, yld:.068, liq:.75, hue:'#2de2e6', poly:'145,420 180,195 240,305 330,262 440,282 470,290 420,330 380,380 350,420', desc:"Docks et entrepôts en pleine gentrification. Ça monte vite."},
+  {id:'palm',    name:'Palm Island',       base:16000, trend:.001,  vol:.01,  yld:.032, liq:.5,  hue:'#ff2d95', poly:'525,170 568,160 585,215 560,262 520,240 512,200', desc:"L'île privée des milliardaires. Peu d'acheteurs, prix stratosphériques."},
+];
+const D = Object.fromEntries(DISTRICTS.map(d => [d.id,d]));
+DISTRICTS.forEach(d => {
+  const pts = d.poly.split(' ').map(p => p.split(',').map(Number));
+  d.pts = pts;
+  d.cx = pts.reduce((s,p)=>s+p[0],0)/pts.length;
+  d.cy = pts.reduce((s,p)=>s+p[1],0)/pts.length;
+});
+const TYPES = {
+  studio:   {n:'Studio',               m2:[16,32],     mult:1.12, ds:['port','flamant','vieux','affaires','marina','ocean'], w:nw => nw<20e6?14:2},
+  appart:   {n:'Appartement',          m2:[38,135],    mult:1,    ds:['port','flamant','vieux','affaires','marina','ocean','palm'], w:nw => nw<40e6?22:6},
+  maison:   {n:'Maison',               m2:[80,220],    mult:.95,  ds:['marais','port','flamant','vieux'], w:nw => nw<60e6?14:4, div:true},
+  local:    {n:'Local commercial',     m2:[50,450],    mult:.82,  ds:['port','flamant','vieux','affaires','marina','ocean'], w:() => 7, conv:true},
+  immeuble: {n:'Immeuble de rapport',  m2:[280,1500],  mult:.82,  ds:['port','flamant','vieux','marina','ocean'], w:nw => nw>7e6?14:4, div:true},
+  villa:    {n:'Villa de prestige',    m2:[220,850],   mult:1.12, ds:['palm','ocean','marina'], w:nw => nw>8e6?9:3},
+  bureaux:  {n:'Plateau de bureaux',   m2:[400,3500],  mult:.78,  ds:['affaires','port','marina','vieux'], w:nw => nw>12e6?10:2, conv:true},
+  terrain:  {n:'Terrain constructible',m2:[800,9000],  mult:.42,  ds:['marais','port','flamant','affaires','marina','ocean'], w:nw => nw>5e6?9:4, land:true},
+  tour:     {n:'Tour résidentielle',   m2:[6000,26000],mult:.86,  ds:['affaires','marina','ocean'], w:nw => nw>50e6?12:0, div:true},
+  logements:{n:'Logements reconvertis',mult:1,   special:true, div:true},
+  neuf:     {n:'Résidence neuve',      mult:1.1, special:true},
+};
+const DPE = ['A','B','C','D','E','F','G'];
+const DPE_F = {A:1.1,B:1.06,C:1.03,D:1,E:.96,F:.9,G:.84};
+const DPE_COL = {A:'#00a651',B:'#50b848',C:'#bed730',D:'#fff200',E:'#fdb913',F:'#f37021',G:'#ed1c24'};
+const dpeBetter = (a,b) => DPE.indexOf(a) <= DPE.indexOf(b) ? a : b;
+const dpeUp = (a,n) => DPE[Math.max(0, DPE.indexOf(a)-n)];
+const MOTIV = [
+  {id:'classic', n:'Vendeur classique',     lo:1.0,  hi:1.14, f0:.02, f1:.06, w:46, cls:''},
+  {id:'mut',     n:'Mutation pressée',      lo:.91,  hi:1.03, f0:.04, f1:.09, w:20, cls:'info'},
+  {id:'succ',    n:'Succession',            lo:.85,  hi:.99,  f0:.05, f1:.11, w:14, cls:'deal'},
+  {id:'div',     n:'Divorce',               lo:.86,  hi:.99,  f0:.06, f1:.13, w:12, cls:'deal'},
+  {id:'liq',     n:'Liquidation judiciaire',lo:.72,  hi:.87,  f0:.01, f1:.05, w:6,  cls:'hot'},
+  {id:'off',     n:'Off-market',            lo:.76,  hi:.90,  f0:.03, f1:.08, w:0,  cls:'hot'},
+];
+const MO = Object.fromEntries(MOTIV.map(m => [m.id,m]));
+const DEFECTS = [{n:'Amiante',c:110},{n:'Mérule',c:170},{n:'Toiture à refaire',c:140},{n:'Fissures structurelles',c:260}];
+const LAND_DEFECT = {n:'Pollution des sols',c:40};
+const STREETS = ['rue des Flamants Roses','avenue du Phare','boulevard des Pélicans','allée de la Lagune','rue Hibiscus','impasse des Cocotiers','avenue Art Déco','quai du Ponton','rue Corail','promenade de la Marina','rue des Hérons','avenue Copacabana','rue des Requins','chemin de la Mangrove','boulevard du Soleil Couchant','rue des Corsaires','avenue des Néons','place des Palmiers'];
+const STAFF = [
+  {id:'hunter', n:"Chasseuse d'affaires", who:'Inès « La Fouine » Barros', fx:"+2 annonces par niveau, vendeurs plus motivés, estimations plus précises, tuyaux off-market", sal:1800, hire:40000, col:'#2de2e6'},
+  {id:'foreman',n:'Chef de chantier',     who:'Marco « Béton » Ruiz',      fx:"−6 % sur le coût des travaux et −10 % de durée par niveau, moins de dépassements", sal:2200, hire:50000, col:'#ff8a3d'},
+  {id:'broker', n:'Agent commercial',     who:'Jade Montclair',            fx:"+15 % d'acheteurs par niveau et meilleure vente express", sal:1600, hire:35000, col:'#ff2d95'},
+  {id:'lawyer', n:'Avocat fiscaliste',    who:'Me Victor Sarkis',          fx:"−2 pts d'IS par niveau, le fisc vous oublie plus vite, +6 % de chances au permis", sal:2600, hire:60000, col:'#ffd23f'},
+  {id:'banker', n:'Banquier privé',       who:'Hélène Dumas-Kraft',        fx:"+6 % d'emprunt max, −0,3 pt de marge bancaire, ligne de crédit plus large", sal:2000, hire:45000, col:'#4dff9e'},
+];
+const HQ = [
+  {n:'Garage à Port Néon',            cap:3,   rent:600,    cost:0},
+  {n:'Bureau au Vieux-Carré',         cap:6,   rent:2500,   cost:150000},
+  {n:"Plateau au Centre d'Affaires",  cap:12,  rent:7500,   cost:800000},
+  {n:'Penthouse à la Marina',         cap:25,  rent:18000,  cost:3e6},
+  {n:'Tour Néon',                     cap:60,  rent:45000,  cost:15e6},
+  {n:'Île privée de Palm Island',     cap:150, rent:110000, cost:60e6},
+];
+const RIVALS0 = [
+  {n:'Castagnet & Fils', boss:'Gaby Castagnet', nw:4.5e6, g:.0062, col:'#7dff6b'},
+  {n:'Groupe Varela',    boss:'Rafael Varela',  nw:9e6,   g:.0054, col:'#ff8a3d'},
+  {n:'Volkov Capital',   boss:'Dmitri Volkov',  nw:22e6,  g:.0046, col:'#8b9bff'},
+  {n:'Moreau Invest',    boss:'Sasha Moreau',   nw:55e6,  g:.0040, col:'#ffd23f'},
+  {n:'Kingsley Realty',  boss:'Duke Kingsley',  nw:180e6, g:.0032, col:'#2de2e6'},
+];
+const PH = {
+  boom:      {n:'Boom',       drift:.0028,  buy:1.3,  cls:'green'},
+  stable:    {n:'Stable',     drift:.0006,  buy:1,    cls:'cyan'},
+  correction:{n:'Correction', drift:-.0022, buy:.72,  cls:'orange'},
+  krach:     {n:'Krach',      drift:-.0065, buy:.42,  cls:'red'},
+};
+const RANKS = [[0,'Petit marchand'],[5e6,'Investisseur'],[15e6,'Requin'],[50e6,'Baron'],[150e6,'Magnat'],[500e6,'Empereur de la Baie'],[1e9,'Légende']];
+const MONTHS = ['Janv.','Févr.','Mars','Avr.','Mai','Juin','Juil.','Août','Sept.','Oct.','Nov.','Déc.'];
+
+const MISSIONS = [
+  {t:'Premier coup',     d:'Achetez votre premier bien.',                          ok:() => S.stats.bought >= 1,        r:{rep:5}},
+  {t:'Coup de pinceau',  d:'Terminez un chantier de travaux.',                     ok:() => S.stats.works >= 1,         r:{rep:4}},
+  {t:'Le flip',          d:'Revendez un bien avec une plus-value.',                ok:() => S.stats.wins >= 1,          r:{rep:6, cash:25000}},
+  {t:'Effet de levier',  d:'Achetez un bien financé à crédit.',                    ok:() => S.stats.lev >= 1,           r:{rep:3}},
+  {t:'Rentier',          d:'Mettez un bien en location.',                          ok:() => S.stats.rented >= 1,        r:{rep:3}},
+  {t:'Équipe de choc',   d:'Cumulez 3 niveaux de personnel.',                      ok:() => staffLevels() >= 3,         r:{rep:5}},
+  {t:'Dix briques',      d:'Atteignez 10 M€ de patrimoine net.',                   ok:() => netWorth() >= 10e6,         r:{rep:8, cash:100000}},
+  {t:'Bâtisseur',        d:'Obtenez un permis de construire.',                     ok:() => S.stats.permits >= 1,       r:{rep:6}},
+  {t:'Promoteur',        d:'Livrez une résidence neuve.',                          ok:() => S.stats.built >= 1,         r:{rep:10, cash:250000}},
+  {t:'Baron de la Baie', d:'Possédez 10 biens en même temps.',                     ok:() => S.props.length >= 10,       r:{rep:8}},
+  {t:'Cinquante',        d:'Atteignez 50 M€ de patrimoine net.',                   ok:() => netWorth() >= 50e6,         r:{rep:10, cash:1e6}},
+  {t:'Numéro un',        d:'Dépassez tous les rivaux au classement.',              ok:() => netWorth() > Math.max(...S.rivals.map(r=>r.nw)), r:{rep:15}},
+  {t:'Empire',           d:'Atteignez 250 M€ de patrimoine net.',                  ok:() => netWorth() >= 250e6,        r:{rep:10, cash:5e6}},
+  {t:'Milliardaire',     d:"Atteignez 1 milliard d'euros de patrimoine net.",       ok:() => netWorth() >= 1e9,          r:{rep:20}, final:true},
+];
+
+/* ---------------- ÉTAT ---------------- */
+const SAVE_KEY = 'neon-estate-save-v1';
+let S = null;
+const UI = {tab:'market', filter:null, speed:0, modal:null, sound:false, lastCash:null, sortM:'deal', newMsgs:0, confirmNew:false};
+
+function newGame(){
+  S = {
+    v:1, week:1, cash:3e6, rep:10, heat:0, hq:0,
+    staff:{hunter:0,foreman:0,broker:0,lawyer:0,banker:0},
+    props:[], listings:[], credit:0, overdraft:0,
+    market:{phase:'stable', rate:2.4, prices:Object.fromEntries(DISTRICTS.map(d => [d.id,d.base])), hist:Object.fromEntries(DISTRICTS.map(d => [d.id,[d.base]])), boosts:[], rentMod:1, rentUntil:0},
+    rivals:RIVALS0.map(r => ({...r})),
+    msgs:[], news:['Bienvenue dans la Baie de Solaris : le marché immobilier ouvre ses portes','La banque centrale maintient son taux directeur à 2,40 %'],
+    mdone:[], fiscal:0, lastWeek:{rent:0,interest:0,salaries:0,charges:0},
+    stats:{bought:0,sold:0,wins:0,profit:0,best:0,rented:0,permits:0,built:0,tax:0,controls:0,works:0,lev:0},
+    nwHist:[3e6], nextId:1, over:false, won:false, rankIdx:0,
+  };
+  for (let i = 0; i < 8; i++) S.listings.push(genListing());
+  sms('Me Delcourt · Notaire', "Bienvenue dans la Baie. Votre société de marchand de biens est immatriculée : 3 M€ sur le compte. En tant que marchand, vos frais de notaire tombent à 2,5 % si vous revendez sous 5 ans. Achetez bas, rénovez, revendez haut.");
+  sms('Inès · Chasseuse', "Je traîne dans les études de notaires et les tribunaux. Embauche-moi et je te ramène les affaires que personne ne voit passer.");
+  UI.lastCash = S.cash;
+}
+function save(){ try { localStorage.setItem(SAVE_KEY, JSON.stringify(S)); } catch(e){} }
+function loadSave(){ try { const t = localStorage.getItem(SAVE_KEY); return t ? JSON.parse(t) : null; } catch(e){ return null; } }
+
+/* ---------------- CALCULS ---------------- */
+const price = d => S.market.prices[d];
+function luxF(p){ return 1.08 + price(p.district)/60000; }
+function valueOf(p){
+  const T = TYPES[p.type];
+  let v = p.m2 * price(p.district) * T.mult;
+  if (T.land){ if (p.permit) v *= 1.35; return v; }
+  v *= (0.55 + 0.45*p.cond/100) * DPE_F[p.dpe];
+  if (p.lux) v *= luxF(p);
+  if (p.divided) v *= 1.22;
+  return v;
+}
+const cap = () => HQ[S.hq].cap;
+const staffLevels = () => Object.values(S.staff).reduce((a,b)=>a+b,0);
+const spread = () => Math.max(.7, 2.2 - .3*S.staff.banker);
+const loanRate = () => S.market.rate + spread();
+const creditRate = () => loanRate() + 1.5;
+const maxLTV = (type) => Math.min(.9, .5 + .06*S.staff.banker + S.rep/400) * (TYPES[type]?.land ? .6 : 1);
+const debt = () => S.props.reduce((s,p)=>s+p.loan,0) + S.credit;
+function netWorth(){ return S.cash + S.props.reduce((s,p)=>s+valueOf(p),0) - debt(); }
+function creditLimit(){ return Math.max(0, (S.props.reduce((s,p)=>s+valueOf(p),0) - S.props.reduce((s,p)=>s+p.loan,0)) * (.2 + .05*S.staff.banker)); }
+function rankOf(nw){ let i = 0; RANKS.forEach((r,k) => { if (nw >= r[0]) i = k; }); return i; }
+function rentBanned(p){
+  const yr = 2027 + Math.floor((S.week-1)/52);
+  if (p.dpe === 'G') return 'DPE G : passoire thermique, location interdite';
+  if (p.dpe === 'F' && yr >= 2028) return 'DPE F : location interdite depuis 2028';
+  if (p.dpe === 'E' && yr >= 2034) return 'DPE E : location interdite depuis 2034';
+  return null;
+}
+const weeklyRent = p => valueOf(p) * D[p.district].yld * (S.week < S.market.rentUntil ? S.market.rentMod : 1) / 52;
+function dateLabel(w){ const y = 2027 + Math.floor((w-1)/52); const m = Math.floor(((w-1)%52)/52*12); return `${MONTHS[m]} ${y}`; }
+function trend13(d){ const h = S.market.hist[d]; const old = h[Math.max(0,h.length-14)]; return price(d)/old - 1; }
+function pointIn(pts,x,y){ let c = false; for (let i=0,j=pts.length-1;i<pts.length;j=i++){ const [xi,yi]=pts[i],[xj,yj]=pts[j]; if (((yi>y)!==(yj>y)) && (x < (xj-xi)*(y-yi)/(yj-yi)+xi)) c = !c; } return c; }
+function randPos(d){ const dd = D[d]; const xs = dd.pts.map(p=>p[0]), ys = dd.pts.map(p=>p[1]); for (let k=0;k<40;k++){ const x = rnd(Math.min(...xs)+8, Math.max(...xs)-8), y = rnd(Math.min(...ys)+8, Math.max(...ys)-8); if (pointIn(dd.pts,x,y) && Math.hypot(x-dd.cx,y-dd.cy) > 16) return [x,y]; } return [dd.cx+rnd(-10,10), dd.cy+20]; }
+
+/* ---------------- ANNONCES ---------------- */
+function genListing(opt = {}){
+  const nw = Math.max(S ? netWorth() : 3e6, 1.5e6);
+  const capV = nw * (Math.random() < .12 ? 3.5 : 1.6);
+  const crisis = S && (S.market.phase === 'correction' || S.market.phase === 'krach');
+  const hl = S ? S.staff.hunter : 0;
+  for (let tries = 0; tries < 12; tries++){
+    const type = opt.type || wpick(Object.entries(TYPES).filter(([k,t]) => !t.special).map(([k,t]) => [k, t.w(nw)]).filter(x => x[1] > 0));
+    const T = TYPES[type];
+    const district = opt.district && T.ds.includes(opt.district) ? opt.district : pick(T.ds);
+    const skew = nw > 25e6 ? .55 : nw > 8e6 ? .9 : 1.5;
+    let m2 = Math.round(T.m2[0] + (T.m2[1]-T.m2[0]) * Math.pow(Math.random(), skew));
+    const cond = T.land ? 100 : rint(8,85);
+    const dpe = T.land ? 'D' : cond < 30 ? pick(['G','F','F','E']) : cond < 60 ? pick(['F','E','E','D']) : pick(['D','D','C','C','B']);
+    const p = {type, district, m2, cond, dpe, lux:false, divided:false, permit:false};
+    let val = valueOf(p);
+    if (val > capV){ m2 = Math.max(T.m2[0], Math.round(m2 * capV/val)); p.m2 = m2; val = valueOf(p); if (val > capV*1.3) continue; }
+    const mo = opt.motiv ? MO[opt.motiv] : wpick(MOTIV.map(m => { let w = m.w; if (m.id !== 'classic') w *= 1 + .12*hl; if (crisis && m.id === 'liq') w *= 3; if (crisis && m.id === 'mut') w *= 1.5; return [m, w]; }));
+    // plus votre société pèse lourd, plus les vendeurs et les concurrents vous voient venir : les décotes fondent
+    const fame = clamp(1 - .2*Math.log10(Math.max(1, nw/3e6)), .4, 1);
+    const r0 = rnd(mo.lo, mo.hi), ratio = r0 < 1 ? 1 - (1 - r0)*fame : r0;
+    const ask = Math.round(val * ratio / 1000) * 1000;
+    const e = Math.max(.03, .12 - .018*hl);
+    let defect = null;
+    if (Math.random() < (T.land ? .12 : .16)){ const df = T.land ? LAND_DEFECT : pick(DEFECTS); defect = {n:df.n, cost:Math.round(df.c * m2)}; }
+    const [x,y] = randPos(district);
+    return {
+      id:S ? S.nextId++ : Math.floor(Math.random()*1e9), type, district, m2, cond, dpe,
+      lux:false, divided:false, permit:false,
+      addr:`${rint(1,180)} ${pick(STREETS)}`, motiv:mo.id, ask, flex:rnd(mo.f0,mo.f1),
+      err:rnd(-e,e), eRange:e, defect, diag:false, offers:2, counter:null,
+      until:(S ? S.week : 1) + (opt.until || rint(3,7)), x, y, off:!!opt.off,
+    };
+  }
+  return genListing({type:'appart'});
+}
+function listingTarget(){ return 6 + 2*S.staff.hunter + Math.min(4, S.hq); }
+
+/* ---------------- MESSAGES / FX ---------------- */
+function sms(from, text, actions){ S.msgs.unshift({id:S.nextId++, from, text, w:S.week, actions:actions||null, done:false, isNew:true}); if (S.msgs.length > 40) S.msgs.length = 40; UI.newMsgs++; }
+function news(t){ S.news.unshift(t); if (S.news.length > 8) S.news.length = 8; }
+function toast(text, cls = ''){
+  const el = document.createElement('div'); el.className = 'toast ' + cls; el.textContent = text;
+  $('#toasts').appendChild(el); setTimeout(() => el.remove(), 4600);
+  while ($('#toasts').children.length > 4) $('#toasts').firstChild.remove();
+}
+function banner(title, sub, color = 'var(--sun)'){
+  const root = $('#bannerRoot');
+  root.innerHTML = `<div class="banner"><h1 style="color:${color};text-shadow:3px 3px 0 #000,0 0 30px ${color}">${esc(title)}</h1>${sub ? `<p>${esc(sub)}</p>` : ''}</div>`;
+  clearTimeout(banner.t); banner.t = setTimeout(() => root.innerHTML = '', 2900);
+}
+let AC = null;
+function sfx(kind){
+  if (!UI.sound) return;
+  try {
+    AC = AC || new (window.AudioContext || window.webkitAudioContext)();
+    const seq = {cash:[[880,.06],[1320,.12]], bad:[[220,.15],[160,.25]], mission:[[523,.1],[659,.1],[784,.1],[1047,.3]], tick:[[440,.03]], buy:[[660,.06],[990,.08]], siren:[[700,.18],[500,.18],[700,.18],[500,.18]]}[kind] || [[440,.05]];
+    let t = AC.currentTime;
+    seq.forEach(([f,d]) => { const o = AC.createOscillator(), g = AC.createGain(); o.type = kind === 'bad' || kind === 'siren' ? 'sawtooth' : 'square'; o.frequency.value = f; g.gain.setValueAtTime(.06,t); g.gain.exponentialRampToValueAtTime(.001,t+d); o.connect(g).connect(AC.destination); o.start(t); o.stop(t+d+.02); t += d*.9; });
+  } catch(e){}
+}
+
+/* ---------------- ACTIONS DE JEU ---------------- */
+function addCash(n){ S.cash += n; }
+function addHeat(n){ S.heat = clamp(S.heat + n, 0, 5); }
+function addRep(n){ S.rep = clamp(S.rep + n, 0, 100); }
+
+function diagCost(l){ return Math.max(2000, Math.round(valueOf(l)*.004/100)*100); }
+function doDiag(id){
+  const l = S.listings.find(x => x.id === id); if (!l || l.diag) return;
+  const c = diagCost(l); if (S.cash < c) return toast('Trésorerie insuffisante pour le diagnostic.','r');
+  addCash(-c); l.diag = true;
+  toast(l.defect ? `Diagnostic : ${l.defect.n} détecté (${fmt(l.defect.cost)} de travaux).` : 'Diagnostic : rien à signaler.', l.defect ? 'r' : 'g');
+  renderAll();
+}
+function sellerMin(l){
+  return l.ask * (1 - l.flex - S.rep/1000) - (l.diag && l.defect ? l.defect.cost * .9 : 0);
+}
+function canBuy(l, priceX, ltv){
+  const fees = priceX * .025, loan = priceX * ltv;
+  if (S.props.length >= cap()) return `QG plein (${cap()} biens max). Améliorez votre QG dans l'onglet Équipe.`;
+  if (S.cash < priceX + fees - loan) return `Il manque ${fmt(priceX + fees - loan - S.cash)} d'apport.`;
+  return null;
+}
+function makeOffer(id){
+  const l = S.listings.find(x => x.id === id); if (!l) return;
+  const m = UI.modal; const offer = Math.round(l.ask * m.offerPct/100 / 1000) * 1000;
+  const why = canBuy(l, offer, m.ltv/100); if (why) return toast(why,'r');
+  if (l.offers <= 0) return toast('Le vendeur ne répond plus à vos offres.','r');
+  const min = sellerMin(l);
+  if (offer >= l.ask || offer >= min){ buy(l, offer, m.ltv/100); return; }
+  l.offers--;
+  if (offer >= min * .93){
+    l.counter = Math.round(Math.max(min*1.02, (offer + l.ask)/2) / 1000) * 1000;
+    toast(`Le vendeur contre-propose à ${fmt(l.counter)}.`,'y'); sfx('tick');
+  } else {
+    toast(l.offers > 0 ? "Offre refusée sèchement. Encore une tentative possible." : "Offre refusée. Le vendeur ne veut plus vous parler.",'r'); sfx('bad');
+    if (Math.random() < .25 && l.offers > 0){ l.until = Math.min(l.until, S.week + 1); }
+  }
+  renderModal(); renderPanel();
+}
+function acceptCounter(id){ const l = S.listings.find(x => x.id === id); if (!l || !l.counter) return; const why = canBuy(l, l.counter, UI.modal.ltv/100); if (why) return toast(why,'r'); buy(l, l.counter, UI.modal.ltv/100); }
+function buy(l, priceX, ltv){
+  const fees = Math.round(priceX * .025), loan = Math.round(priceX * ltv);
+  addCash(-(priceX + fees - loan));
+  const p = {id:l.id, type:l.type, district:l.district, m2:l.m2, cond:l.cond, dpe:l.dpe, lux:false, divided:false, permit:false, addr:l.addr, x:l.x, y:l.y,
+    purchase:priceX, fees, works:0, loan, status:'idle', left:0, total:0, plan:null, sale:null, offer:null, vacant:0, boughtW:S.week};
+  S.listings = S.listings.filter(x => x.id !== l.id);
+  S.props.push(p);
+  S.stats.bought++; if (loan > 0) S.stats.lev++;
+  if (l.defect){
+    addCash(-l.defect.cost); p.works += l.defect.cost;
+    if (!l.diag){ sms('Marco · Chantier', `Mauvaise surprise au ${l.addr} : ${l.defect.n.toLowerCase()}. Travaux urgents obligatoires : ${fmtFull(l.defect.cost)}. La prochaine fois, fais un diagnostic avant de signer.`); sfx('bad'); }
+  }
+  closeModal();
+  banner('Acte signé', `${TYPES[p.type].n} · ${D[p.district].name} · ${fmt(priceX)}`, 'var(--cyan)');
+  sfx('buy'); checkMissions(); renderAll(); save();
+}
+
+function worksFor(p){
+  const T = TYPES[p.type]; if (T.land) return [];
+  const f = S.staff.foreman;
+  const scaleW = 1 + Math.log10(1 + p.m2/300) * .6;
+  const list = [
+    {id:'rafraich', n:'Rafraîchissement', d:'Peinture, sols, cuisine équipée. +25 points d\'état.', m2c:400, wk:3, ok:p.cond < 95, ap:q => { q.cond = Math.min(100, q.cond + 25); }},
+    {id:'energie',  n:'Rénovation énergétique', d:'Isolation, pompe à chaleur, menuiseries. DPE +2 classes.', m2c:450, wk:4, ok:DPE.indexOf(p.dpe) > 2, ap:q => { q.dpe = dpeUp(q.dpe,2); }},
+    {id:'renov',    n:'Rénovation complète', d:'Tout est refait à neuf. État 95, DPE C minimum.', m2c:1400, wk:8, ok:p.cond < 95 || DPE.indexOf(p.dpe) > 2, ap:q => { q.cond = Math.max(q.cond,95); q.dpe = dpeBetter(q.dpe,'C'); }},
+    {id:'luxe',     n:'Rénovation de prestige', d:`Matériaux nobles, domotique, piscine. État 100, DPE B, valeur ×${luxF(p).toFixed(2).replace('.',',')}.`, m2c:2700, wk:12, ok:!p.lux && !['local','bureaux'].includes(p.type), ap:q => { q.cond = 100; q.dpe = dpeBetter(q.dpe,'B'); q.lux = true; }},
+    {id:'division', n:'Division en lots', d:'Découpe en lots revendus séparément. Valeur ×1,22.', m2c:250, wk:6, ok:!!T.div && !p.divided, ap:q => { q.divided = true; }},
+    {id:'conv',     n:'Transformation en logements', d:"Changement d'usage : bureaux ou commerce en appartements. État 90, DPE C.", m2c:1100, wk:14, ok:!!T.conv, ap:q => { q.type = 'logements'; q.cond = 90; q.dpe = dpeBetter(q.dpe,'C'); }},
+  ];
+  return list.filter(w => w.ok).map(w => {
+    const cost = Math.round(w.m2c * p.m2 * (1 - .06*f) / 100) * 100;
+    const weeks = Math.max(1, Math.ceil(w.wk * scaleW * (1 - .1*f)));
+    const q = {...p}; w.ap(q);
+    return {...w, cost, weeks, after:valueOf(q)};
+  });
+}
+function startWorks(pid, wid){
+  const p = S.props.find(x => x.id === pid); if (!p || p.status !== 'idle' || p.sale) return;
+  const w = worksFor(p).find(x => x.id === wid); if (!w) return;
+  const noir = !!UI.modal?.noir;
+  const cost = Math.round(w.cost * (noir ? .65 : 1));
+  if (S.cash < cost) return toast(`Il manque ${fmt(cost - S.cash)} pour lancer le chantier.`,'r');
+  addCash(-cost); p.works += cost; p.status = 'works'; p.left = w.weeks; p.total = w.weeks; p.plan = wid; p.noir = noir;
+  if (noir){ addHeat(1.2); toast('Chantier au noir lancé. Le fisc regarde dans votre direction.','r'); }
+  else toast(`Chantier lancé : ${w.n}, ${w.weeks} sem.`,'g');
+  sfx('tick'); renderAll(); save();
+}
+function finishWorks(p){
+  const w = worksFor(p).find(x => x.id === p.plan) || {n:'Travaux', ap:()=>{}};
+  if (p.plan === 'conv'){ p.type = 'logements'; p.cond = 90; p.dpe = dpeBetter(p.dpe,'C'); }
+  else w.ap(p);
+  const n = w.n; p.status = 'idle'; p.plan = null;
+  S.stats.works++;
+  const over = Math.random() < Math.max(.02, .14 - .03*S.staff.foreman);
+  if (over){ const extra = Math.round(p.works * .1 / 1000)*1000; addCash(-extra); p.works += extra; sms('Marco · Chantier', `${n} terminé au ${p.addr}, mais avec un dépassement de budget : ${fmtFull(extra)}. Les artisans, tu sais ce que c'est.`); }
+  else sms('Marco · Chantier', `${n} terminé au ${p.addr}. Nouvelle valeur estimée : ${fmt(valueOf(p))}. Propre.`);
+  if (p.noir && Math.random() < .18){ const fine = 30000 + Math.round(p.m2*40); addCash(-fine); addHeat(1); sms('Inspection du travail', `Contrôle surprise sur votre chantier du ${p.addr}. Travail dissimulé constaté. Amende : ${fmtFull(fine)}.`); sfx('siren'); }
+  p.noir = false;
+}
+function toggleRent(pid){
+  const p = S.props.find(x => x.id === pid); if (!p) return;
+  if (p.status === 'rented'){ p.status = 'idle'; p.vacant = 0; toast('Bail résilié, le bien est libre.'); }
+  else if (p.status === 'idle'){
+    const b = rentBanned(p); if (b) return toast(b,'r');
+    if (TYPES[p.type].land) return;
+    p.status = 'rented'; p.vacant = rint(1,3); S.stats.rented++;
+    toast(`Bien mis en location : ${fmt(weeklyRent(p))} par semaine une fois loué.`,'g');
+  }
+  checkMissions(); renderAll(); save();
+}
+function listForSale(pid){
+  const p = S.props.find(x => x.id === pid); if (!p) return;
+  const pr = Math.round(valueOf(p) * (p.status === 'rented' ? .9 : 1) * UI.modal.salePct/100 / 1000) * 1000;
+  p.sale = {price:pr, since:S.week}; p.offer = null;
+  toast(`Mis en vente à ${fmt(pr)}.`,'g'); sfx('tick'); renderAll(); save();
+}
+function unlist(pid){ const p = S.props.find(x => x.id === pid); if (!p) return; p.sale = null; p.offer = null; renderAll(); save(); }
+function cutPrice(pid){ const p = S.props.find(x => x.id === pid); if (!p || !p.sale) return; p.sale.price = Math.round(p.sale.price*.95/1000)*1000; toast(`Prix baissé à ${fmt(p.sale.price)}.`); renderAll(); save(); }
+function expressPrice(p){ return Math.round(valueOf(p) * (.8 + .015*S.staff.broker) * (p.status === 'rented' ? .9 : 1) / 1000) * 1000; }
+function saleCalc(p, pr, express = false){
+  const tva = Math.max(0, pr - p.purchase) * 20/120;
+  const fee = express ? 0 : pr * Math.max(.01, .03 - .004*S.staff.broker);
+  const basis = p.purchase + p.fees + p.works;
+  return {tva, fee, basis, profit:pr - tva - fee - basis, net:pr - tva - fee - p.loan};
+}
+function sell(pid, pr, how){
+  const p = S.props.find(x => x.id === pid); if (!p) return;
+  const c = saleCalc(p, pr, how === 'express');
+  addCash(c.net);
+  S.fiscal += c.profit;
+  S.props = S.props.filter(x => x.id !== pid);
+  S.stats.sold++; S.stats.profit += c.profit;
+  if (c.profit > 0){ S.stats.wins++; S.stats.best = Math.max(S.stats.best, c.profit); addRep(clamp(c.profit/c.basis*25, 1, 6)); }
+  else addRep(-2);
+  S.msgs.forEach(m => { if (m.actions && m.actions.some(a => a.arg == pid)) m.done = true; });
+  closeModal();
+  if (c.profit > 0) banner(c.profit > 1e6 ? 'Gros coup' : 'Vendu', `Plus-value nette ${fmt(c.profit)} · TVA sur marge ${fmt(c.tva)}`, 'var(--green)');
+  else banner('Vendu à perte', `Moins-value ${fmt(c.profit)}`, 'var(--red)');
+  sfx(c.profit > 0 ? 'cash' : 'bad');
+  checkMissions(); renderAll(); save();
+}
+function acceptOffer(pid){ const p = S.props.find(x => x.id === pid); if (!p || !p.offer) return toast('Cette offre a expiré.','r'); sell(pid, p.offer.amount, 'offre'); }
+function refuseOffer(pid){ const p = S.props.find(x => x.id === pid); if (p){ p.offer = null; } S.msgs.forEach(m => { if (m.actions && m.actions.some(a => a.arg == pid)) m.done = true; }); renderAll(); save(); }
+function repayLoan(pid){ const p = S.props.find(x => x.id === pid); if (!p || !p.loan) return; if (S.cash < p.loan) return toast('Trésorerie insuffisante.','r'); addCash(-p.loan); p.loan = 0; toast('Emprunt remboursé.','g'); renderAll(); save(); }
+function permitCost(p){ return Math.round((15000 + valueOf(p)*.015)/1000)*1000; }
+function permitChance(p, bribe){ return clamp(.6 + .06*S.staff.lawyer + S.rep/500 + (bribe ? .3 : 0), 0, .97); }
+function filePermit(pid){
+  const p = S.props.find(x => x.id === pid); if (!p || p.status !== 'idle' || p.sale) return;
+  const bribe = !!UI.modal?.bribe;
+  const c = permitCost(p) + (bribe ? Math.round(valueOf(p)*.02/1000)*1000 : 0);
+  if (S.cash < c) return toast(`Il manque ${fmt(c - S.cash)}.`,'r');
+  addCash(-c); p.works += c; p.status = 'permit'; p.left = rint(6,12); p.total = p.left; p.bribe = bribe;
+  if (bribe){ addHeat(1.5); toast('Enveloppe glissée à la mairie. Discret… normalement.','r'); }
+  else toast(`Permis déposé. Instruction : ${p.left} semaines.`,'g');
+  renderAll(); save();
+}
+function buildCost(p){ const sdp = Math.round(p.m2*.8); return Math.round(sdp * (1800 + .12*price(p.district)) * (1 - .06*S.staff.foreman) / 1000) * 1000; }
+function buildWeeks(p){ const sdp = p.m2*.8; return Math.max(8, Math.ceil(20 * (1 - .08*S.staff.foreman) * (1 + sdp/20000))); }
+function startBuild(pid){
+  const p = S.props.find(x => x.id === pid); if (!p || !p.permit || p.status !== 'idle' || p.sale) return;
+  const c = buildCost(p); if (S.cash < c) return toast(`Il manque ${fmt(c - S.cash)}. Pensez à la ligne de crédit (onglet Banque).`,'r');
+  addCash(-c); p.works += c; p.status = 'building'; p.left = buildWeeks(p); p.total = p.left;
+  banner('Premier coup de pioche', `${Math.round(p.m2*.8).toLocaleString('fr-FR')} m² à construire · ${p.left} semaines`, 'var(--orange)');
+  renderAll(); save();
+}
+
+/* ----- équipe, QG, banque ----- */
+function hire(id){
+  const st = STAFF.find(s => s.id === id); const L = S.staff[id]; if (L >= 5) return;
+  const c = st.hire * (L+1) * (L+1); if (S.cash < c) return toast(`Il manque ${fmt(c - S.cash)}.`,'r');
+  addCash(-c); S.staff[id]++;
+  toast(`${st.who} passe niveau ${S.staff[id]}.`,'g'); sfx('buy');
+  if (L === 0) sms(st.who.split(' ')[0] + ' · ' + st.n.split(' ')[0], pick(["C'est parti, patron. On va retourner la Baie.","Je commence lundi. Enfin, tout de suite.","Bonne décision. Tu ne le regretteras pas."]));
+  checkMissions(); renderAll(); save();
+}
+function fire(id){ if (S.staff[id] <= 0) return; S.staff[id]--; toast('Niveau de personnel réduit.'); renderAll(); save(); }
+function upgradeHQ(){
+  const nx = HQ[S.hq+1]; if (!nx) return; if (S.cash < nx.cost) return toast(`Il manque ${fmt(nx.cost - S.cash)}.`,'r');
+  addCash(-nx.cost); S.hq++; banner('Nouveau QG', nx.n, 'var(--pink)'); sfx('mission'); addRep(3); renderAll(); save();
+}
+function borrowCredit(amt){ const room = creditLimit() - S.credit; const a = Math.min(amt, room); if (a <= 0) return toast('Ligne de crédit épuisée.','r'); S.credit += a; addCash(a); toast(`Tirage de ${fmt(a)} sur la ligne de crédit.`,'g'); renderAll(); save(); }
+function repayCredit(amt){ const a = Math.min(amt, S.credit, Math.max(0,S.cash)); if (a <= 0) return; S.credit -= a; addCash(-a); toast(`Remboursement de ${fmt(a)}.`,'g'); renderAll(); save(); }
+function launder(){ const c = Math.round(Math.max(50000, netWorth()*.02)/1000)*1000; if (S.heat < .5) return; if (S.cash < c) return toast('Trésorerie insuffisante.','r'); addCash(-c); addHeat(-2); toast(`Régularisation négociée par Me Sarkis : ${fmt(c)}. −2 étoiles.`,'g'); renderAll(); save(); }
+
+/* ---------------- TOUR DE JEU ---------------- */
+function nextWeek(){
+  if (!S || S.over) return;
+  const cash0 = S.cash;
+  S.week++;
+  const M = S.market;
+  // phase de marché
+  const tr = {stable:[['boom',.02],['correction',.02]], boom:[['stable',.03],['correction',.015]], correction:[['stable',.04],['krach',.015]], krach:[['correction',.06]]}[M.phase];
+  let r = Math.random();
+  for (const [ph,pr] of tr){ if (r < pr){ const old = M.phase; M.phase = ph; news(`Marché immobilier : passage en phase ${PH[ph].n.toUpperCase()}`); if (ph === 'krach') { banner('Krach immobilier','Les prix s\'effondrent','var(--red)'); sfx('siren'); } else if (old === 'krach' || ph === 'boom') toast(`Le marché passe en phase ${PH[ph].n}.`, ph === 'boom' ? 'g' : 'y'); break; } r -= pr; }
+  M.rate = clamp(M.rate + gauss()*.05 + (2.5 - M.rate)*.01 + (M.phase === 'krach' ? -.03 : M.phase === 'boom' ? .01 : 0), .25, 6);
+  M.boosts = M.boosts.filter(b => b.until > S.week);
+  DISTRICTS.forEach(d => {
+    const boost = M.boosts.filter(b => b.d === d.id).reduce((s,b)=>s+b.add,0);
+    const g = d.trend + PH[M.phase].drift + boost + (2.5 - M.rate)*.0003 + gauss()*d.vol*.5;
+    M.prices[d.id] *= 1 + g;
+    const h = M.hist[d.id]; h.push(M.prices[d.id]); if (h.length > 60) h.shift();
+  });
+  // biens
+  let rent = 0, charges = 0, interest = 0;
+  for (const p of [...S.props]){
+    if (p.status === 'works'){ if (--p.left <= 0) finishWorks(p); }
+    else if (p.status === 'permit'){
+      if (--p.left <= 0){
+        p.status = 'idle';
+        if (Math.random() < permitChance(p, p.bribe)){ p.permit = true; S.stats.permits++; sms('Mairie de Solaris', `Permis de construire ACCORDÉ pour le ${p.addr} : ${Math.round(p.m2*.8).toLocaleString('fr-FR')} m² de surface de plancher. Le terrain prend 35 % de valeur.`); sfx('cash'); }
+        else { sms('Mairie de Solaris', `Permis de construire REFUSÉ pour le ${p.addr}. Vous pouvez déposer un nouveau dossier.`); sfx('bad'); }
+      }
+    }
+    else if (p.status === 'building'){
+      if (--p.left <= 0){
+        const sdp = Math.round(p.m2*.8);
+        p.type = 'neuf'; p.m2 = sdp; p.cond = 100; p.dpe = 'A'; p.permit = false; p.status = 'idle'; S.stats.built++;
+        banner('Livraison', `Résidence neuve · ${sdp.toLocaleString('fr-FR')} m² · ${fmt(valueOf(p))}`, 'var(--green)'); sfx('mission');
+        sms('Marco · Chantier', `Clés en main au ${p.addr} : ${sdp.toLocaleString('fr-FR')} m² livrés, DPE A. À toi de vendre les lots.`);
+      }
+    }
+    else if (p.status === 'rented'){
+      const b = rentBanned(p);
+      if (b){ p.status = 'idle'; sms('Préfecture', `${p.addr} : ${b}. Le locataire est parti, faites des travaux énergétiques.`); }
+      else if (p.vacant > 0) p.vacant--;
+      else {
+        const rr = weeklyRent(p); rent += rr;
+        if (Math.random() < .012){ p.vacant = rint(2,6); sms('Gestion locative', `Le locataire du ${p.addr} a donné son congé. Relocation en cours.`); }
+        else if (Math.random() < .006){ const lost = rr*4; charges += lost; sms('Gestion locative', `Impayés au ${p.addr} : ${fmtFull(lost)} perdus. Procédure lancée.`); }
+      }
+    }
+    charges += valueOf(p) * .00018;
+    interest += p.loan * loanRate()/100/52;
+    // vente
+    if (p.sale && !p.offer && p.status !== 'works' && p.status !== 'building' && p.status !== 'permit'){
+      const eff = valueOf(p) * (p.status === 'rented' ? .9 : 1);
+      const ratio = p.sale.price / eff;
+      const pf = clamp(Math.exp(-(ratio - .95)*8), .02, 1.6);
+      const v = valueOf(p);
+      const sizeF = v > 50e6 ? .4 : v > 20e6 ? .55 : v > 5e6 ? .75 : 1;
+      const rateF = clamp(1.25 - M.rate*.1, .6, 1.15);
+      const prob = .3 * D[p.district].liq * pf * PH[M.phase].buy * (1 + .15*S.staff.broker) * sizeF * rateF;
+      if (Math.random() < prob){
+        const amount = ratio < .92 ? p.sale.price : Math.round(p.sale.price * rnd(.94,1) / 1000) * 1000;
+        p.offer = {amount, until:S.week + 2};
+        const c = saleCalc(p, amount);
+        sms('Jade · Ventes', `Offre ferme sur le ${p.addr} (${TYPES[p.type].n}) : ${fmtFull(amount)}. Plus-value nette estimée : ${fmt(c.profit)}. Valable 2 semaines.`, [{l:'Accepter', a:'acceptOffer', arg:p.id, cls:'go'}, {l:'Refuser', a:'refuseOffer', arg:p.id, cls:'dg'}]);
+        sfx('tick');
+      }
+    } else if (p.offer && p.offer.until < S.week){
+      p.offer = null; S.msgs.forEach(m => { if (m.actions && m.actions.some(a => a.arg == p.id)) m.done = true; });
+    }
+  }
+  interest += S.credit * creditRate()/100/52;
+  if (S.cash < 0) interest += -S.cash * .15/52;
+  const salaries = STAFF.reduce((s,st) => s + st.sal * S.staff[st.id], 0);
+  const hqRent = HQ[S.hq].rent;
+  addCash(rent - charges - interest - salaries - hqRent);
+  S.fiscal += rent - charges - interest - salaries - hqRent;
+  S.lastWeek = {rent, interest, salaries:salaries + hqRent, charges};
+  // fisc
+  S.heat = Math.max(0, S.heat - (.025 + .02*S.staff.lawyer));
+  if (S.heat >= .5 && Math.random() < .0045 * S.heat * S.heat){
+    const nw = Math.max(netWorth(), 0);
+    const fine = Math.round(Math.max(50000, nw * .04 * S.heat) / 1000) * 1000;
+    addCash(-fine); addRep(-10); S.stats.controls++; S.heat = 0;
+    banner('Contrôle fiscal', `Redressement : ${fmt(fine)}`, 'var(--red)'); sfx('siren');
+    sms('DGFiP · Brigade', `Suite à la vérification de comptabilité de votre société, un redressement de ${fmtFull(fine)} est prononcé, pénalités incluses.`);
+  }
+  if ((S.week - 1) % 52 === 0){
+    const f = S.fiscal;
+    if (f > 0){
+      const is = Math.round(Math.min(f, 42500)*.15 + Math.max(0, f - 42500) * (.25 - .02*S.staff.lawyer));
+      addCash(-is); S.stats.tax += is; S.fiscal = 0;
+      sms('Expert-comptable', `Clôture de l'exercice ${2027 + Math.floor((S.week-2)/52)} : bénéfice ${fmtFull(f)}. Impôt sur les sociétés (15 % jusqu'à 42 500 €, puis ${Math.round((.25-.02*S.staff.lawyer)*100)} %) : ${fmtFull(is)}.`);
+    } else {
+      sms('Expert-comptable', `Clôture de l'exercice : déficit de ${fmtFull(f)}. Il sera reporté sur les bénéfices futurs.`);
+    }
+  }
+  // annonces
+  S.listings = S.listings.filter(l => {
+    if (l.until < S.week) return false;
+    const deal = 1 - l.ask/valueOf(l);
+    if (Math.random() < .04 + Math.max(0, deal)*.45){
+      const rv = pick(S.rivals);
+      if (deal > .15) toast(`${rv.n} a raflé l'affaire du ${l.addr}.`,'y');
+      if (UI.modal && UI.modal.kind === 'deal' && UI.modal.id === l.id) closeModal();
+      return false;
+    }
+    return true;
+  });
+  while (S.listings.length < listingTarget()) S.listings.push(genListing());
+  if (S.staff.hunter > 0 && Math.random() < .07*S.staff.hunter){
+    const l = genListing({motiv:'off', off:true, until:2}); S.listings.unshift(l);
+    sms('Inès · Chasseuse', `Tuyau off-market : ${TYPES[l.type].n.toLowerCase()} de ${l.m2.toLocaleString('fr-FR')} m² à ${D[l.district].name}, demandé ${fmt(l.ask)}. Le vendeur veut signer vite. 2 semaines max.`, [{l:'Voir l\'affaire', a:'openDeal', arg:l.id, cls:'pri'}]);
+  }
+  // rivaux
+  S.rivals.forEach(rv => { rv.nw *= 1 + rv.g + PH[M.phase].drift*.8 + gauss()*.01; });
+  if (Math.random() < .05){
+    const rv = pick(S.rivals), me = netWorth();
+    const t = rv.nw < me ? pick([`Tu montes vite, le nouveau. Fais attention où tu mets les pieds.`, `On m'a dit que tu chassais sur mes terres. Profite tant que ça dure.`, `Joli coup la semaine dernière. Ça ne se reproduira pas.`]) : pick([`Petit conseil : les vrais deals, ça se fait au Boulevard Océan. Pas dans ton garage.`, `Si tu veux vendre ta boîte, appelle-moi. Je paie cash.`, `La Baie est à nous. Toi, tu fais de la figuration.`]);
+    sms(`${rv.boss} · ${rv.n}`, t);
+  }
+  // événements
+  if (Math.random() < .07) randomEvent();
+  // découvert
+  if (S.cash < 0){
+    const room = creditLimit() - S.credit;
+    if (room > 0){ const a = Math.min(room, -S.cash + 10000); S.credit += a; addCash(a); toast(`Découvert couvert par la ligne de crédit (${fmt(a)}).`,'y'); }
+  }
+  if (S.cash < 0){
+    S.overdraft++;
+    if (S.overdraft >= 4 || netWorth() < 0){ gameOver(); return; }
+    banner('Découvert', `Semaine ${S.overdraft}/3 · Vendez ou remboursez avant la faillite`, 'var(--red)'); sfx('siren');
+  } else S.overdraft = 0;
+  S.msgs.forEach(m => { if (m.w < S.week - 1) m.isNew = false; });
+  // bilan
+  const nw = netWorth(); S.nwHist.push(nw); if (S.nwHist.length > 520) S.nwHist.shift();
+  const ri = rankOf(nw);
+  if (ri > S.rankIdx){ S.rankIdx = ri; setTimeout(() => { banner('Promotion', `Nouveau rang : ${RANKS[ri][1]}`, 'var(--pink)'); sfx('mission'); }, 400); addRep(4); }
+  checkMissions();
+  renderAll(); save();
+}
+function boost(d, add, weeks){ S.market.boosts.push({d, add, until:S.week + weeks}); }
+function bump(d, f){ S.market.prices[d] *= 1 + f; }
+function randomEvent(){
+  const EV = [
+    [3, () => { const d = pick(['port','marais','flamant','marina']); boost(d,.003,30); return `Nouvelle ligne de tram vers ${D[d].name} : les prix vont grimper pendant des mois`; }],
+    [2, () => { ['palm','ocean','marina'].forEach(d => bump(d,.035)); return 'Exode de milliardaires de la tech : le front de mer s\'envole'; }],
+    [2, () => { ['ocean','palm','marina','port'].forEach(d => bump(d,-.02)); let n = 0; S.props.forEach(p => { if (['ocean','palm','marina','port'].includes(p.district) && !TYPES[p.type].land){ p.cond = Math.max(5, p.cond - rint(8,18)); n++; } }); if (n) sms('Assurances Solaris', `L'ouragan a endommagé ${n} de vos biens côtiers. État dégradé, prévoyez des travaux.`); return 'Ouragan Delia : la côte est touchée, dégâts sur le front de mer'; }],
+    [2, () => { bump('vieux',-.03); return 'Scandale de la mérule au Vieux-Carré : les acheteurs fuient'; }],
+    [2, () => { bump('port',-.025); return 'Fusillade sur les docks de Port Néon : la police boucle le quartier'; }],
+    [2, () => { ['affaires','marina'].forEach(d => bump(d,.02)); return 'Le Grand Prix de Solaris confirmé pour dix ans'; }],
+    [2, () => { S.market.rentMod = .88; S.market.rentUntil = S.week + 26; return 'Encadrement des loyers voté : −12 % sur les loyers pendant six mois'; }],
+    [1, () => { if (S.market.phase !== 'krach') S.market.phase = 'correction'; S.market.rate += .5; return 'Crise bancaire : les banques ferment les vannes, taux en hausse'; }],
+    [2, () => { S.market.rate = Math.max(.25, S.market.rate - .4); return 'La banque centrale baisse ses taux de 0,40 point'; }],
+    [2, () => { boost('marais',.0035,40); return 'Zone franche aux Marais : défiscalisation pour les promoteurs'; }],
+    [2, () => { bump('vieux',.02); return 'Festival Néon Nights : le Vieux-Carré affiche complet'; }],
+    [1, () => { bump('affaires',-.03); return 'Télétravail généralisé : les bureaux du Centre d\'Affaires se vident'; }],
+    [2, () => { boost('port',.002,26); return 'Un géant de la tech installe son campus sur les docks de Port Néon'; }],
+  ];
+  const t = wpick(EV.map(([w,f]) => [f,w]))();
+  news(t); toast(`FLASH INFO : ${t}`,'y');
+}
+function checkMissions(){
+  let delay = 900;
+  MISSIONS.forEach((m,i) => {
+    if (S.mdone[i] || !m.ok()) return;
+    S.mdone[i] = true;
+    const d = delay; delay += 3000;
+    if (m.r.cash) addCash(m.r.cash);
+    if (m.r.rep) addRep(m.r.rep);
+    setTimeout(() => { banner('Mission accomplie', `${m.t}${m.r.cash ? ' · Bonus ' + fmt(m.r.cash) : ''} · Respect +${m.r.rep}`, 'var(--sun)'); sfx('mission'); }, d);
+    if (m.final && !S.won){ S.won = true; setTimeout(showVictory, d + 2700); }
+  });
+}
+function gameOver(){ S.over = true; UI.speed = 0; save(); renderAll(); sfx('siren'); showEnd(false); }
+
+/* ---------------- RENDU ---------------- */
+function renderAll(){ renderHUD(); renderMap(); renderDInfo(); renderTabs(); renderPanel(); renderPhone(); renderTicker(); if (UI.modal) renderModal(); }
+function floatCash(delta){
+  const el = $('#cashFloatHost'); if (!el) return;
+  const f = document.createElement('div'); f.className = 'float'; f.style.color = delta >= 0 ? 'var(--green)' : 'var(--red)';
+  f.textContent = (delta >= 0 ? '+' : '') + fmt(delta); el.appendChild(f); setTimeout(() => f.remove(), 1700);
+}
+function renderHUD(){
+  const nw = netWorth(), ph = PH[S.market.phase], ri = rankOf(nw);
+  const stars = [1,2,3,4,5].map(i => `<span class="${S.heat >= i - .5 ? 'on' : ''}">★</span>`).join('');
+  $('#hud').innerHTML = `
+    <div class="brand"><b>NÉON ESTATE</b><small>MARCHAND DE BIENS</small></div>
+    <div class="hud-mid">
+      <span class="date">Sem. ${S.week} · ${dateLabel(S.week)}</span>
+      <span class="chip ${ph.cls}" title="Phase du marché">Marché ${ph.n}</span>
+      <span class="chip mute" title="Taux directeur de la banque centrale">Taux ${S.market.rate.toFixed(2).replace('.',',')} %</span>
+      <span class="chip ${S.props.length >= cap() ? 'orange' : 'mute'}" title="Biens détenus / capacité du QG">Biens ${S.props.length}/${cap()}</span>
+    </div>
+    <div class="hud-right">
+      <div class="rank"><small>Rang</small>${RANKS[ri][1]}</div>
+      <div class="stars-wrap" title="Pression fiscale : plus il y a d'étoiles, plus un contrôle est probable"><div class="stars">${stars}</div><small>Pression fiscale</small></div>
+      <div class="money" id="cashFloatHost"><div class="cash ${S.cash < 0 ? 'neg' : ''}">${fmtFull(S.cash)}</div><div class="nw">Patrimoine net <b>${fmt(nw)}</b></div></div>
+    </div>`;
+  if (UI.lastCash != null && Math.abs(S.cash - UI.lastCash) >= 1) floatCash(S.cash - UI.lastCash);
+  UI.lastCash = S.cash;
+  document.querySelectorAll('#speed button').forEach(b => b.classList.toggle('on', +b.dataset.arg === UI.speed));
+  $('#sndBtn').textContent = 'Son : ' + (UI.sound ? 'on' : 'off');
+}
+function renderMap(){
+  const svg = $('#map');
+  const dists = DISTRICTS.map(d => {
+    const t = trend13(d.id), sel = UI.filter === d.id;
+    const col = t > .01 ? '#4dff9e' : t < -.01 ? '#ff3b5c' : d.hue;
+    return `<polygon class="dist" data-act="district" data-arg="${d.id}" points="${d.poly}" fill="${d.hue}" fill-opacity="${sel ? .45 : .16}" stroke="${sel ? '#fff' : col}" stroke-width="${sel ? 2.5 : 1.4}" ${sel ? 'filter="url(#glow)"' : ''}><title>${esc(d.name)}</title></polygon>`;
+  }).join('');
+  const labels = DISTRICTS.map(d => {
+    const t = trend13(d.id);
+    return `<text class="lbl" x="${d.cx}" y="${d.cy - 4}" text-anchor="middle" fill="#fff">${esc(d.name.toUpperCase())}</text>
+            <text class="lbl2" x="${d.cx}" y="${d.cy + 9}" text-anchor="middle" fill="${t > .005 ? '#4dff9e' : t < -.005 ? '#ff3b5c' : '#ad96cb'}">${Math.round(price(d.id)).toLocaleString('fr-FR')} €/m² ${t >= 0 ? '▲' : '▼'}</text>`;
+  }).join('');
+  const lst = S.listings.map(l => `<rect x="${l.x-4}" y="${l.y-4}" width="8" height="8" transform="rotate(45 ${l.x} ${l.y})" fill="${l.off ? '#ffd23f' : '#2de2e6'}" style="cursor:pointer" data-act="openDeal" data-arg="${l.id}" filter="url(#glow)"><title>${esc(TYPES[l.type].n)} · ${fmt(l.ask)}</title></rect>`).join('');
+  const own = S.props.map(p => `<circle cx="${p.x}" cy="${p.y}" r="5.5" fill="#ff2d95" stroke="#fff" stroke-width="1.5" style="cursor:pointer" data-act="openProp" data-arg="${p.id}" filter="url(#glow)"><title>${esc(TYPES[p.type].n)} · ${esc(p.addr)}</title></circle>`).join('');
+  const palms = [[470,330],[492,250],[500,120],[540,280],[575,180],[30,380],[110,30]].map(([x,y],i) => `<use href="#palm" x="${x-10}" y="${y-30}" width="20" height="34" fill="#05020a" opacity=".85"/>`).join('');
+  svg.innerHTML = `
+    <rect width="600" height="420" fill="#120a20"/>
+    <path d="M455,0 L600,0 L600,420 L350,420 L380,380 L420,330 L470,290 L480,240 L478,180 L466,90 Z" fill="url(#sea)"/>
+    <g opacity=".9"><circle cx="560" cy="70" r="46" fill="url(#sunG)" mask="url(#sunMask)"/></g>
+    ${[0,1,2,3,4,5].map(i => `<line x1="${470+i*4}" y1="${150+i*45}" x2="${600}" y2="${150+i*45}" stroke="#2de2e6" stroke-opacity=".12"/>`).join('')}
+    ${dists}
+    <path d="M0,210 L180,195 L290,150 L410,140 L466,120 M240,305 L262,420 M300,0 L290,150 L330,262 L380,380 M480,215 L512,205" stroke="#ff2d95" stroke-opacity=".5" stroke-width="1.5" stroke-dasharray="6 5" fill="none"/>
+    ${palms}${labels}${lst}${own}`;
+  $('#mapHint').textContent = UI.filter ? 'Filtre : ' + D[UI.filter].name : 'Cliquez un quartier';
+}
+function renderDInfo(){
+  const d = D[UI.filter || 'port'], t = trend13(d.id);
+  const mine = S.props.filter(p => p.district === d.id).length;
+  const n = S.listings.filter(l => l.district === d.id).length;
+  $('#dinfo').innerHTML = `
+    <div class="row"><h3 style="color:${d.hue};text-shadow:0 0 14px ${d.hue}66">${esc(d.name)}</h3>${UI.filter ? '<button class="btn sm" data-act="district" data-arg="">Toute la Baie</button>' : '<span class="chip mute">Aperçu</span>'}</div>
+    <p class="mute" style="margin:6px 0 0">${esc(d.desc)}</p>
+    <div class="kv">
+      <div><small>Prix moyen</small><b>${Math.round(price(d.id)).toLocaleString('fr-FR')} €/m²</b></div>
+      <div><small>Sur 3 mois</small><b class="${t >= 0 ? 'g' : 'r'}">${pct(t)}</b></div>
+      <div><small>Rendement locatif</small><b>${(d.yld*100).toFixed(1).replace('.',',')} %</b></div>
+      <div><small>Liquidité</small><b>${d.liq >= .9 ? 'Forte' : d.liq >= .75 ? 'Correcte' : 'Faible'}</b></div>
+      <div><small>Annonces</small><b>${n}</b></div>
+      <div><small>Vos biens</small><b>${mine}</b></div>
+    </div>`;
+}
+function renderTabs(){
+  const forsale = S.props.filter(p => p.offer).length;
+  const T = [['market','Annonces',S.listings.length],['portfolio','Portefeuille',forsale || 0],['team','Équipe & QG'],['bank','Banque'],['missions','Missions'],['ranking','Classement'],['stats','Bilan']];
+  $('#tabs').innerHTML = T.map(([id,n,c]) => `<button class="tab ${UI.tab === id ? 'on' : ''}" data-act="tab" data-arg="${id}">${n}${c ? `<span class="n">${c}</span>` : ''}</button>`).join('');
+}
+function dpeBadge(d){ return `<span class="dpe" style="background:${DPE_COL[d]}" title="Diagnostic de performance énergétique">${d}</span>`; }
+function estRange(l){ const v = valueOf(l)*(1+l.err); return l.diag ? [valueOf(l), valueOf(l)] : [v*(1-l.eRange/2), v*(1+l.eRange/2)]; }
+function listingCard(l){
+  const T = TYPES[l.type], d = D[l.district], mo = MO[l.motiv];
+  const [a,b] = estRange(l); const mid = (a+b)/2; const disc = 1 - l.ask/mid;
+  return `<button class="lc" data-act="openDeal" data-arg="${l.id}">
+    <div class="lc-top" style="background:linear-gradient(120deg,${d.hue},${d.hue}55 70%,transparent)">
+      <div><div class="ty">${esc(T.n)}</div><div class="dn">${esc(d.name)}</div></div>
+      ${T.land ? '' : dpeBadge(l.dpe)}
+    </div>
+    ${l.off ? '<span class="sticker">Tuyau</span>' : ''}
+    <div class="lc-b">
+      <div class="addr">${esc(l.addr)} · ${l.m2.toLocaleString('fr-FR')} m²</div>
+      <div class="row"><span class="price">${fmt(l.ask)}</span><span class="small ${disc > .05 ? 'g' : disc < -.03 ? 'r' : 'mute'}">${disc >= 0 ? '−' : '+'}${Math.abs(Math.round(disc*100))} % vs estim.</span></div>
+      ${T.land ? `<div class="small mute">Constructible · ${Math.round(l.m2*.8).toLocaleString('fr-FR')} m² de plancher</div>` : `<div class="bar" title="État : ${l.cond}/100"><i style="width:${l.cond}%"></i></div>`}
+      <div class="tags">${mo.id !== 'classic' ? `<span class="tag ${mo.cls}">${esc(mo.n)}</span>` : `<span class="tag">${esc(mo.n)}</span>`}${l.diag ? (l.defect ? `<span class="tag bad">${esc(l.defect.n)}</span>` : '<span class="tag deal">Diag OK</span>') : ''}${l.until - S.week <= 1 ? '<span class="tag warn">Expire</span>' : ''}${l.counter ? '<span class="tag info">Contre-offre</span>' : ''}</div>
+    </div></button>`;
+}
+function statusChip(p){
+  if (p.status === 'works') return `<span class="tag warn">Travaux · ${p.left} sem.</span>`;
+  if (p.status === 'permit') return `<span class="tag info">Permis · ${p.left} sem.</span>`;
+  if (p.status === 'building') return `<span class="tag warn">Chantier · ${p.left} sem.</span>`;
+  if (p.status === 'rented') return p.vacant > 0 ? '<span class="tag warn">Vacant</span>' : '<span class="tag deal">Loué</span>';
+  return '<span class="tag">Libre</span>';
+}
+function propCard(p){
+  const T = TYPES[p.type], d = D[p.district], v = valueOf(p), basis = p.purchase + p.fees + p.works, pl = v - basis;
+  const prog = ['works','permit','building'].includes(p.status) ? `<div class="bar prog"><i style="width:${Math.round((1 - p.left/p.total)*100)}%"></i></div>` : '';
+  return `<button class="lc" data-act="openProp" data-arg="${p.id}">
+    <div class="lc-top" style="background:linear-gradient(120deg,#ff2d95,#8b3dff88 70%,transparent)">
+      <div><div class="ty">${esc(T.n)}</div><div class="dn">${esc(d.name)}</div></div>
+      ${T.land ? (p.permit ? '<span class="tag hot">Permis OK</span>' : '') : dpeBadge(p.dpe)}
+    </div>
+    ${p.offer ? '<span class="sticker">Offre !</span>' : ''}
+    <div class="lc-b">
+      <div class="addr">${esc(p.addr)} · ${p.m2.toLocaleString('fr-FR')} m²</div>
+      <div class="row"><span class="price">${fmt(v)}</span><span class="small ${pl >= 0 ? 'g' : 'r'}">${pl >= 0 ? '+' : ''}${fmt(pl)}</span></div>
+      ${prog || (T.land ? '' : `<div class="bar" title="État : ${p.cond}/100"><i style="width:${p.cond}%"></i></div>`)}
+      <div class="tags">${statusChip(p)}${p.sale ? `<span class="tag hot">En vente ${fmt(p.sale.price)}</span>` : ''}${p.loan ? `<span class="tag">Crédit ${fmt(p.loan)}</span>` : ''}${p.lux ? '<span class="tag info">Prestige</span>' : ''}${p.divided ? '<span class="tag info">Divisé</span>' : ''}</div>
+    </div></button>`;
+}
+function renderPanel(){
+  const el = $('#panel'); const t = UI.tab;
+  if (t === 'market'){
+    let L = S.listings.filter(l => !UI.filter || l.district === UI.filter);
+    const key = {deal: l => -(1 - l.ask/(valueOf(l)*(1+l.err))), cheap: l => l.ask, big: l => -l.ask, end: l => l.until}[UI.sortM];
+    L = [...L].sort((a,b) => key(a) - key(b));
+    el.innerHTML = `<div class="toolbar"><span class="mute small">Trier :</span><div class="seg">${[['deal','Meilleures affaires'],['cheap','Prix ↑'],['big','Prix ↓'],['end','Expiration']].map(([k,n]) => `<button class="${UI.sortM === k ? 'on' : ''}" data-act="sortM" data-arg="${k}">${n}</button>`).join('')}</div>${UI.filter ? `<span class="chip pink">${esc(D[UI.filter].name)}</span><button class="btn sm" data-act="district" data-arg="">Tout voir</button>` : ''}</div>
+    ${L.length ? `<div class="grid">${L.map(listingCard).join('')}</div>` : `<div class="empty"><b>Rien à vendre ici</b>Aucune annonce dans ce quartier cette semaine. Passez à la semaine suivante ou embauchez une chasseuse d'affaires.</div>`}`;
+  }
+  else if (t === 'portfolio'){
+    const P = S.props.filter(p => !UI.filter || p.district === UI.filter);
+    const tv = S.props.reduce((s,p)=>s+valueOf(p),0);
+    el.innerHTML = `<div class="toolbar"><span class="chip mute">${S.props.length}/${cap()} biens</span><span class="chip cyan">Valeur ${fmt(tv)}</span><span class="chip green">Loyers ${fmt(S.lastWeek.rent)}/sem.</span>${UI.filter ? `<span class="chip pink">${esc(D[UI.filter].name)}</span>` : ''}</div>
+    ${P.length ? `<div class="grid">${P.map(propCard).join('')}</div>` : `<div class="empty"><b>Portefeuille vide</b>Ouvrez l'onglet Annonces et trouvez votre première affaire. Les vendeurs en succession, divorce ou liquidation lâchent le plus.</div>`}`;
+  }
+  else if (t === 'team'){
+    const nx = HQ[S.hq+1];
+    el.innerHTML = `<h3 class="section-t">Quartier général</h3>
+      <div class="staff"><div class="avatar" style="background:linear-gradient(135deg,var(--pink),var(--violet))">QG</div>
+        <div><b>${esc(HQ[S.hq].n)}</b><div class="small mute">Capacité ${cap()} biens · loyer ${fmtFull(HQ[S.hq].rent)}/sem.</div>${nx ? `<div class="small">Suivant : <b>${esc(nx.n)}</b> · ${nx.cap} biens · ${fmtFull(nx.rent)}/sem.</div>` : '<div class="small y">Siège ultime atteint.</div>'}</div>
+        ${nx ? `<button class="btn pri sm" data-act="hq" ${S.cash < nx.cost ? 'disabled' : ''}>Déménager ${fmt(nx.cost)}</button>` : ''}</div>
+      <h3 class="section-t">Personnel</h3><div class="stack">${STAFF.map(st => {
+        const L = S.staff[st.id], c = st.hire*(L+1)*(L+1);
+        return `<div class="staff"><div class="avatar" style="background:${st.col};color:#0c0614">${st.who.split(' ')[0][0]}${st.who.split(' ').slice(-1)[0][0]}</div>
+          <div style="min-width:0"><b>${esc(st.n)}</b> <span class="small mute">· ${esc(st.who)}</span><div class="small mute" style="white-space:normal">${esc(st.fx)}</div>
+          <div class="lvl">${[1,2,3,4,5].map(i => `<i class="${L >= i ? 'on' : ''}"></i>`).join('')}</div><div class="small mute">${L ? `Salaire ${fmtFull(st.sal*L)}/sem.` : 'Non recruté'}</div></div>
+          <div class="acts" style="flex-direction:column;align-items:stretch">${L < 5 ? `<button class="btn ${L ? 'cy' : 'pri'} sm" data-act="hire" data-arg="${st.id}" ${S.cash < c ? 'disabled' : ''}>${L ? 'Promouvoir' : 'Recruter'} ${fmt(c)}</button>` : '<span class="chip green">Max</span>'}${L ? `<button class="btn sm" data-act="fire" data-arg="${st.id}">Rétrograder</button>` : ''}</div></div>`;
+      }).join('')}</div>`;
+  }
+  else if (t === 'bank'){
+    const lim = creditLimit(), room = Math.max(0, lim - S.credit), lw = S.lastWeek;
+    const loans = S.props.filter(p => p.loan > 0);
+    el.innerHTML = `<h3 class="section-t">Conditions bancaires</h3>
+      <div class="kv"><div><small>Taux directeur</small><b>${S.market.rate.toFixed(2).replace('.',',')} %</b></div><div><small>Taux de vos prêts</small><b>${loanRate().toFixed(2).replace('.',',')} %</b></div><div><small>Emprunt max</small><b>${Math.round(maxLTV('appart')*100)} % du prix</b></div><div><small>Dette totale</small><b class="${debt() > 0 ? 'o' : ''}">${fmt(debt())}</b></div></div>
+      <h3 class="section-t">Ligne de crédit d'entreprise</h3>
+      <div class="m-sec"><div class="row"><span>Utilisé <b>${fmt(S.credit)}</b> sur <b>${fmt(lim)}</b> · taux ${creditRate().toFixed(2).replace('.',',')} %</span></div>
+        <div class="bar" style="margin:8px 0"><i style="width:${lim ? Math.min(100, S.credit/lim*100) : 0}%;background:var(--orange)"></i></div>
+        <div class="acts">${[100000,1e6,10e6].map(x => `<button class="btn cy sm" data-act="borrow" data-arg="${x}" ${room < 1000 ? 'disabled' : ''}>Tirer ${fmt(Math.min(x, room) || x)}</button>`).join('')}${[100000,1e6,10e6].map(x => `<button class="btn sm" data-act="repay" data-arg="${x}" ${S.credit <= 0 || S.cash <= 0 ? 'disabled' : ''}>Rembourser ${fmt(x)}</button>`).join('')}</div>
+        <p class="small mute" style="margin:8px 0 0">Plafond : ${Math.round((.2 + .05*S.staff.banker)*100)} % de vos fonds propres immobiliers. Un découvert est couvert automatiquement par la ligne. Sans ligne, quatre semaines de découvert mènent à la liquidation.</p></div>
+      <h3 class="section-t">Flux de la dernière semaine</h3>
+      <div class="sum"><span>Loyers encaissés</span><b class="g">+${fmtFull(lw.rent)}</b><span>Intérêts d'emprunt</span><b class="r">−${fmtFull(lw.interest)}</b><span>Salaires et loyer du QG</span><b class="r">−${fmtFull(lw.salaries)}</b><span>Taxe foncière, assurances, copro</span><b class="r">−${fmtFull(lw.charges)}</b><span class="tot">Résultat courant</span><b class="tot ${lw.rent - lw.interest - lw.salaries - lw.charges >= 0 ? 'g' : 'r'}">${fmtFull(lw.rent - lw.interest - lw.salaries - lw.charges)}</b></div>
+      <h3 class="section-t">Fiscalité</h3>
+      <div class="sum"><span>Résultat fiscal de l'exercice en cours</span><b class="${S.fiscal >= 0 ? '' : 'r'}">${fmtFull(S.fiscal)}</b><span>Clôture de l'exercice dans</span><b>${52 - ((S.week-1)%52)} sem.</b><span>IS payé depuis le début</span><b>${fmtFull(S.stats.tax)}</b></div>
+      <div class="m-sec" style="margin-top:10px"><div class="row"><span>Pression fiscale : <b class="${S.heat >= 1 ? 'r' : ''}">${S.heat.toFixed(1).replace('.',',')} / 5</b></span><button class="btn dg sm" data-act="launder" ${S.heat < .5 ? 'disabled' : ''}>Régulariser · ${fmt(Math.max(50000, netWorth()*.02))}</button></div><p class="small mute" style="margin:6px 0 0">Les chantiers au noir et les enveloppes à la mairie attirent le fisc. Chaque étoile augmente le risque de contrôle fiscal et le montant du redressement.</p></div>
+      <h3 class="section-t">Prêts in fine en cours</h3>
+      ${loans.length ? `<div class="tbl-wrap"><table><thead><tr><th>Bien</th><th class="num">Capital</th><th class="num">Intérêts/sem.</th><th></th></tr></thead><tbody>${loans.map(p => `<tr><td>${esc(TYPES[p.type].n)} · ${esc(p.addr)}</td><td class="num">${fmt(p.loan)}</td><td class="num">${fmtFull(p.loan*loanRate()/100/52)}</td><td class="num"><button class="btn sm" data-act="repayLoan" data-arg="${p.id}" ${S.cash < p.loan ? 'disabled' : ''}>Rembourser</button></td></tr>`).join('')}</tbody></table></div>` : '<p class="mute">Aucun prêt. Le capital d\'un prêt in fine est remboursé à la revente du bien.</p>'}`;
+  }
+  else if (t === 'missions'){
+    const cur = MISSIONS.findIndex((m,i) => !S.mdone[i]);
+    el.innerHTML = `<p class="small mute" style="margin:0 0 12px">${S.mdone.filter(Boolean).length} / ${MISSIONS.length} accomplies. Les missions se valident dans n'importe quel ordre.</p><div class="stack">${MISSIONS.map((m,i) => `<div class="mission ${S.mdone[i] ? 'done' : i === cur ? 'cur' : ''}"><div class="ic">${S.mdone[i] ? '✓' : i+1}</div><div><b>${esc(m.t)}</b><div class="small mute">${esc(m.d)}</div></div><div class="small" style="text-align:right">${m.r.cash ? `<div class="g">${fmt(m.r.cash)}</div>` : ''}<div class="y">Respect +${m.r.rep}</div></div></div>`).join('')}</div>`;
+  }
+  else if (t === 'ranking'){
+    const me = netWorth();
+    const rows = [...S.rivals.map(r => ({n:r.n, boss:r.boss, nw:r.nw, col:r.col})), {n:'Votre société', boss:RANKS[rankOf(me)][1], nw:me, me:true, col:'#ff2d95'}].sort((a,b) => b.nw - a.nw);
+    const mx = rows[0].nw;
+    el.innerHTML = `<h3 class="section-t">Les rois de la Baie</h3><div class="tbl-wrap"><table><thead><tr><th>#</th><th>Société</th><th>Dirigeant</th><th class="num">Patrimoine</th><th style="width:30%"></th></tr></thead><tbody>
+      ${rows.map((r,i) => `<tr class="${r.me ? 'me' : ''}"><td class="disp" style="font-size:18px">${i+1}</td><td>${esc(r.n)}</td><td class="mute">${esc(r.boss)}</td><td class="num">${fmt(r.nw)}</td><td><div class="bar"><i style="width:${Math.max(2, r.nw/mx*100)}%;background:${r.col}"></i></div></td></tr>`).join('')}</tbody></table></div>
+      <h3 class="section-t">Les rangs</h3><div class="tags">${RANKS.map((r,i) => `<span class="tag ${i <= rankOf(me) ? 'hot' : ''}">${esc(r[1])} · ${r[0] ? fmt(r[0]) : '0 €'}</span>`).join('')}</div>`;
+  }
+  else if (t === 'stats'){
+    const st = S.stats;
+    el.innerHTML = `<h3 class="section-t">Patrimoine net</h3><canvas id="chart" width="800" height="220" aria-label="Évolution du patrimoine net"></canvas>
+      <div class="kv"><div><small>Acquisitions</small><b>${st.bought}</b></div><div><small>Ventes</small><b>${st.sold}</b></div><div><small>Plus-values cumulées</small><b class="${st.profit >= 0 ? 'g' : 'r'}">${fmt(st.profit)}</b></div><div><small>Meilleur coup</small><b class="g">${fmt(st.best)}</b></div><div><small>Chantiers terminés</small><b>${st.works}</b></div><div><small>Résidences livrées</small><b>${st.built}</b></div><div><small>IS payé</small><b>${fmt(st.tax)}</b></div><div><small>Contrôles fiscaux</small><b class="${st.controls ? 'r' : ''}">${st.controls}</b></div><div><small>Respect</small><b class="y">${Math.round(S.rep)}/100</b></div></div>
+      <div class="acts" style="margin-top:18px"><button class="btn dg sm" data-act="menu">Menu principal</button></div>`;
+    drawChart();
+  }
+}
+function drawChart(){
+  const c = $('#chart'); if (!c) return;
+  const W = c.clientWidth || 600, H = 220, dpr = window.devicePixelRatio || 1;
+  c.width = W*dpr; c.height = H*dpr; const g = c.getContext('2d'); g.scale(dpr,dpr);
+  const h = S.nwHist; const mn = Math.min(0, ...h), mx = Math.max(...h)*1.05 || 1;
+  const pl = 58, pr = 10, pt = 10, pb = 22;
+  const X = i => pl + (W-pl-pr) * (h.length > 1 ? i/(h.length-1) : 0), Y = v => pt + (H-pt-pb) * (1 - (v-mn)/(mx-mn));
+  g.font = '11px Rubik, sans-serif'; g.fillStyle = '#ad96cb'; g.strokeStyle = 'rgba(173,150,203,.15)';
+  for (let k = 0; k <= 4; k++){ const v = mn + (mx-mn)*k/4, y = Y(v); g.beginPath(); g.moveTo(pl,y); g.lineTo(W-pr,y); g.stroke(); g.fillText(fmt(v), 4, y+4); }
+  const startW = S.week - h.length + 1;
+  g.fillText(`Sem. ${startW}`, pl, H-6); g.textAlign = 'right'; g.fillText(`Sem. ${S.week}`, W-pr, H-6); g.textAlign = 'left';
+  const grd = g.createLinearGradient(0,pt,0,H-pb); grd.addColorStop(0,'rgba(255,45,149,.45)'); grd.addColorStop(1,'rgba(255,45,149,0)');
+  g.beginPath(); h.forEach((v,i) => i ? g.lineTo(X(i),Y(v)) : g.moveTo(X(i),Y(v))); g.lineTo(X(h.length-1),Y(mn)); g.lineTo(X(0),Y(mn)); g.closePath(); g.fillStyle = grd; g.fill();
+  g.beginPath(); h.forEach((v,i) => i ? g.lineTo(X(i),Y(v)) : g.moveTo(X(i),Y(v))); g.strokeStyle = '#ff2d95'; g.lineWidth = 2.5; g.shadowColor = '#ff2d95'; g.shadowBlur = 10; g.stroke(); g.shadowBlur = 0;
+  const lx = X(h.length-1), ly = Y(h[h.length-1]); g.fillStyle = '#fff'; g.beginPath(); g.arc(lx,ly,4,0,7); g.fill();
+}
+function renderPhone(){
+  $('#phone').innerHTML = S.msgs.length ? S.msgs.slice(0,30).map(m => `<div class="sms ${m.isNew ? 'new' : ''}"><div class="who"><span class="${m.from.includes('DGFiP') || m.from.includes('Inspection') ? 'r' : m.from.includes('·') ? 'c' : 'p'}">${esc(m.from)}</span><span>Sem. ${m.w}</span></div>${esc(m.text)}${m.actions && !m.done ? `<div class="acts">${m.actions.map(a => `<button class="btn sm ${a.cls||''}" data-act="${a.a}" data-arg="${a.arg}">${esc(a.l)}</button>`).join('')}</div>` : ''}</div>`).join('') : '<p class="mute">Aucun message.</p>';
+  const h = 19 + Math.floor(S.week % 5), mi = (S.week*17) % 60; $('#phTime').textContent = `${h}:${String(mi).padStart(2,'0')}`;
+}
+function renderTicker(){ $('#ticker').innerHTML = S.news.map(n => `<span>${esc(n)}</span>`).join(''); }
+
+/* ---------------- MODALES ---------------- */
+function openDeal(id){
+  const l = S.listings.find(x => x.id == id); if (!l) return toast('Cette affaire n\'est plus disponible.','r');
+  UI.modal = {kind:'deal', id:l.id, offerPct:Math.round(clamp(100 - (l.flex*100)*.6, 60, 100)), ltv:0};
+  renderModal();
+}
+function openProp(id){ const p = S.props.find(x => x.id == id); if (!p) return; UI.modal = {kind:'prop', id:p.id, salePct:100, noir:false, bribe:false}; renderModal(); }
+function closeModal(){ UI.modal = null; $('#ovRoot').innerHTML = ''; }
+function renderModal(){
+  const m = UI.modal; if (!m) return;
+  const keepScroll = $('#ovRoot .modal')?.scrollTop || 0;
+  let html = '';
+  if (m.kind === 'deal'){
+    const l = S.listings.find(x => x.id === m.id); if (!l) return closeModal();
+    const T = TYPES[l.type], d = D[l.district], mo = MO[l.motiv];
+    const [a,b] = estRange(l);
+    const lmax = Math.round(maxLTV(l.type)*100);
+    m.ltv = Math.min(m.ltv, lmax);
+    const q = {...l, cond:Math.max(l.cond,95), dpe:dpeBetter(l.dpe,'C')};
+    const pot = T.land ? null : valueOf(q);
+    html = `<div class="m-hero" style="background:linear-gradient(120deg,${d.hue},${d.hue}66 55%,#1f1034)">
+      <button class="m-x" data-act="close" aria-label="Fermer">×</button>
+      <h2>${esc(T.n)}</h2><div class="sub">${esc(d.name)} · ${esc(l.addr)} · ${l.m2.toLocaleString('fr-FR')} m²</div>
+      <div class="tags" style="margin-top:10px"><span class="tag ${mo.cls || ''}" style="background:rgba(0,0,0,.35);color:#fff">${esc(mo.n)}</span>${T.land ? '' : `<span class="tag" style="background:rgba(0,0,0,.35);color:#fff">DPE ${l.dpe}</span><span class="tag" style="background:rgba(0,0,0,.35);color:#fff">État ${l.cond}/100</span>`}<span class="tag" style="background:rgba(0,0,0,.35);color:#fff">Expire dans ${Math.max(0, l.until - S.week)} sem.</span></div></div>
+    <div class="m-b">
+      <div class="kv" style="margin:0">
+        <div><small>Prix demandé</small><b>${fmtFull(l.ask)}</b></div>
+        <div><small>${l.diag ? 'Valeur expertisée' : 'Estimation'}</small><b>${l.diag ? fmt(a) : fmt(a) + ' – ' + fmt(b)}</b></div>
+        <div><small>Prix au m²</small><b>${Math.round(l.ask/l.m2).toLocaleString('fr-FR')} €</b></div>
+        <div><small>${T.land ? 'Surface constructible' : 'Après rénov. complète'}</small><b>${T.land ? Math.round(l.m2*.8).toLocaleString('fr-FR') + ' m²' : '≈ ' + fmt(pot)}</b></div>
+      </div>
+      <div class="m-sec"><h4>Diagnostics</h4>${l.diag ? (l.defect ? `<p class="r" style="margin:0">${esc(l.defect.n)} détecté : ${fmtFull(l.defect.cost)} de travaux obligatoires. Le vendeur le sait, il acceptera de baisser.</p>` : '<p class="g" style="margin:0">Rien à signaler. Le bien est sain.</p>') : `<div class="row"><p class="small mute" style="margin:0">Amiante, mérule, structure, toiture : un vice caché se paie au prix fort après la signature. L'expertise donne aussi la valeur exacte.</p><button class="btn cy sm" data-act="diag" data-arg="${l.id}">Expertise ${fmt(diagCost(l))}</button></div>`}</div>
+      <div class="m-sec"><h4>Négociation</h4>
+        <div class="slider"><label for="offerR"><span>Votre offre</span><b id="offerV"></b></label><input type="range" id="offerR" min="60" max="100" step="1" value="${m.offerPct}" data-in="offerPct"></div>
+        <div class="slider" style="margin-top:10px"><label for="ltvR"><span>Financement bancaire (prêt in fine)</span><b id="ltvV"></b></label><input type="range" id="ltvR" min="0" max="${lmax}" step="5" value="${m.ltv}" data-in="ltv"></div>
+        <div class="sum" id="dealSum"></div>
+        ${l.counter ? `<div class="m-sec" style="margin-top:12px;border-color:var(--sun)"><div class="row"><span>Contre-proposition du vendeur : <b class="y">${fmtFull(l.counter)}</b></span><button class="btn go sm" data-act="acceptCounter" data-arg="${l.id}">Accepter</button></div></div>` : ''}
+        <p class="small mute" style="margin:10px 0 0">Tentatives restantes : <b>${l.offers}</b>. Les vendeurs en succession, divorce ou liquidation acceptent de plus grosses décotes. Votre respect pèse dans la balance.</p>
+        <div class="why" id="dealWhy"></div>
+        <div class="acts" style="margin-top:10px"><button class="btn pri" data-act="offer" data-arg="${l.id}" id="offerBtn" ${l.offers <= 0 ? 'disabled' : ''}>Faire l'offre</button><button class="btn" data-act="fullPrice" data-arg="${l.id}">Payer le prix demandé</button></div>
+      </div>
+    </div>`;
+  } else {
+    const p = S.props.find(x => x.id === m.id); if (!p) return closeModal();
+    const T = TYPES[p.type], d = D[p.district], v = valueOf(p), basis = p.purchase + p.fees + p.works;
+    const busy = ['works','permit','building'].includes(p.status);
+    let sec = '';
+    if (busy){
+      const lab = {works:'Chantier en cours', permit:'Instruction du permis', building:'Construction en cours'}[p.status];
+      sec += `<div class="m-sec"><h4>${lab}</h4><div class="bar prog" style="height:8px"><i style="width:${Math.round((1-p.left/p.total)*100)}%"></i></div><p class="small mute" style="margin:8px 0 0">Encore ${p.left} semaine${p.left > 1 ? 's' : ''}.${p.status === 'permit' ? ` Chances d'obtention : ${Math.round(permitChance(p,p.bribe)*100)} %.` : ''}</p></div>`;
+    }
+    if (!busy && !p.sale){
+      if (T.land){
+        if (!p.permit){
+          sec += `<div class="m-sec"><h4>Permis de construire</h4><p class="small mute" style="margin:0 0 8px">Surface de plancher autorisée : ${Math.round(p.m2*.8).toLocaleString('fr-FR')} m². Un terrain avec permis purgé vaut 35 % de plus. Chances : <b>${Math.round(permitChance(p, m.bribe)*100)} %</b>.</p>
+          <label class="check"><input type="checkbox" id="bribeC" data-in="bribe" ${m.bribe ? 'checked' : ''}> Glisser une enveloppe à l'adjoint à l'urbanisme (+30 % de chances, +${fmt(v*.02)}, +1,5 étoile)</label>
+          <div class="acts" style="margin-top:10px"><button class="btn pri" data-act="permit" data-arg="${p.id}">Déposer le permis · ${fmt(permitCost(p) + (m.bribe ? v*.02 : 0))}</button></div></div>`;
+        } else {
+          const sdp = Math.round(p.m2*.8), after = sdp * price(p.district) * TYPES.neuf.mult * 1.1;
+          sec += `<div class="m-sec"><h4>Promotion immobilière</h4><div class="sum"><span>Surface à construire</span><b>${sdp.toLocaleString('fr-FR')} m²</b><span>Coût de construction</span><b>${fmtFull(buildCost(p))}</b><span>Durée</span><b>${buildWeeks(p)} semaines</b><span>Valeur à la livraison (prix actuels)</span><b class="g">≈ ${fmt(after)}</b></div>
+          <div class="acts" style="margin-top:10px"><button class="btn pri" data-act="build" data-arg="${p.id}" ${S.cash < buildCost(p) ? 'disabled' : ''}>Lancer la construction</button>${S.cash < buildCost(p) ? '<span class="why">Trésorerie insuffisante : tirez sur la ligne de crédit (onglet Banque).</span>' : ''}</div></div>`;
+        }
+      } else if (p.status === 'idle'){
+        const W = worksFor(p);
+        sec += `<div class="m-sec"><h4>Travaux</h4>${W.length ? `<div class="works">${W.map(w => { const c = Math.round(w.cost*(m.noir ? .65 : 1)); return `<div class="work"><b>${esc(w.n)}</b><p>${esc(w.d)}</p><div class="sum" style="margin:0"><span>Coût</span><b>${fmt(c)}</b><span>Durée</span><b>${w.weeks} sem.</b><span>Valeur après</span><b class="${w.after - v > c ? 'g' : 'o'}">${fmt(w.after)}</b></div><button class="btn cy sm" data-act="works" data-arg="${p.id}:${w.id}" ${S.cash < c ? 'disabled' : ''}>Lancer</button></div>`; }).join('')}</div>
+          <label class="check" style="margin-top:10px"><input type="checkbox" id="noirC" data-in="noir" ${m.noir ? 'checked' : ''}> Travaux au noir : −35 % sur la facture, +1,2 étoile de pression fiscale, risque d'inspection</label>` : '<p class="small mute" style="margin:0">Aucun chantier pertinent : le bien est au top.</p>'}</div>`;
+      }
+      if (!T.land && (p.status === 'idle' || p.status === 'rented')){
+        const b = rentBanned(p);
+        sec += `<div class="m-sec"><h4>Location</h4><div class="row"><span class="small">${p.status === 'rented' ? (p.vacant ? `Recherche de locataire (${p.vacant} sem.)` : `Loué : <b class="g">${fmtFull(weeklyRent(p))}/sem.</b>`) : b ? `<span class="r">${b}</span>` : `Loyer attendu : <b>${fmtFull(weeklyRent(p))}/sem.</b> (${(D[p.district].yld*100).toFixed(1).replace('.',',')} % brut)`}</span>
+          <button class="btn ${p.status === 'rented' ? '' : 'go'} sm" data-act="rent" data-arg="${p.id}" ${p.status !== 'rented' && b ? 'disabled' : ''}>${p.status === 'rented' ? 'Donner congé' : 'Mettre en location'}</button></div></div>`;
+      }
+    }
+    if (!busy){
+      if (!p.sale){
+        sec += `<div class="m-sec"><h4>Vente</h4>
+          <div class="slider"><label for="saleR"><span>Prix affiché (par rapport à la valeur${p.status === 'rented' ? ' occupée, −10 %' : ''})</span><b id="saleV"></b></label><input type="range" id="saleR" min="80" max="135" step="1" value="${m.salePct}" data-in="salePct"></div>
+          <div class="sum" id="saleSum"></div>
+          <div class="acts" style="margin-top:10px"><button class="btn pri" data-act="list" data-arg="${p.id}">Mettre en vente</button><button class="btn" data-act="express" data-arg="${p.id}">Vente express à un marchand · ${fmt(expressPrice(p))}</button></div></div>`;
+      } else {
+        const c = p.offer ? saleCalc(p, p.offer.amount) : null;
+        sec += `<div class="m-sec" style="border-color:var(--pink)"><h4>En vente à ${fmtFull(p.sale.price)}</h4>
+          ${p.offer ? `<p style="margin:0 0 8px">Offre ferme : <b class="g">${fmtFull(p.offer.amount)}</b>, plus-value nette ${fmt(c.profit)} (TVA sur marge ${fmt(c.tva)}).</p><div class="acts"><button class="btn go" data-act="acceptOffer" data-arg="${p.id}">Accepter l'offre</button><button class="btn dg sm" data-act="refuseOffer" data-arg="${p.id}">Refuser</button></div>` : `<p class="small mute" style="margin:0 0 8px">En ligne depuis ${S.week - p.sale.since} sem. Les acheteurs se manifestent par SMS.</p>`}
+          <div class="acts" style="margin-top:8px"><button class="btn sm" data-act="cut" data-arg="${p.id}">Baisser de 5 %</button><button class="btn sm" data-act="unlist" data-arg="${p.id}">Retirer de la vente</button><button class="btn sm" data-act="express" data-arg="${p.id}">Vente express · ${fmt(expressPrice(p))}</button></div></div>`;
+      }
+    }
+    if (p.loan > 0) sec += `<div class="m-sec"><div class="row"><span class="small">Prêt in fine : <b>${fmtFull(p.loan)}</b> · ${fmtFull(p.loan*loanRate()/100/52)}/sem. d'intérêts</span><button class="btn sm" data-act="repayLoan" data-arg="${p.id}" ${S.cash < p.loan ? 'disabled' : ''}>Rembourser</button></div></div>`;
+    html = `<div class="m-hero" style="background:linear-gradient(120deg,#ff2d95,${d.hue}88 55%,#1f1034)">
+      <button class="m-x" data-act="close" aria-label="Fermer">×</button>
+      <h2>${esc(T.n)}</h2><div class="sub">${esc(d.name)} · ${esc(p.addr)} · ${p.m2.toLocaleString('fr-FR')} m²</div>
+      <div class="tags" style="margin-top:10px">${statusChip(p)}${T.land ? (p.permit ? '<span class="tag hot">Permis purgé</span>' : '') : `<span class="tag" style="background:rgba(0,0,0,.35);color:#fff">DPE ${p.dpe}</span><span class="tag" style="background:rgba(0,0,0,.35);color:#fff">État ${p.cond}/100</span>`}${p.lux ? '<span class="tag info">Prestige</span>' : ''}${p.divided ? '<span class="tag info">Divisé en lots</span>' : ''}</div></div>
+    <div class="m-b">
+      <div class="kv" style="margin:0"><div><small>Valeur de marché</small><b>${fmt(v)}</b></div><div><small>Prix de revient</small><b>${fmt(basis)}</b></div><div><small>Plus-value latente</small><b class="${v - basis >= 0 ? 'g' : 'r'}">${fmt(v - basis)}</b></div><div><small>Détenu depuis</small><b>${S.week - p.boughtW} sem.</b></div></div>
+      <div class="sum" style="margin:0"><span class="mute">Prix d'achat</span><span>${fmtFull(p.purchase)}</span><span class="mute">Frais de notaire (2,5 %)</span><span>${fmtFull(p.fees)}</span><span class="mute">Travaux et frais engagés</span><span>${fmtFull(p.works)}</span></div>
+      ${sec}
+    </div>`;
+  }
+  $('#ovRoot').innerHTML = `<div class="ov" data-act="ovclick"><div class="modal" role="dialog" aria-modal="true">${html}</div></div>`;
+  $('#ovRoot .modal').scrollTop = keepScroll;
+  updateSums();
+}
+function updateSums(){
+  const m = UI.modal; if (!m) return;
+  if (m.kind === 'deal'){
+    const l = S.listings.find(x => x.id === m.id); if (!l) return;
+    const offer = Math.round(l.ask * m.offerPct/100 / 1000) * 1000, fees = Math.round(offer*.025), loan = Math.round(offer*m.ltv/100);
+    const apport = offer + fees - loan;
+    $('#offerV').textContent = `${fmtFull(offer)} (${m.offerPct < 100 ? '−' + (100 - m.offerPct) + ' %' : 'prix demandé'})`;
+    $('#ltvV').textContent = `${m.ltv} % · ${fmt(loan)}`;
+    $('#dealSum').innerHTML = `<span>Prix</span><b>${fmtFull(offer)}</b><span>Frais de notaire réduits (marchand de biens, 2,5 %)</span><b>${fmtFull(fees)}</b><span>Emprunt à ${loanRate().toFixed(2).replace('.',',')} %</span><b>−${fmtFull(loan)}</b><span class="tot">Apport à décaisser</span><b class="tot">${fmtFull(apport)}</b><span class="mute">Trésorerie après signature</span><b class="${S.cash - apport >= 0 ? 'g' : 'r'}">${fmtFull(S.cash - apport)}</b><span class="mute">Intérêts</span><b>${fmtFull(loan*loanRate()/100/52)}/sem.</b>`;
+    const why = canBuy(l, offer, m.ltv/100);
+    $('#dealWhy').textContent = why || '';
+    $('#offerBtn').disabled = !!why || l.offers <= 0;
+  } else if (m.kind === 'prop'){
+    const p = S.props.find(x => x.id === m.id); if (!p || !$('#saleV')) return;
+    const base = valueOf(p) * (p.status === 'rented' ? .9 : 1);
+    const pr = Math.round(base * m.salePct/100 / 1000) * 1000; const c = saleCalc(p, pr);
+    const ratio = m.salePct/100 / .95;
+    const speed = ratio < .97 ? 'Très rapide' : ratio < 1.03 ? 'Rapide' : ratio < 1.1 ? 'Normale' : ratio < 1.2 ? 'Lente' : 'Très lente';
+    $('#saleV').textContent = `${fmtFull(pr)} (${m.salePct} %)`;
+    $('#saleSum').innerHTML = `<span>TVA sur marge (20/120 de la marge)</span><b>−${fmtFull(c.tva)}</b><span>Honoraires d'agence (${(Math.max(.01,.03-.004*S.staff.broker)*100).toFixed(1).replace('.',',')} %)</span><b>−${fmtFull(c.fee)}</b><span>Remboursement du prêt</span><b>−${fmtFull(p.loan)}</b><span>Cash encaissé</span><b>${fmtFull(c.net)}</b><span class="tot">Plus-value nette</span><b class="tot ${c.profit >= 0 ? 'g' : 'r'}">${fmtFull(c.profit)}</b><span class="mute">Vitesse de vente estimée</span><b>${speed}</b>`;
+  }
+}
+
+/* ---------------- ÉCRANS ---------------- */
+function palmsSVG(n){ return Array.from({length:n}, (_,i) => `<svg viewBox="0 0 120 200" style="transform:${i % 2 ? 'scaleX(-1)' : ''} translateY(${(i%3)*12}px)"><use href="#palm"/></svg>`).join(''); }
+function showTitle(){
+  UI.speed = 0;
+  const sv = loadSave();
+  $('#ovRoot').innerHTML = `<div class="title"><div class="t-sky"><div class="t-sun"></div><div class="t-grid"></div><div class="t-palms">${palmsSVG(2)}</div></div>
+    <div class="t-in">
+      <div class="t-logo"><b>NÉON<br>ESTATE</b><span>Baie de Solaris · Marchand de biens</span></div>
+      <div class="t-panels">
+        <div class="t-panel" style="background:linear-gradient(135deg,#2de2e6,#1a6dff);transform:rotate(-2deg)">Achète bas.<small>Successions, divorces, liquidations</small></div>
+        <div class="t-panel" style="background:linear-gradient(135deg,#ff8a3d,#ff2d95);transform:rotate(1.5deg)">Rénove.<small>Travaux, division, permis de construire</small></div>
+        <div class="t-panel" style="background:linear-gradient(135deg,#ffd23f,#ff8a3d);color:#1a0618;transform:rotate(-1deg)">Vends haut.<small>Et fais trembler la Baie</small></div>
+      </div>
+      <div class="t-btns">
+        ${sv && !sv.over ? `<button class="btn pri" data-act="continue">Continuer · Sem. ${sv.week} · ${fmt(sv.cash)}</button>` : ''}
+        <button class="btn ${sv && !sv.over ? '' : 'pri'}" data-act="newgame">${UI.confirmNew ? 'Écraser la sauvegarde ?' : 'Nouvelle partie · 3 M€'}</button>
+      </div>
+      <div class="t-help"><b>Comment jouer</b><ul>
+        <li>Vous démarrez avec <b>3 000 000 €</b> et un garage à Port Néon. Objectif : bâtir l'empire immobilier le plus puissant de la Baie, jusqu'au milliard.</li>
+        <li><b>Annonces</b> : négociez, faites expertiser, financez à crédit (prêt in fine). Frais de notaire réduits à 2,5 % pour les marchands de biens.</li>
+        <li><b>Portefeuille</b> : travaux, division en lots, changement d'usage, location, permis de construire, promotion, revente. TVA sur marge à chaque vente, IS en fin d'exercice.</li>
+        <li><b>Semaine suivante</b> fait avancer le temps (ou lancez la lecture auto). Surveillez le marché, les flash info et votre pression fiscale.</li>
+        <li>Quatre semaines de découvert, ou un patrimoine négatif, et c'est la liquidation.</li></ul></div>
+    </div></div>`;
+}
+function showEnd(win){
+  const nw = netWorth();
+  $('#ovRoot').innerHTML = `<div class="title"><div class="t-sky" style="${win ? '' : 'filter:grayscale(.85) brightness(.7)'}"><div class="t-sun"></div><div class="t-grid"></div><div class="t-palms">${palmsSVG(2)}</div></div>
+    <div class="t-in end">
+      <h1 style="color:${win ? 'var(--sun)' : 'var(--red)'};text-shadow:5px 5px 0 #000,0 0 50px ${win ? 'rgba(255,210,63,.6)' : 'rgba(255,59,92,.6)'}">${win ? 'Légende' : 'Liquidé'}</h1>
+      <p style="font-size:16px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;margin:0">${win ? 'Un milliard. La Baie de Solaris vous appartient.' : 'Le tribunal de commerce a prononcé la liquidation judiciaire.'}</p>
+      <div class="t-help"><div class="kv"><div><small>Semaines</small><b>${S.week}</b></div><div><small>Patrimoine net</small><b>${fmt(nw)}</b></div><div><small>Biens vendus</small><b>${S.stats.sold}</b></div><div><small>Plus-values</small><b>${fmt(S.stats.profit)}</b></div><div><small>Meilleur coup</small><b>${fmt(S.stats.best)}</b></div><div><small>Rang</small><b>${RANKS[rankOf(nw)][1]}</b></div></div></div>
+      <div class="t-btns">${win ? '<button class="btn pri" data-act="closeEnd">Continuer à jouer</button>' : ''}<button class="btn ${win ? '' : 'pri'}" data-act="newgameNow">Nouvelle partie</button></div>
+    </div></div>`;
+}
+function showVictory(){ UI.speed = 0; showEnd(true); }
+
+/* ---------------- ÉVÉNEMENTS UI ---------------- */
+const ACT = {
+  next: () => { if (overlayOpen()) return; nextWeek(); sfx('tick'); },
+  speed: a => { UI.speed = +a; renderHUD(); },
+  sound: () => { UI.sound = !UI.sound; renderHUD(); sfx('buy'); },
+  tab: a => { UI.tab = a; renderTabs(); renderPanel(); },
+  district: a => { UI.filter = a || null; if (a && UI.tab !== 'portfolio') UI.tab = 'market'; renderMap(); renderDInfo(); renderTabs(); renderPanel(); },
+  sortM: a => { UI.sortM = a; renderPanel(); },
+  openDeal: a => openDeal(+a), openProp: a => openProp(+a),
+  close: () => closeModal(),
+  ovclick: (a, el, ev) => { if (ev.target === el) closeModal(); },
+  diag: a => doDiag(+a),
+  offer: a => makeOffer(+a),
+  fullPrice: a => { UI.modal.offerPct = 100; const l = S.listings.find(x => x.id === +a); if (!l) return; const why = canBuy(l, l.ask, UI.modal.ltv/100); if (why) return toast(why,'r'); buy(l, l.ask, UI.modal.ltv/100); },
+  acceptCounter: a => acceptCounter(+a),
+  works: a => { const [pid,wid] = a.split(':'); startWorks(+pid, wid); },
+  rent: a => toggleRent(+a),
+  list: a => listForSale(+a), unlist: a => unlist(+a), cut: a => cutPrice(+a),
+  express: a => { const p = S.props.find(x => x.id === +a); if (p) sell(p.id, expressPrice(p), 'express'); },
+  acceptOffer: a => acceptOffer(+a), refuseOffer: a => refuseOffer(+a),
+  repayLoan: a => repayLoan(+a),
+  permit: a => filePermit(+a), build: a => startBuild(+a),
+  hire: a => hire(a), fire: a => fire(a), hq: () => upgradeHQ(),
+  borrow: a => borrowCredit(+a), repay: a => repayCredit(+a), launder: () => launder(),
+  continue: () => { const sv = loadSave(); if (sv){ S = sv; UI.lastCash = S.cash; } closeModal(); renderAll(); },
+  newgame: () => { const sv = loadSave(); if (sv && !sv.over && !UI.confirmNew){ UI.confirmNew = true; showTitle(); return; } UI.confirmNew = false; newGame(); closeModal(); renderAll(); save(); banner('Bienvenue dans la Baie', '3 000 000 € · Un garage · Aucune limite', 'var(--pink)'); },
+  newgameNow: () => { UI.confirmNew = false; newGame(); closeModal(); renderAll(); save(); },
+  closeEnd: () => { closeModal(); renderAll(); },
+  menu: () => { save(); UI.confirmNew = false; showTitle(); },
+};
+function overlayOpen(){ return !!$('#ovRoot').children.length; }
+document.addEventListener('click', ev => {
+  const el = ev.target.closest('[data-act]'); if (!el) return;
+  const fn = ACT[el.dataset.act]; if (!fn) return;
+  if (el.dataset.act === 'ovclick' && ev.target !== el) return;
+  if (!S && !['newgame','continue','newgameNow'].includes(el.dataset.act)) return;
+  fn(el.dataset.arg, el, ev);
+});
+document.addEventListener('input', ev => {
+  const k = ev.target.dataset?.in; if (!k || !UI.modal) return;
+  if (ev.target.type === 'checkbox'){ UI.modal[k] = ev.target.checked; renderModal(); }
+  else { UI.modal[k] = +ev.target.value; updateSums(); }
+});
+document.addEventListener('keydown', ev => {
+  if (ev.key === 'Escape' && UI.modal) closeModal();
+  if ((ev.key === ' ' || ev.key === 'Enter') && ev.target === document.body && !overlayOpen()){ ev.preventDefault(); ACT.next(); }
+});
+setInterval(() => {
+  if (!S || S.over || !UI.speed || overlayOpen()) return;
+  const now = Date.now(); const every = UI.speed === 2 ? 650 : 1600;
+  if (!UI.lastTick || now - UI.lastTick >= every){ UI.lastTick = now; nextWeek(); }
+}, 100);
+window.addEventListener('resize', () => { if (UI.tab === 'stats') drawChart(); });
+
+/* ---------------- DÉMARRAGE ---------------- */
+function boot(){
+  const sv = loadSave();
+  if (sv && !sv.over){ S = sv; } else { newGame(); }
+  UI.lastCash = S.cash;
+  renderAll();
+  showTitle();
+}
+if (window.claude?.hot?.snapshot) window.claude.hot.snapshot(() => ({S}));
+boot();
+</script>
+</body>
+</html>
