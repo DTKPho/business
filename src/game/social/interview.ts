@@ -7,6 +7,7 @@ import { PLAYER_ID } from '../types';
 import { lastNameOf, nameOf, teammateOf, teamOf } from '../people';
 import { pick, uid, chance } from '../rng';
 import { analyze } from './nlp';
+import { circuitName } from './voice';
 import { driverStandings } from '../standings';
 
 export function createInterview(s: GameState, context: PendingInterview['context'], extra?: { race?: RaceResultEntry; raceId?: string; quali?: number }): PendingInterview {
@@ -43,7 +44,7 @@ function generateQuestions(s: GameState, context: PendingInterview['context'], e
       if (mr) qs.push({ text: `${lastNameOf(s, mate)} finished ${mr.dnf ? 'with a DNF' : `P${mr.position}`}. How do you rate your intra-team battle?`, topic: 'teammate', subject: mate });
     }
     if (s.flags['teamOrderRefused']) qs.push({ text: 'You ignored a team order on the radio. Why?', topic: 'controversy' });
-    else qs.push({ text: myPos <= 3 ? `You're P${myPos} in the championship. Can we talk about the title?` : `Next up: ${CALENDAR[s.round + 1]?.short ?? 'the end of the season'}. What are your targets?`, topic: 'championship' });
+    else qs.push({ text: myPos <= 3 ? `You're P${myPos} in the championship. Can we talk about the title?` : `Next up: ${CALENDAR[s.round + 1] ? circuitName(CALENDAR[s.round + 1].id, 'en') : 'the end of the season'}. What are your targets?`, topic: 'championship' });
     return qs;
   }
 
@@ -55,7 +56,7 @@ function generateQuestions(s: GameState, context: PendingInterview['context'], e
   }
 
   // Jeudi presse / interviews longues
-  qs.push({ text: `Welcome to ${circuit?.city ?? 'this Grand Prix'}. Does ${circuit?.street ? 'a street circuit' : 'this track'} suit you?`, topic: 'result' });
+  qs.push({ text: `Welcome to ${circuit ? circuitName(circuit.id, 'en') : 'this Grand Prix'}. Does ${circuit?.street ? 'a street circuit' : 'this track'} suit you?`, topic: 'result' });
   if (lastMe && lastMe.dnf) qs.push({ text: 'After last weekend\'s DNF, how did you bounce back mentally?', topic: 'personal' });
   else if (lastMe && lastMe.position === 1) qs.push({ text: 'You arrive here as a race winner. Does the pressure change?', topic: 'championship' });
   if (mate && chance(0.7)) qs.push({ text: `People say the atmosphere with ${nameOf(s, mate)} is ${chance(0.5) ? 'tense' : 'great'}. What's the truth?`, topic: 'teammate', subject: mate });

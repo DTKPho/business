@@ -29,6 +29,7 @@ export function Home() {
   const setScreen = useGame((s) => s.setScreen);
   const setPhone = useGame((s) => s.setPhoneApp);
   const startWeekend = useGame((s) => s.startWeekend);
+  const autoWeekend = useGame((s) => s.autoWeekend);
   const p = g.player;
   const next = g.round < 24 ? CALENDAR[g.round] : null;
   const team = teamOf(g, PLAYER_ID);
@@ -92,6 +93,19 @@ export function Home() {
                   }}
                 >
                   ✈️ Partir pour {next.city}
+                </button>
+              )}
+              {!g.weekend && g.actionsLeft <= 0 && (
+                <button
+                  className="ghost big"
+                  onClick={() => {
+                    startWeekend();
+                    autoWeekend();
+                    setScreen('weekend');
+                  }}
+                  title="Essais et qualifs simulés, puis course en mode TV"
+                >
+                  ⚡ Simuler le GP (mode TV)
                 </button>
               )}
             </div>

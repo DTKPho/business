@@ -11,6 +11,8 @@ import { DriverName, DriverPhoto, Flag, TeamLogo, TyreDot } from '../ui/media';
 import { InterviewPanel } from '../weekend/InterviewPanel';
 import { RaceLive } from '../weekend/RaceLive';
 import { DecisionModal } from '../weekend/DecisionModal';
+import { RaceSummary } from '../weekend/Broadcast';
+import type { AutoProfile } from '../../game/types';
 import { CircuitProfile } from './Home';
 import { Scene } from '../ui/scene';
 import { circuitFallback } from '../ui/backgrounds';
@@ -70,6 +72,7 @@ export function Weekend() {
           </div>
         ))}
       </div>
+      <AutoBar />
       {w.stage === 'media' && <MediaStage />}
       {w.stage === 'fp' && <PracticeStage />}
       {(w.stage === 'quali' || w.stage === 'sprintQuali') && <QualiStage />}
@@ -282,6 +285,7 @@ function PreRace() {
   const g = useGame((s) => s.game!);
   const w = g.weekend!;
   const start = useGame((s) => s.startRace);
+  const setAuto = useGame((s) => s.setAuto);
   const c = CALENDAR.find((x) => x.id === w.raceId)!;
   const sprint = w.stage === 'sprint';
   const rain = sprint ? w.rain.sprint : w.rain.race;
@@ -324,8 +328,11 @@ function PreRace() {
           ))}
         </div>
         <p className="small muted">Tu pourras changer d’avis en course (bouton « Box ») selon l’usure, la météo et les safety cars.</p>
-        <button className="primary big" onClick={() => start(tyre, plan)}>
-          🚦 {sprint ? 'Départ de la course sprint' : 'Mise en grille et départ'}
+        <button className="primary big" onClick={() => { setAuto({ on: false }); start(tyre, plan); }}>
+          🎮 {sprint ? 'Départ de la course sprint' : 'Mise en grille et départ'} (je pilote)
+        </button>
+        <button className="ghost big" onClick={() => { setAuto({ on: true }); start(tyre, plan); }}>
+          🎬 Départ en mode TV (simulation auto)
         </button>
       </div>
       <div className="card">
@@ -413,6 +420,9 @@ function PostRace() {
             </div>
           </div>
         </div>
+        {(w.summaries ?? []).slice().reverse().map((sm, i) => (
+          <RaceSummary key={i} sum={sm} />
+        ))}
         {w.sprintResult && (
           <details className="card">
             <summary>Résultat du sprint</summary>
@@ -454,3 +464,37 @@ function PostRace() {
 }
 
 export { TYRE_INFO };
+
+function AutoBar() {
+  const g = useGame((s) => s.game!);
+  const w = g.weekend!;
+  const setAuto = useGame((s) => s.setAuto);
+  const autoWeekend = useGame((s) => s.autoWeekend);
+  const a = w.auto ?? { on: false, profile: 'equilibre' as AutoProfile, stopDecisions: false };
+  const racing = !!w.race || w.stage === 'post';
+  const profiles: [AutoProfile, string][] = [
+    ['prudent', '🛡️ Prudent'],
+    ['equilibre', '⚖️ Équilibré'],
+    ['agressif', '🔥 Agressif'],
+  ];
+  return (
+    <div className="card auto-bar">
+      <div className="row wrap">
+        <b>🤖 Pilote automatique</b>
+        {profiles.map(([p, l]) => (
+          <button key={p} className={a.profile === p ? 'primary sm' : 'ghost sm'} onClick={() => setAuto({ profile: p })}>
+            {l}
+          </button>
+        ))}
+        <label className="row small">
+          <input type="checkbox" checked={a.stopDecisions} onChange={(e) => setAuto({ stopDecisions: e.target.checked })} /> M’arrêter pour les décisions
+        </label>
+      </div>
+      {!racing && (
+        <button className="primary" onClick={autoWeekend} title="Essais, qualifs et décisions gérés automatiquement, puis départ en mode TV">
+          ⚡ Simuler jusqu’à la course (mode TV)
+        </button>
+      )}
+    </div>
+  );
+}

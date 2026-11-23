@@ -884,3 +884,36 @@ export function gridPenaltiesFromWeekend(w: WeekendState): Record<string, number
   }
   return out;
 }
+
+// ───────────────────────── Choix automatiques ─────────────────────────
+
+/** Index d'option choisi selon le profil : [prudent, équilibré, agressif]. */
+const AUTO_PICK: Record<string, [number, number, number]> = {
+  crashAhead: [0, 0, 1],
+  diveBomb: [1, 2, 0],
+  overtakeChance: [3, 1, 0],
+  undercut: [1, 0, 0],
+  debris: [1, 1, 0],
+  brakes: [0, 2, 1],
+  rainGamble: [1, 1, 0],
+  reportRival: [1, 1, 0],
+  helpFriend: [0, 1, 1],
+  restart: [2, 1, 0],
+  lateTyres: [1, 0, 0],
+  traffic: [0, 0, 1],
+  yellow: [0, 0, 1],
+  tow: [2, 0, 0],
+  impede: [0, 0, 1],
+  timing: [1, 1, 0],
+  upgrade: [1, 0, 0],
+  gearbox: [0, 0, 1],
+  shareData: [0, 0, 1],
+  journalist: [1, 0, 0],
+  practiceStart: [0, 0, 0],
+};
+
+export function autoChoice(d: PendingDecision, profile: 'prudent' | 'equilibre' | 'agressif'): number {
+  const p = AUTO_PICK[d.defId] ?? [0, 0, 0];
+  const i = p[profile === 'prudent' ? 0 : profile === 'equilibre' ? 1 : 2];
+  return Math.min(i, d.options.length - 1);
+}

@@ -269,6 +269,11 @@ export interface RaceState {
   decisionsTaken?: number;
   mods?: Record<string, number>; // bonus/malus de rythme temporaire (s/tour)
   modLaps?: Record<string, number>;
+  highlights?: { lap: number; emoji: string; text: string; weight: number; player?: boolean }[];
+  commentary?: string[];
+  posHistory?: Record<string, number[]>;
+  battles?: [string, string][];
+  intensity?: number;
 }
 
 export interface RaceResultEntry {
@@ -323,6 +328,8 @@ export interface WeekendState {
   extra?: Record<string, number>; // effets des décisions (pénalités, risques, bonus)
   decisionLog?: string[];
   pendingRisks?: string[];
+  auto?: AutoSettings;
+  summaries?: RaceSummary[];
 }
 
 // ───────────────────── Social ─────────────────────
@@ -502,6 +509,22 @@ export interface GameState {
   seenEvents: string[];
   flags: Record<string, number | boolean | string>;
   cheats?: CheatState;
+}
+
+export type AutoProfile = 'prudent' | 'equilibre' | 'agressif';
+
+export interface AutoSettings {
+  on: boolean; // course en simulation auto (mode TV)
+  profile: AutoProfile;
+  stopDecisions: boolean; // s'arrêter pour les décisions
+}
+
+export interface RaceSummary {
+  kind: 'race' | 'sprint';
+  totalLaps: number;
+  highlights: { lap: number; emoji: string; text: string; weight: number; player?: boolean }[];
+  myPositions: number[];
+  startPos: number;
 }
 
 export interface DecisionOption {

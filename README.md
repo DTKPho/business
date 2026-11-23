@@ -102,6 +102,22 @@ karting, e-sport, restaurant…), fondation caritative, vie de couple.
 - **Mode triche** (Réglages → afficher l’onglet 🎭) : position imposée en qualif et
   à l’arrivée, abandon forcé, rythme de chaque pilote, argent, attributs, etc.
 
+## Simulation automatique (mode TV)
+
+- **⚡ Simuler le GP** (accueil) ou **⚡ Simuler jusqu’à la course** (week-end) : essais,
+  réglages, qualifs et décisions sont gérés par le pilote automatique, puis la
+  course démarre en **mode TV**.
+- **Profil du pilote automatique** : 🛡️ Prudent, ⚖️ Équilibré ou 🔥 Agressif (stratégie
+  pneus, mode de pilotage, choix lors des décisions, consignes d’équipe). Option
+  « M’arrêter pour les décisions » pour garder la main sur les moments clés.
+- **Réalisation TV** : la course accélère quand il ne se passe rien et ralentit
+  d’elle-même sur les moments chauds (bagarres, crash, safety car, changement de
+  leader, derniers tours), avec bannières « moment fort », commentaires en direct,
+  duels serrés, jauge d’intensité et graphique de ta position.
+- **Résumé de course** après chaque sprint et Grand Prix (même avec « ⏭ Fin ») :
+  courbe de ta position et chronologie des moments forts.
+- Bouton **🎬 Mode TV / 🎮 Je pilote** pour passer de l’un à l’autre en pleine course.
+
 ## Mode IA (optionnel)
 
 Dans **Réglages**, tu peux renseigner une clé API Anthropic : les pilotes répondent

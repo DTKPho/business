@@ -23,6 +23,9 @@ import type {
   WeekendState,
   Settings,
   CheatState,
+  AutoSettings,
+  AutoProfile,
+  RaceState,
 } from './types';
 import { PLAYER_ID } from './types';
 import { createGame, daysUntilWeekend, SAVE_VERSION, type NewPlayerInput } from './init';
@@ -32,6 +35,7 @@ import { lastNameOf, teamOf, teammateOf } from './people';
 import { optimalSetup, setupFeedback, setupQuality, TYRE_INFO } from './sim/pace';
 import { runQualifying, runSprintQuali, type QualiRisk } from './sim/qualifying';
 import { initRace, raceResults, simulateLap, type RaceContext } from './sim/race';
+import { topHighlights } from './sim/broadcast';
 import {
   addFollowers,
   applyRel,
@@ -50,7 +54,7 @@ import {
   startNextSeason,
 } from './career/season';
 import { applyQualiCheats } from './cheats';
-import { buildWeekendDecision, gridPenaltiesFromWeekend, maybeRaceDecision, qualiModsFromWeekend, queueWeekendDecisions, resolveRaceDecision, resolveWeekendDecision } from './decisions';
+import { autoChoice, buildWeekendDecision, gridPenaltiesFromWeekend, maybeRaceDecision, qualiModsFromWeekend, queueWeekendDecisions, resolveRaceDecision, resolveWeekendDecision } from './decisions';
 import { buildOffer, negotiate as negotiateOffer, offerToContract, type CounterProposal } from './career/contracts';
 import { createInterview, evaluateInterview } from './social/interview';
 import { analyze, detectActivity, detectIntent } from './social/nlp';
@@ -96,7 +100,9 @@ interface Store {
   runPractice: (program: 'quali' | 'long' | 'aero') => void;
   runQuali: (risks: QualiRisk[]) => void;
   startQualiSession: (risks: QualiRisk[]) => void;
-  resolveDecision: (choice: number) => void;
+  resolveDecision: (choice: number, silent?: boolean) => void;
+  setAuto: (a: Partial<AutoSettings>) => void;
+  autoWeekend: () => void;
   clearOutcome: () => void;
   startRace: (startTyre: TyreCompound, plan: TyreCompound[]) => void;
   raceTick: () => void;
@@ -172,6 +178,34 @@ export const useGame = create<Store>()(
           dailyTick(g);
         }
         g.actionsLeft = daysUntilWeekend(g);
+      };
+
+      /** Pilote automatique : stratégie pneus, mode de course, consignes. */
+      const autoPilot = (g: GameState, r: RaceState, profile: AutoProfile) => {
+        if (r.teamOrder && !r.teamOrder.answered) {
+          r.teamOrder.answered = true;
+          r.teamOrder.accepted = profile !== 'agressif' || chance(0.5);
+          g.weekend!.teamOrderAnswer = r.teamOrder.accepted ? 'accepted' : 'refused';
+          r.radio.push(`T${r.lap} — Toi : « ${r.teamOrder.accepted ? 'Compris, je le laisse passer.' : 'Négatif, je reste devant.'} »`);
+        }
+        const me = r.cars.find((c) => c.driverId === PLAYER_ID);
+        if (!me || me.status === 'out') return;
+        const lapsLeft = r.totalLaps - r.lap;
+        // Mode de pilotage
+        const close = me.gapAhead > 0 && me.gapAhead < 1.0;
+        r.playerMode =
+          me.tyreWear > 72 ? 'save' : profile === 'prudent' ? (lapsLeft < 5 && close ? 'push' : 'normal') : profile === 'agressif' ? (close ? 'attack' : 'push') : close || lapsLeft < 6 ? 'push' : 'normal';
+        r.playerBoost = close && me.battery > 30;
+        if (r.pendingPit) return;
+        const dryUsed = new Set(me.usedCompounds.filter((t) => 'SMH'.includes(t))).size;
+        const wearLimit = profile === 'agressif' ? 70 : profile === 'prudent' ? 80 : 75;
+        if (me.tyreAge < 3) return;
+        if (r.weather.rain > 0.28 && (me.tyre === 'S' || me.tyre === 'M' || me.tyre === 'H')) r.pendingPit = r.weather.rain > 0.68 ? 'W' : 'I';
+        else if (r.weather.rain < 0.12 && (me.tyre === 'I' || me.tyre === 'W')) r.pendingPit = lapsLeft > 25 ? 'M' : 'S';
+        else if (r.kind === 'race' && lapsLeft > 2 && (me.tyreWear > wearLimit || (dryUsed < 2 && lapsLeft < 6 && !me.usedCompounds.some((t) => t === 'I' || t === 'W')))) {
+          const plan = g.weekend!.strategyPlan[me.pits] ?? (lapsLeft > 30 ? 'H' : lapsLeft > 15 ? 'M' : 'S');
+          r.pendingPit = plan === me.tyre && dryUsed < 2 ? (plan === 'H' ? 'M' : 'H') : plan;
+        }
       };
 
       return {
@@ -472,7 +506,7 @@ export const useGame = create<Store>()(
           const w = get().game?.weekend;
           if (w && !w.decision) get().runQuali(risks);
         },
-        resolveDecision: (choice) => {
+        resolveDecision: (choice, silent) => {
           let outcome: UIState['outcome'] = null;
           let runQ: QualiRisk[] | null = null;
           mutate((g) => {
@@ -480,23 +514,100 @@ export const useGame = create<Store>()(
             if (!w) return;
             if (w.race?.decision) {
               const d = w.race.decision;
+              const label = d.options[choice]?.label ?? '';
               const text = resolveRaceDecision(g, w.race, choice);
-              outcome = { title: d.title, text, emoji: d.emoji };
+              if (silent) {
+                w.race.highlights ??= [];
+                w.race.highlights.push({ lap: w.race.lap, emoji: d.emoji, text: `${d.title} → ${label} : ${text}`, weight: 4, player: true });
+                w.race.commentary ??= [];
+                w.race.commentary.push(`T${w.race.lap} · ${d.emoji} ${text}`);
+              } else outcome = { title: d.title, text, emoji: d.emoji };
               return;
             }
             if (w.decision) {
               const d = w.decision;
               const text = resolveWeekendDecision(g, w, choice);
-              outcome = { title: d.title, text, emoji: d.emoji };
+              if (!silent) outcome = { title: d.title, text, emoji: d.emoji };
               const isQuali = d.stage === 'quali';
               w.decision = isQuali && w.decisionQueue?.length ? buildWeekendDecision(g, w, w.decisionQueue.shift()!) : null;
               if (isQuali && !w.decision && w.pendingRisks) runQ = w.pendingRisks as QualiRisk[];
             }
           });
-          set((st) => ({ ui: { ...st.ui, outcome } }));
+          if (!silent) set((st) => ({ ui: { ...st.ui, outcome } }));
           if (runQ) get().runQuali(runQ);
         },
         clearOutcome: () => set((st) => ({ ui: { ...st.ui, outcome: null } })),
+        setAuto: (a) =>
+          mutate((g) => {
+            const w = g.weekend;
+            if (!w) return;
+            w.auto = { on: false, profile: 'equilibre', stopDecisions: false, ...(w.auto ?? {}), ...a };
+          }),
+        autoWeekend: () => {
+          let guard = 0;
+          while (guard++ < 60) {
+            const g = get().game;
+            const w = g?.weekend;
+            if (!g || !w) return;
+            const profile: AutoProfile = w.auto?.profile ?? 'equilibre';
+            if (w.decision) {
+              get().resolveDecision(autoChoice(w.decision, profile), true);
+              continue;
+            }
+            // L'attaché de presse répond aux interviews à ta place (sans effet)
+            if (g.interviews.some((i) => !i.done && (i.context === 'thursday' || i.context === 'postQuali'))) {
+              mutate((gg) => {
+                for (const i of gg.interviews) if (!i.done && (i.context === 'thursday' || i.context === 'postQuali')) {
+                  i.done = true;
+                  i.answers = i.questions.map(() => '(réponse de ton attaché de presse)');
+                }
+                log(gg, '🎙️ Ton attaché de presse a géré les médias à ta place.', 'info');
+              });
+              continue;
+            }
+            if (w.stage === 'media') {
+              get().advanceStage();
+              continue;
+            }
+            if (w.stage === 'fp') {
+              if (w.runsLeft > 0) {
+                if (!w.runs.length)
+                  mutate((gg) => {
+                    const ww = gg.weekend!;
+                    const k = 0.55 + gg.player.stats.feedback / 400;
+                    for (const key of Object.keys(ww.setup) as (keyof SetupValues)[]) ww.setup[key] = Math.round(ww.setup[key] + (ww.optimal[key] - ww.setup[key]) * Math.min(0.95, k) + rand(-4, 4));
+                  });
+                get().runPractice(w.runsLeft === 1 ? 'long' : 'quali');
+              } else get().advanceStage();
+              continue;
+            }
+            if (w.stage === 'quali' || w.stage === 'sprintQuali') {
+              const done = w.stage === 'quali' ? !!w.quali : !!w.sprintQuali;
+              if (!done) {
+                const risk: QualiRisk = profile === 'prudent' ? 'safe' : profile === 'agressif' ? 'attack' : 'normal';
+                get().startQualiSession([risk, risk, profile === 'equilibre' ? 'attack' : risk]);
+              } else get().advanceStage();
+              continue;
+            }
+            if (w.stage === 'race' || w.stage === 'sprint') {
+              if (!w.race) {
+                const c = CALENDAR.find((x) => x.id === w.raceId)!;
+                const sprint = w.stage === 'sprint';
+                const plan: [TyreCompound, TyreCompound[]] = sprint
+                  ? [profile === 'agressif' ? 'S' : 'M', []]
+                  : profile === 'prudent'
+                    ? ['M', ['H']]
+                    : profile === 'agressif'
+                      ? ['S', c.tyreStress > 0.65 ? ['M', 'S'] : ['M']]
+                      : ['M', c.tyreStress > 0.65 ? ['H', 'M'] : ['H']];
+                get().setAuto({ on: true });
+                get().startRace(plan[0], plan[1]);
+              }
+              return;
+            }
+            return;
+          }
+        },
         startRace: (startTyre, plan) =>
           mutate((g) => {
             const w = g.weekend;
@@ -521,6 +632,8 @@ export const useGame = create<Store>()(
           // Clone léger : on ne copie que la course
           const r = clone(g.weekend.race);
           const shallow: GameState = { ...g, weekend: { ...g.weekend, race: r } };
+          const auto = g.weekend.auto;
+          if (auto?.on) autoPilot(shallow, r, auto.profile);
           if (r.teamOrder && !r.teamOrder.answered && r.lap - r.teamOrder.lap > 2) {
             r.teamOrder.answered = true;
             r.teamOrder.accepted = false;
@@ -528,6 +641,7 @@ export const useGame = create<Store>()(
           simulateLap(raceCtx(shallow), r);
           if (!r.finished) r.decision = maybeRaceDecision(shallow, r);
           set({ game: shallow });
+          if (r.decision && auto?.on && !auto.stopDecisions) get().resolveDecision(autoChoice(r.decision, auto.profile), true);
         },
         raceToEnd: () => {
           const g = get().game;
@@ -536,29 +650,22 @@ export const useGame = create<Store>()(
           const shallow: GameState = { ...g, weekend: { ...g.weekend, race: r } };
           let guard = 0;
           if (r.decision) return;
+          const auto = g.weekend.auto;
+          const profile = auto?.profile ?? 'equilibre';
           while (!r.finished && guard++ < 200) {
-            if (r.teamOrder && !r.teamOrder.answered) {
-              r.teamOrder.answered = true;
-              r.teamOrder.accepted = true;
-            }
-            // Le joueur gère ses pneus automatiquement si nécessaire
-            const me = r.cars.find((c) => c.driverId === PLAYER_ID);
-            if (me && me.status !== 'out' && !r.pendingPit) {
-              const lapsLeft = r.totalLaps - r.lap;
-              const dryUsed = new Set(me.usedCompounds.filter((t) => 'SMH'.includes(t))).size;
-              if (me.tyreAge < 3) {
-                /* vient de changer de pneus */
-              } else if (r.weather.rain > 0.28 && (me.tyre === 'S' || me.tyre === 'M' || me.tyre === 'H')) r.pendingPit = r.weather.rain > 0.68 ? 'W' : 'I';
-              else if (r.weather.rain < 0.12 && (me.tyre === 'I' || me.tyre === 'W')) r.pendingPit = lapsLeft > 25 ? 'M' : 'S';
-              else if (r.kind === 'race' && lapsLeft > 2 && (me.tyreWear > 75 || (dryUsed < 2 && lapsLeft < 6 && !me.usedCompounds.some((t) => t === 'I' || t === 'W')))) {
-                const plan = shallow.weekend!.strategyPlan[me.pits] ?? (lapsLeft > 30 ? 'H' : lapsLeft > 15 ? 'M' : 'S');
-                r.pendingPit = plan === me.tyre && dryUsed < 2 ? (plan === 'H' ? 'M' : 'H') : plan;
-              }
-            }
+            autoPilot(shallow, r, profile);
             simulateLap(raceCtx(shallow), r);
             if (!r.finished) {
               r.decision = maybeRaceDecision(shallow, r);
-              if (r.decision) break;
+              if (r.decision) {
+                if (auto?.on && !auto.stopDecisions) {
+                  set({ game: shallow });
+                  get().resolveDecision(autoChoice(r.decision, profile), true);
+                  get().raceToEnd();
+                  return;
+                }
+                break;
+              }
             }
           }
           set({ game: shallow });
@@ -598,6 +705,8 @@ export const useGame = create<Store>()(
               const itw = createInterview(g, 'postRace', { race: me, raceId: w.raceId });
               g.interviews.unshift(itw);
             }
+            w.summaries ??= [];
+            w.summaries.push({ kind: w.race.kind, totalLaps: w.race.totalLaps, highlights: topHighlights(w.race, 12), myPositions: w.race.posHistory?.[PLAYER_ID] ?? [], startPos: w.race.cars.find((c) => c.driverId === PLAYER_ID)?.startPos ?? 0 });
             w.race = null;
             // passe à l'étape suivante
             if (w.stageIndex < w.stages.length - 1) {

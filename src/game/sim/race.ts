@@ -6,6 +6,7 @@ import { lastNameOf, statsOf, teamOf, teammateOf } from '../people';
 import { aiSetupQuality, basePace, bestTyreForRain, TYRE_INFO, weatherTyrePenalty } from './pace';
 import { chance, clamp, gauss, pick, rand, randInt } from '../rng';
 import { applyRaceCheats, racePaceNudge } from '../cheats';
+import { broadcastLap, snapshot } from './broadcast';
 
 export interface RaceContext {
   s: GameState;
@@ -199,6 +200,7 @@ function aiPitDecision(_ctx: RaceContext, r: RaceState, car: RaceCar): TyreCompo
 /** Simule un tour complet. Mute `r` (appelant passe une copie). */
 export function simulateLap(ctx: RaceContext, r: RaceState): void {
   if (r.finished) return;
+  const before = snapshot(r);
   const { s, c } = ctx;
   r.lap++;
   const lap = r.lap;
@@ -429,6 +431,7 @@ export function simulateLap(ctx: RaceContext, r: RaceState): void {
 
   // Arrivée
   if (lap >= r.totalLaps) finishRace(ctx, r);
+  broadcastLap(ctx.s, r, before);
 }
 
 function finishRace(ctx: RaceContext, r: RaceState) {

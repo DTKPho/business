@@ -6,6 +6,7 @@ import { identity, lastNameOf } from '../../game/people';
 import { lapTime } from '../../game/format';
 import { TYRE_INFO } from '../../game/sim/pace';
 import { TyreDot } from '../ui/media';
+import { Battles, Commentary, HighlightBanner, IntensityMeter, PositionChart } from './Broadcast';
 
 const SPEEDS = [
   { label: '⏸', ms: 0 },
@@ -23,15 +24,25 @@ export function RaceLive() {
   const pit = useGame((s) => s.requestPit);
   const answer = useGame((s) => s.answerTeamOrder);
   const complete = useGame((s) => s.completeRaceSession);
-  const [speed, setSpeed] = useState(1);
+  const auto = g.weekend!.auto;
+  const setAuto = useGame((s) => s.setAuto);
+  const [speed, setSpeed] = useState(auto?.on ? 2 : 1);
   const r = g.weekend!.race!;
 
+  // Minuterie adaptative : en mode TV, ça accélère quand c'est calme et ralentit sur les moments chauds
   useEffect(() => {
-    const ms = SPEEDS[speed].ms;
-    if (!ms || r.finished || r.decision) return;
-    const id = setInterval(tick, ms);
-    return () => clearInterval(id);
-  }, [speed, r.finished, r.decision, tick]);
+    const base = SPEEDS[speed].ms;
+    if (!base || r.finished || r.decision) return;
+    let delay = base;
+    if (auto?.on) {
+      const i = r.intensity ?? 0;
+      const left = r.totalLaps - r.lap;
+      const factor = i >= 7 || left <= 2 ? 2.6 : i >= 4 ? 1.5 : i >= 2 ? 0.9 : 0.4;
+      delay = Math.max(120, base * factor);
+    }
+    const id = setTimeout(tick, delay);
+    return () => clearTimeout(id);
+  }, [speed, r.finished, r.decision, r.lap, r.intensity, r.totalLaps, auto?.on, tick]);
 
   const order = [...r.cars].sort((a, b) => a.pos - b.pos);
   const leader = order.find((c) => c.status !== 'out');
@@ -59,12 +70,18 @@ export function RaceLive() {
           <button className="ghost sm" disabled={r.finished} onClick={tick}>
             +1 tour
           </button>
-          <button className="ghost sm" disabled={r.finished} onClick={toEnd} title="L’IA gère tes arrêts au stand">
+          <button className="ghost sm" disabled={r.finished} onClick={toEnd} title="Résultat immédiat (l’IA gère tes arrêts) — s’arrête aux décisions">
             ⏭ Fin
           </button>
+          <button className={auto?.on ? 'primary sm' : 'ghost sm'} disabled={r.finished} onClick={() => setAuto({ on: !auto?.on })} title="Le pilote automatique gère ta course, la réalisation TV ralentit sur les moments forts">
+            {auto?.on ? '🎬 Mode TV (auto)' : '🎮 Je pilote'}
+          </button>
+          <IntensityMeter r={r} />
         </div>
       </div>
 
+      <HighlightBanner r={r} />
+      <Battles r={r} />
       <div className="race-grid">
         <div className="card tower">
           <table className="table tower-table">
@@ -210,6 +227,13 @@ export function RaceLive() {
               <button className="primary big" onClick={complete}>
                 📊 Voir les résultats
               </button>
+            </div>
+          )}
+          <Commentary r={r} />
+          {me && (
+            <div className="card">
+              <h3>📈 Ta course</h3>
+              <PositionChart positions={r.posHistory?.[PLAYER_ID] ?? []} total={r.totalLaps} startPos={me.startPos} height={100} />
             </div>
           )}
           <div className="card radio">
