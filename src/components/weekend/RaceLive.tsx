@@ -28,10 +28,10 @@ export function RaceLive() {
 
   useEffect(() => {
     const ms = SPEEDS[speed].ms;
-    if (!ms || r.finished) return;
+    if (!ms || r.finished || r.decision) return;
     const id = setInterval(tick, ms);
     return () => clearInterval(id);
-  }, [speed, r.finished, tick]);
+  }, [speed, r.finished, r.decision, tick]);
 
   const order = [...r.cars].sort((a, b) => a.pos - b.pos);
   const leader = order.find((c) => c.status !== 'out');

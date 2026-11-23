@@ -4,7 +4,8 @@ import type { GameState, QualiEntry, RaceCar, RaceEvent, RaceResultEntry, RaceSt
 import { PLAYER_ID } from '../types';
 import { lastNameOf, statsOf, teamOf, teammateOf } from '../people';
 import { aiSetupQuality, basePace, bestTyreForRain, TYRE_INFO, weatherTyrePenalty } from './pace';
-import { chance, clamp, gauss, pick, rand } from '../rng';
+import { chance, clamp, gauss, pick, rand, randInt } from '../rng';
+import { applyRaceCheats, racePaceNudge } from '../cheats';
 
 export interface RaceContext {
   s: GameState;
@@ -89,6 +90,11 @@ export function initRace(ctx: RaceContext, grid: QualiEntry[], kind: 'race' | 's
     fastestLap: null,
     radio: [],
     collisions: [],
+    forcedDnf: s.cheats?.enabled ? Object.fromEntries(Object.entries(s.cheats.race).filter(([, v]) => v === 'DNF').map(([id]) => [id, randInt(2, Math.max(3, totalLaps - 2))])) : undefined,
+    decision: null,
+    decisionsTaken: 0,
+    mods: {},
+    modLaps: {},
   };
 }
 
@@ -246,6 +252,11 @@ export function simulateLap(ctx: RaceContext, r: RaceState): void {
     let t = car.pace * (1 + r.weather.rain * 0.11) + r.weather.rain * (100 - st.wet) * 0.0011 * car.pace;
     t += tyre.offset + wearPen + fuel + weatherTyrePenalty(car.tyre, r.weather.rain) + m.pace;
     t += car.damage * car.pace * 0.04;
+    t += racePaceNudge(s, r, car.driverId, car.pos);
+    if (r.mods?.[car.driverId] && (r.modLaps?.[car.driverId] ?? 0) > 0) {
+      t += r.mods[car.driverId];
+      r.modLaps![car.driverId]--;
+    }
     t += gauss(0, 0.1 + (100 - st.consistency) * 0.004);
     // Batterie / mode dépassement (règlement 2026)
     let boost = false;
@@ -260,6 +271,11 @@ export function simulateLap(ctx: RaceContext, r: RaceState): void {
     if (car.gapAhead > 0 && car.gapAhead < 1.0 && r.safetyCar === 'none') t += 0.25 * c.aeroSens;
     // Départ
     if (lap === 1) t += gauss(0, 0.55) - (st.starts - 82) * 0.03 + car.startPos * 0.04;
+    // Triche : abandon imposé
+    if (r.forcedDnf?.[car.driverId] === lap) {
+      retire(ctx, r, car, pick(['problème moteur', 'boîte de vitesses', 'problème hydraulique', 'sortie de piste']), chance(0.5));
+      continue;
+    }
     // Fiabilité
     const rel = team.car.reliability;
     if (chance((100 - rel) * 0.000055 * (mode === 'attack' ? 1.3 : 1))) {
@@ -427,6 +443,7 @@ function finishRace(ctx: RaceContext, r: RaceState) {
       }
     }
   }
+  applyRaceCheats(ctx.s, r);
   const fin = r.cars.filter((x) => x.status !== 'out').sort((a, b) => a.totalTime + a.penalties - (b.totalTime + b.penalties));
   fin.forEach((car, i) => (car.pos = i + 1));
   r.cars.filter((x) => x.status === 'out').forEach((car, i) => (car.pos = fin.length + i + 1));

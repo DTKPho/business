@@ -10,7 +10,7 @@ import { driverStandings, teamStandings } from '../standings';
 import { carScore } from '../sim/pace';
 import { groupAfterRace, groupRandom } from '../social/group';
 import { driverPostsAfterRace, fanComments, makePost, paddockRumour, raceNews, news } from '../social/press';
-import { spontaneousDM } from '../social/voice';
+import { spontaneousDM, tpText } from '../social/voice';
 import { buildOffer, generateOffers, offerToContract } from './contracts';
 import { addDays, money } from '../format';
 import { daysUntilWeekend, START_SEASON } from '../init';
@@ -323,17 +323,19 @@ export function postRace(s: GameState, res: WeekendResult, collisions: { a: stri
   if (me) {
     const tp = `tp:${team}`;
     let txt = '';
-    if (me.position === 1) txt = pick(['Quelle course ! Toute l’usine est en feu. Profite, tu l’as méritée.', 'Victoire magnifique. Merci pour ton engagement.']);
-    else if (teamOrderAnswer === 'refused') txt = 'Je ne vais pas le répéter deux fois : quand l’équipe donne une consigne, tu l’appliques. On en parle demain à l’usine.';
-    else if (me.dnf && rating < 4) txt = 'On a laissé des points sur la table aujourd’hui. Analyse ça avec ton ingénieur, je veux une réaction.';
-    else if (me.position > 0 && me.position < exp - 2) txt = 'Bien au-dessus des attentes. Continue comme ça.';
+    const X = (en: string, fr: string) => tpText(s, team, en, fr);
+    if (me.position === 1) txt = pick([X('What a race! The whole factory is on fire. Enjoy it, you earned it.', 'Quelle course ! Toute l’usine est en feu. Profite, tu l’as méritée.'), X('Magnificent win. Thank you for your commitment.', 'Victoire magnifique. Merci pour ton engagement.')]);
+    else if (teamOrderAnswer === 'refused') txt = X('I won\'t say it twice: when the team gives an instruction, you follow it. We talk tomorrow at the factory.', 'Je ne vais pas le répéter deux fois : quand l’équipe donne une consigne, tu l’appliques. On en parle demain à l’usine.');
+    else if (me.dnf && rating < 4) txt = X('We left points on the table today. Go through it with your engineer, I want a reaction.', 'On a laissé des points sur la table aujourd’hui. Analyse ça avec ton ingénieur, je veux une réaction.');
+    else if (me.position > 0 && me.position < exp - 2) txt = X('Well above expectations. Keep it up.', 'Bien au-dessus des attentes. Continue comme ça.');
+    if (txt) txt = `${tdef.principal}: ${txt}`;
     if (txt) pushDM(s, tp, txt, tp);
   }
   for (const n of raceNews(s, res)) s.news.unshift(n);
   s.feed.unshift(...driverPostsAfterRace(s, res));
   // Posts automatiques de l'équipe
   if (me && me.position > 0 && me.position <= 3) {
-    const post = makePost(s, team, 'race', `${me.position === 1 ? 'VICTOIRE' : 'PODIUM'} pour ${p.firstName} ${p.lastName} à ${circuit.city} ! 🏆 #${tdef.short}`, randInt(300_000, 1_500_000));
+    const post = makePost(s, team, 'race', `${me.position === 1 ? 'RACE WIN' : 'PODIUM'} for ${p.firstName} ${p.lastName} in ${circuit.city}! 🏆 #${tdef.short}`, randInt(300_000, 1_500_000));
     post.comments = fanComments(s, post, 0.8);
     s.feed.unshift(post);
   }

@@ -6,7 +6,7 @@ import { BACKGROUNDS, playerBaseStats, STAT_KEYS, STAT_LABELS, START_SEASON } fr
 import type { Background, DriverStats, ResidenceId, TeamId } from '../../game/types';
 import { useGame } from '../../game/store';
 import { overall } from '../../game/people';
-import { Bar, Flag, Helmet, SmartImage, TeamCar, TeamLogo } from '../ui/media';
+import { Bar, Flag, Silhouette, SmartImage, TeamCar, TeamLogo } from '../ui/media';
 import { driverPhotoCandidates } from '../../data/drivers';
 
 import { resizeImage } from '../ui/image';
@@ -24,7 +24,7 @@ export function Setup() {
   const [num, setNum] = useState(21);
   const [birth, setBirth] = useState(2005);
   const [photo, setPhoto] = useState<string | null>(null);
-  const [helmet, setHelmet] = useState({ primary: '#0a2a6b', secondary: '#f5c400' });
+  const helmet = { primary: '#0a2a6b', secondary: '#f5c400' };
   const [bg, setBg] = useState<Background>('f2champ');
   const [bonus, setBonus] = useState<Partial<DriverStats>>({});
   const [difficulty, setDifficulty] = useState<'easy' | 'normal' | 'hard'>('normal');
@@ -94,8 +94,8 @@ export function Setup() {
             </div>
             <div className="form">
               <div className="photo-pick">
-                <div className="avatar" style={{ width: 120, height: 120, borderColor: helmet.primary }}>
-                  {photo ? <img src={photo} alt="" /> : <Helmet primary={helmet.primary} secondary={helmet.secondary} size={110} number={num} />}
+                <div className="avatar" style={{ width: 120, height: 120, borderColor: '#55556a' }}>
+                  {photo ? <img src={photo} alt="" /> : <Silhouette size={120} tint="#c9c9d6" />}
                 </div>
                 <div>
                   <label className="btn">
@@ -107,14 +107,9 @@ export function Setup() {
                       Retirer
                     </button>
                   )}
-                  <p className="muted small">Sinon ton casque sert d’avatar.</p>
+                  <p className="muted small">Sinon, une silhouette neutre sert d’avatar.</p>
                 </div>
               </div>
-              <div className="row">
-                <label>Couleur casque<input type="color" value={helmet.primary} onChange={(e) => setHelmet({ ...helmet, primary: e.target.value })} /></label>
-                <label>Couleur secondaire<input type="color" value={helmet.secondary} onChange={(e) => setHelmet({ ...helmet, secondary: e.target.value })} /></label>
-              </div>
-              <Helmet primary={helmet.primary} secondary={helmet.secondary} size={140} number={num} />
             </div>
           </div>
         )}

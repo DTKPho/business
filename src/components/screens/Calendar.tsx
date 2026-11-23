@@ -3,6 +3,8 @@ import { useGame } from '../../game/store';
 import { PLAYER_ID } from '../../game/types';
 import { dateFr } from '../../game/format';
 import { DriverName, Flag } from '../ui/media';
+import { ImageUpload, Scene } from '../ui/scene';
+import { circuitFallback } from '../ui/backgrounds';
 
 export function Calendar() {
   const g = useGame((s) => s.game!);
@@ -17,6 +19,8 @@ export function Calendar() {
           const status = res ? 'done' : i === g.round ? 'next' : '';
           return (
             <div key={c.id} className={`cal card ${status}`}>
+              <Scene imageKey={`circuit:${c.id}`} fallback={circuitFallback(c.id)} className="cal-bg" overlay={0.5}>
+              <ImageUpload imageKey={`circuit:${c.id}`} compact />
               <div className="row between">
                 <span className="eyebrow">
                   R{i + 1} · {dateFr(raceDate(g.season, i))}
@@ -43,6 +47,7 @@ export function Calendar() {
                 </div>
               )}
               {status === 'next' && <div className="chip pos">Prochaine course</div>}
+              </Scene>
             </div>
           );
         })}

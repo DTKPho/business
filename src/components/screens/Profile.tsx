@@ -5,7 +5,7 @@ import { PLAYER_ID } from '../../game/types';
 import { compact } from '../../game/format';
 import { overall } from '../../game/people';
 import { STAT_KEYS, STAT_LABELS, BACKGROUNDS } from '../../game/init';
-import { Bar, DriverPhoto, Flag, Helmet } from '../ui/media';
+import { Bar, DriverPhoto, Flag } from '../ui/media';
 import { resizeImage } from '../ui/image';
 
 export function Profile() {
@@ -21,7 +21,7 @@ export function Profile() {
   return (
     <div className="page">
       <div className="grid2">
-        <section className="card profile-card" style={{ borderColor: p.helmet.primary }}>
+        <section className="card profile-card" >
           <div className="row">
             <DriverPhoto id={PLAYER_ID} size={140} />
             <div>
@@ -38,15 +38,8 @@ export function Profile() {
                   📷 Changer de photo
                   <input type="file" accept="image/*" hidden onChange={async (e) => { const f = e.target.files?.[0]; if (f) { const url = await resizeImage(f); update((pl) => { pl.photo = url; }); } }} />
                 </label>
-                {p.photo && <button className="ghost sm" onClick={() => update((pl) => { pl.photo = null; })}>Utiliser le casque</button>}
+                {p.photo && <button className="ghost sm" onClick={() => update((pl) => { pl.photo = null; })}>Retirer la photo</button>}
               </div>
-            </div>
-          </div>
-          <div className="row">
-            <Helmet primary={p.helmet.primary} secondary={p.helmet.secondary} size={110} number={p.number} />
-            <div className="form">
-              <label>Casque — couleur 1<input type="color" value={p.helmet.primary} onChange={(e) => update((pl) => { pl.helmet.primary = e.target.value; })} /></label>
-              <label>Casque — couleur 2<input type="color" value={p.helmet.secondary} onChange={(e) => update((pl) => { pl.helmet.secondary = e.target.value; })} /></label>
             </div>
           </div>
         </section>

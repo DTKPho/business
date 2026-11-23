@@ -22,6 +22,7 @@ const NAV: { id: Screen; icon: string; label: string }[] = [
   { id: 'lifestyle', icon: '🛥️', label: 'Style de vie' },
   { id: 'profile', icon: '🧑‍🚀', label: 'Mon pilote' },
   { id: 'settings', icon: '⚙️', label: 'Réglages' },
+  { id: 'cheats', icon: '🎭', label: 'Triche' },
 ];
 
 export function Sidebar() {
@@ -37,7 +38,7 @@ export function Sidebar() {
       <div className="brand">
         PADDOCK<span>F1 CAREER</span>
       </div>
-      {NAV.map((n) => (
+      {NAV.filter((n) => n.id !== 'cheats' || g.cheats?.enabled || g.settings.showCheats).map((n) => (
         <button key={n.id} className={`nav ${screen === n.id ? 'on' : ''} ${n.id === 'weekend' && g.weekend ? 'live' : ''}`} onClick={() => setScreen(n.id)}>
           <span className="nav-icon">{n.icon}</span>
           <span className="nav-label">{n.label}</span>

@@ -29,48 +29,48 @@ function generateQuestions(s: GameState, context: PendingInterview['context'], e
 
   if (context === 'postRace' && extra?.race) {
     const r = extra.race;
-    if (r.dnf) qs.push({ text: `Abandon aujourd’hui (${r.dnf}). Que s’est-il passé de votre point de vue ?`, topic: 'result' });
-    else if (r.position === 1) qs.push({ text: 'Victoire ! Décrivez-nous ce que vous ressentez en ce moment.', topic: 'result' });
-    else if (r.position <= 3) qs.push({ text: `Un podium, P${r.position}. Satisfait, ou il y avait mieux à faire ?`, topic: 'result' });
-    else if (r.position <= 10) qs.push({ text: `P${r.position}, des points. Quel bilan tirez-vous de cette course ?`, topic: 'result' });
-    else qs.push({ text: `P${r.position}, hors des points. Qu’est-ce qui n’a pas fonctionné ?`, topic: 'result' });
+    if (r.dnf) qs.push({ text: `You retired today (${r.dnf}). What happened from your side?`, topic: 'result' });
+    else if (r.position === 1) qs.push({ text: pick(['You won! Tell us what you are feeling right now.', 'Victory! Talk us through those final laps.']), topic: 'result' });
+    else if (r.position <= 3) qs.push({ text: `A podium, P${r.position}. Happy, or was there more out there?`, topic: 'result' });
+    else if (r.position <= 10) qs.push({ text: `P${r.position}, some points. How would you sum up your race?`, topic: 'result' });
+    else qs.push({ text: `P${r.position}, out of the points. What went wrong?`, topic: 'result' });
     const col = s.flags['lastCollision'] as string | undefined;
     if (col) {
       const [other, blame] = col.split('|');
-      qs.push({ text: `Le contact avec ${lastNameOf(s, other)} : ${blame === PLAYER_ID ? 'les commissaires vous ont jugé responsable. Vous acceptez la décision ?' : 'il semble être fautif. Que lui dites-vous ?'}`, topic: 'rival', subject: other });
+      qs.push({ text: `The contact with ${lastNameOf(s, other)}: ${blame === PLAYER_ID ? 'the stewards found you responsible. Do you accept the decision?' : 'it looked like his fault. What would you say to him?'}`, topic: 'rival', subject: other });
     } else if (mate) {
       const mr = s.weekend?.raceResult?.find((e) => e.driverId === mate);
-      if (mr) qs.push({ text: `${lastNameOf(s, mate)} termine ${mr.dnf ? 'en abandon' : `P${mr.position}`}. Comment jugez-vous votre duel interne ?`, topic: 'teammate', subject: mate });
+      if (mr) qs.push({ text: `${lastNameOf(s, mate)} finished ${mr.dnf ? 'with a DNF' : `P${mr.position}`}. How do you rate your intra-team battle?`, topic: 'teammate', subject: mate });
     }
-    if (s.flags['teamOrderRefused']) qs.push({ text: 'Vous avez ignoré une consigne d’équipe à la radio. Pourquoi ?', topic: 'controversy' });
-    else qs.push({ text: myPos <= 3 ? `Vous êtes P${myPos} au championnat. On peut parler de titre ?` : `Prochaine étape : ${CALENDAR[s.round + 1]?.short ?? 'la fin de saison'}. Quels objectifs ?`, topic: 'championship' });
+    if (s.flags['teamOrderRefused']) qs.push({ text: 'You ignored a team order on the radio. Why?', topic: 'controversy' });
+    else qs.push({ text: myPos <= 3 ? `You're P${myPos} in the championship. Can we talk about the title?` : `Next up: ${CALENDAR[s.round + 1]?.short ?? 'the end of the season'}. What are your targets?`, topic: 'championship' });
     return qs;
   }
 
   if (context === 'postQuali') {
     const q = extra?.quali ?? 10;
-    qs.push({ text: q === 1 ? 'La pole position ! Comment était ce dernier tour ?' : q <= 5 ? `P${q} sur la grille. Content de votre qualif ?` : `P${q} seulement. Que vous a-t-il manqué ?`, topic: 'result' });
-    qs.push({ text: 'Quelle stratégie pour demain ? On peut s’attendre à quoi ?', topic: 'team' });
+    qs.push({ text: q === 1 ? 'Pole position! How did that final lap feel?' : q <= 5 ? `P${q} on the grid. Happy with your qualifying?` : `Only P${q}. What was missing?`, topic: 'result' });
+    qs.push({ text: 'What\'s the plan for tomorrow? What can we expect?', topic: 'team' });
     return qs;
   }
 
   // Jeudi presse / interviews longues
-  qs.push({ text: `Bienvenue à ${circuit?.city ?? 'ce Grand Prix'}. ${circuit?.street ? 'Un circuit urbain' : 'Un circuit'} qui vous convient ?`, topic: 'result' });
-  if (lastMe && lastMe.dnf) qs.push({ text: 'Après votre abandon du week-end dernier, comment avez-vous rebondi mentalement ?', topic: 'personal' });
-  else if (lastMe && lastMe.position === 1) qs.push({ text: 'Vous arrivez en vainqueur. Est-ce que la pression change ?', topic: 'championship' });
-  if (mate && chance(0.7)) qs.push({ text: `On dit que l’ambiance avec ${nameOf(s, mate)} est ${chance(0.5) ? 'tendue' : 'excellente'}. Qu’en est-il vraiment ?`, topic: 'teammate', subject: mate });
+  qs.push({ text: `Welcome to ${circuit?.city ?? 'this Grand Prix'}. Does ${circuit?.street ? 'a street circuit' : 'this track'} suit you?`, topic: 'result' });
+  if (lastMe && lastMe.dnf) qs.push({ text: 'After last weekend\'s DNF, how did you bounce back mentally?', topic: 'personal' });
+  else if (lastMe && lastMe.position === 1) qs.push({ text: 'You arrive here as a race winner. Does the pressure change?', topic: 'championship' });
+  if (mate && chance(0.7)) qs.push({ text: `People say the atmosphere with ${nameOf(s, mate)} is ${chance(0.5) ? 'tense' : 'great'}. What's the truth?`, topic: 'teammate', subject: mate });
   const contract = s.player.contract;
-  if (contract && contract.endSeason <= s.season && chance(0.85)) qs.push({ text: `Votre contrat avec ${team?.name} expire en fin de saison. Discussions en cours ? D’autres équipes ?`, topic: 'contract' });
-  if (leader && leader.driverId !== PLAYER_ID && chance(0.5)) qs.push({ text: `${nameOf(s, leader.driverId)} mène le championnat. Est-il battable cette saison ?`, topic: 'rival', subject: leader.driverId });
-  if (chance(0.4) && team) qs.push({ text: `Que pensez-vous du travail de ${team.principal} à la tête de l’équipe ?`, topic: 'team', subject: teamId ?? undefined });
-  if (s.player.image.controversy > 40 && chance(0.6)) qs.push({ text: 'Vos sorties nocturnes et vos posts font beaucoup parler. Est-ce compatible avec le haut niveau ?', topic: 'lifestyle' });
-  if (chance(0.35)) qs.push({ text: 'Que pensez-vous des sanctions de la FIA sur les jurons à la radio ?', topic: 'regulations' });
-  if (chance(0.3)) qs.push({ text: 'Un message pour vos fans, de plus en plus nombreux ?', topic: 'fans' });
+  if (contract && contract.endSeason <= s.season && chance(0.85)) qs.push({ text: `Your contract with ${team?.name} ends this season. Any talks? Other teams?`, topic: 'contract' });
+  if (leader && leader.driverId !== PLAYER_ID && chance(0.5)) qs.push({ text: `${nameOf(s, leader.driverId)} leads the championship. Can he be beaten this year?`, topic: 'rival', subject: leader.driverId });
+  if (chance(0.4) && team) qs.push({ text: `What do you think of ${team.principal}'s work leading the team?`, topic: 'team', subject: teamId ?? undefined });
+  if (s.player.image.controversy > 40 && chance(0.6)) qs.push({ text: 'Your nights out and social posts get a lot of attention. Is that compatible with elite sport?', topic: 'lifestyle' });
+  if (chance(0.35)) qs.push({ text: 'What\'s your view on the FIA\'s fines for swearing on the radio?', topic: 'regulations' });
+  if (chance(0.3)) qs.push({ text: 'Any message for your growing fanbase?', topic: 'fans' });
   if (context === 'podcast') {
-    qs.push({ text: 'Raconte-nous ton enfance, comment tout a commencé en karting ?', topic: 'personal' });
-    qs.push({ text: 'Qui est le pilote le plus drôle du paddock, et le plus pénible en piste ?', topic: 'rival' });
+    qs.push({ text: 'Tell us about your childhood. How did it all start in karting?', topic: 'personal' });
+    qs.push({ text: 'Who is the funniest driver in the paddock, and the most annoying on track?', topic: 'rival' });
   }
-  if (context === 'feature') qs.push({ text: 'Où vous voyez-vous dans cinq ans ?', topic: 'future' });
+  if (context === 'feature') qs.push({ text: 'Where do you see yourself in five years?', topic: 'future' });
   return qs.slice(0, context === 'podcast' || context === 'feature' ? 4 : 3);
 }
 
@@ -188,14 +188,14 @@ export function evaluateInterview(s: GameState, itw: PendingInterview): Intervie
   const q0 = quotes[0] ? `« ${quotes[0]} »` : '';
   const angle = st.angle;
   const headlines: Record<Angle, string[]> = {
-    humble: [`${name}, la tête froide : « Tout le mérite revient à l’équipe »`, `${name} reste humble et concentré`],
-    arrogant: [`${name} affiche une confiance XXL`, `« Je suis le plus rapide » : ${name} met la pression`, `${name} fait parler son ego`],
-    blame: [`${name} tacle ${teamName} en public`, `Malaise chez ${teamName} : ${name} critique son équipe`, `${name} ne mâche pas ses mots contre ses ingénieurs`],
-    funny: [`${name}, l’humour comme arme fatale`, `Le paddock hilare après la conférence de ${name}`],
-    bland: [`${name} reste prudent face à la presse`, `${name} : langue de bois et concentration`],
-    loyal: [`${name} jure fidélité à ${teamName}`, `${name} veut écrire son histoire avec ${teamName}`],
-    leaving: [`${name} ouvre la porte à un départ !`, `Mercato : ${name} écoute les offres`, `${teamName} sous pression : ${name} laisse planer le doute`],
-    angry: [`${name} explose face aux micros`, `Coup de sang de ${name} en zone mixte`],
+    humble: [`${name} keeps calm: "All credit goes to the team"`, `${name} stays humble and focused`],
+    arrogant: [`${name} oozes confidence`, `"I'm the fastest": ${name} turns up the heat`, `${name}'s ego takes centre stage`],
+    blame: [`${name} hits out at ${teamName} in public`, `Tension at ${teamName}: ${name} criticises his team`, `${name} doesn't hold back on his engineers`],
+    funny: [`${name}, humour as a weapon`, `Paddock in stitches after ${name}'s press conference`],
+    bland: [`${name} plays it safe with the media`, `${name}: straight bat, full focus`],
+    loyal: [`${name} pledges loyalty to ${teamName}`, `${name} wants to write his story with ${teamName}`],
+    leaving: [`${name} opens the door to a move!`, `Silly season: ${name} is listening to offers`, `${teamName} under pressure as ${name} keeps options open`],
+    angry: [`${name} explodes in front of the microphones`, `${name} loses his cool in the media pen`],
   };
   const headline = pick(headlines[angle]);
   const summaries: Record<Angle, string> = {

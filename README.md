@@ -53,7 +53,7 @@ les pilotes cités. Interviews magazine, plateaux TV et podcasts à la demande.
   autodérision, Piastri laconique, Alonso « Karma 😉 », Leclerc chaleureux…).
 - Groupe WhatsApp des pilotes : invitations (golf, padel, sim racing…), sujets
   GPDA, anniversaires réels, chambrage après les courses, réactions à tes messages.
-- Paddockgram (réseau social) : publications, likes, commentaires des fans et des
+- Instagram : publications, likes, commentaires des fans et des
   pilotes amis, croissance d’abonnés.
 - Mail : offres de contrat, sponsors personnels, invitations à des événements.
 
@@ -73,6 +73,34 @@ boutique (immobilier à Monaco, voitures, montres, yacht, jet privé…), staff
 personnel (manager, préparateur, kiné, attaché de presse, coach, chef, pilote de
 jet), résidence fiscale, sponsors personnels, placements, entreprises (merch,
 karting, e-sport, restaurant…), fondation caritative, vie de couple.
+
+## Nouveautés v2
+
+- **Tes images partout** : fond de l’accueil et de l’onglet Écurie (équipe), fonds
+  des circuits (calendrier et week-end), photos des articles de la boutique, galeries
+  de tes maisons, voitures, yacht, jet, photo de ta résidence, fonds d’écran du
+  téléphone et du groupe WhatsApp, photos dans tes posts Instagram. Deux façons :
+  le bouton 🖼️ dans le jeu, ou le dossier `images/` (voir `images/LISEZMOI.md`
+  pour les noms de fichiers exacts).
+- **Ambiance par onglet** : couleurs, fonds et effets propres à chaque écran
+  (couleurs de ton équipe à l’accueil, du pays sur les circuits, or pour le style
+  de vie, vert pour les finances…).
+- **Avatar neutre** (silhouette) tant que tu n’as pas importé de photo.
+- **Anglais** : groupe WhatsApp, Instagram (commentaires), interviews et messages
+  privés en anglais ; les pilotes francophones (Leclerc, Gasly, Ocon, Hadjar,
+  Stroll) t’écrivent en français si ton pilote est francophone. Vasseur et Mekies
+  aussi.
+- **Réponses construites à partir de ton message** : invitation (activité + moment
+  repris), question sur un circuit (avis selon la forme de leur voiture), avis sur
+  un pilote cité (ami, rival, leader…), résultats réels, contrat, conseils selon le
+  sujet (pluie, pneus, qualif, mental…), réaction à tes provocations ou excuses.
+- **Décisions pendant le week-end** : en essais (évolution à tester, boîte fissurée,
+  partage de données…), en qualif (trafic, drapeau jaune, aspiration, gêner un
+  rival, timing…) et en course (crash devant toi, plongeon d’un rival, occasion de
+  dépassement, undercut, débris, freins, pari météo, signaler un rival, aider un ami,
+  relance après safety car, pneus en fin de vie).
+- **Mode triche** (Réglages → afficher l’onglet 🎭) : position imposée en qualif et
+  à l’arrivée, abandon forcé, rythme de chaque pilote, argent, attributs, etc.
 
 ## Mode IA (optionnel)
 

@@ -137,6 +137,7 @@ export interface Player {
   businesses: OwnedBusiness[];
   investments: Investment[];
   achievements: string[];
+  gallery?: Record<string, string[]>; // propriétaire → clés d'images
 }
 
 export interface OwnedBusiness {
@@ -177,6 +178,7 @@ export interface SeasonSummary {
 export type ResidenceId = 'monaco' | 'uk' | 'france' | 'switzerland' | 'dubai' | 'spain' | 'italy' | 'usa' | 'netherlands';
 
 export interface OwnedAsset {
+  uid?: string; // identifiant unique (galerie photo)
   id: string; // id du catalogue
   boughtDay: number;
   price: number;
@@ -262,6 +264,11 @@ export interface RaceState {
   fastestLap: { driverId: string; time: number } | null;
   radio: string[];
   collisions: { a: string; b: string; lap: number; blame: string }[];
+  forcedDnf?: Record<string, number>;
+  decision?: PendingDecision | null;
+  decisionsTaken?: number;
+  mods?: Record<string, number>; // bonus/malus de rythme temporaire (s/tour)
+  modLaps?: Record<string, number>;
 }
 
 export interface RaceResultEntry {
@@ -311,6 +318,11 @@ export interface WeekendState {
   teamOrderAnswer: 'accepted' | 'refused' | null;
   collisions: { a: string; b: string; lap: number; blame: string }[];
   pitlaneStart: boolean;
+  decision?: PendingDecision | null; // décision en attente (essais / qualif)
+  decisionQueue?: string[];
+  extra?: Record<string, number>; // effets des décisions (pénalités, risques, bonus)
+  decisionLog?: string[];
+  pendingRisks?: string[];
 }
 
 // ───────────────────── Social ─────────────────────
@@ -339,6 +351,7 @@ export interface SocialPost {
   likes: number;
   comments: { author: string; text: string }[];
   image?: string; // emoji scène
+  imageKey?: string; // photo importée par le joueur
   likedByPlayer?: boolean;
 }
 
@@ -436,6 +449,7 @@ export interface Settings {
   simSpeed: number;
   difficulty: 'easy' | 'normal' | 'hard';
   driverLanguage: 'fr' | 'vo';
+  showCheats?: boolean;
 }
 
 export type Screen =
@@ -452,7 +466,8 @@ export type Screen =
   | 'planner'
   | 'profile'
   | 'paddock'
-  | 'settings';
+  | 'settings'
+  | 'cheats';
 
 export type PhoneApp = 'messages' | 'whatsapp' | 'insta' | 'mail';
 
@@ -486,6 +501,31 @@ export interface GameState {
   generatedDrivers: Record<string, GeneratedDriver>;
   seenEvents: string[];
   flags: Record<string, number | boolean | string>;
+  cheats?: CheatState;
+}
+
+export interface DecisionOption {
+  label: string;
+  desc: string;
+}
+
+export interface PendingDecision {
+  defId: string;
+  stage: 'fp' | 'quali' | 'race';
+  title: string;
+  text: string;
+  emoji: string;
+  options: DecisionOption[];
+  data: Record<string, string | number>;
+  outcome?: string;
+}
+
+export interface CheatState {
+  enabled: boolean;
+  persistent: boolean; // garder les consignes après le GP
+  quali: Record<string, number>; // position imposée en qualif
+  race: Record<string, number | 'DNF'>; // position imposée à l'arrivée (ou abandon)
+  pace: Record<string, number>; // bonus de rythme en % (+ = plus rapide)
 }
 
 export interface GeneratedDriver {

@@ -26,6 +26,7 @@ export function basePace(s: GameState, driverId: string, c: CircuitDef, o: PaceO
   let deficit = (100 - car) * 0.0009 + (100 - st.pace) * 0.00042 - form * 0.00018;
   deficit += o.rain * (100 - st.wet) * 0.0011;
   deficit += (1 - o.setupQuality) * 0.0055;
+  if (s.cheats?.enabled) deficit -= (s.cheats.pace[driverId] ?? 0) / 100;
   if (driverId === PLAYER_ID) {
     const d = s.settings.difficulty;
     deficit += d === 'easy' ? -0.0035 : d === 'hard' ? 0.0015 : 0;

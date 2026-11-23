@@ -57,13 +57,7 @@ export function SettingsScreen() {
               ))}
             </select>
           </label>
-          <label>
-            Langue des pilotes (mode IA)
-            <select value={st.driverLanguage} onChange={(e) => update((s) => { s.driverLanguage = e.target.value as 'fr' | 'vo'; })}>
-              <option value="fr">Tout en français</option>
-              <option value="vo">Version originale (anglais pour les non-francophones)</option>
-            </select>
-          </label>
+          <p className="small muted">Langues : le groupe WhatsApp, Instagram et les interviews sont en anglais ; en privé, les pilotes francophones (Leclerc, Gasly, Ocon, Hadjar, Stroll) t’écrivent en français si ton pilote est francophone.</p>
           <button className="ghost" onClick={async () => { setTest('Test en cours…'); setTest(await claudeTestKey(useGame.getState().game!)); }}>
             📻 Tester la connexion
           </button>
@@ -78,6 +72,9 @@ export function SettingsScreen() {
               <option value="normal">Normal</option>
               <option value="hard">Difficile</option>
             </select>
+          </label>
+          <label className="row">
+            <input type="checkbox" checked={!!st.showCheats} onChange={(e) => update((s) => { s.showCheats = e.target.checked; })} /> Afficher l’onglet 🎭 Triche
           </label>
           <h3>Sauvegarde</h3>
           <p className="small muted">La partie est sauvegardée automatiquement dans ton navigateur.</p>

@@ -22,6 +22,7 @@ import type {
   WeekendResult,
   WeekendState,
   Settings,
+  CheatState,
 } from './types';
 import { PLAYER_ID } from './types';
 import { createGame, daysUntilWeekend, SAVE_VERSION, type NewPlayerInput } from './init';
@@ -48,10 +49,12 @@ import {
   pushMail,
   startNextSeason,
 } from './career/season';
+import { applyQualiCheats } from './cheats';
+import { buildWeekendDecision, gridPenaltiesFromWeekend, maybeRaceDecision, qualiModsFromWeekend, queueWeekendDecisions, resolveRaceDecision, resolveWeekendDecision } from './decisions';
 import { buildOffer, negotiate as negotiateOffer, offerToContract, type CounterProposal } from './career/contracts';
 import { createInterview, evaluateInterview } from './social/interview';
-import { analyze, detectActivity, detectIntent, detectIntents } from './social/nlp';
-import { inviteAcceptance, localReply } from './social/voice';
+import { analyze, detectActivity, detectIntent } from './social/nlp';
+import { composeReply, driverLang, inviteAcceptance, styleText, tpLang, tpText } from './social/voice';
 import { groupReplyTo } from './social/group';
 import { claudeAvailable, claudeDriverReply, claudeEvaluateInterview, claudeGroupReplies } from './social/claude';
 import { fanComments, makePost, news } from './social/press';
@@ -65,6 +68,7 @@ export interface UIState {
   toast: { text: string; tone: 'good' | 'bad' | 'info' } | null;
   seasonReport: string[] | null;
   typing: Record<string, boolean>;
+  outcome: { title: string; text: string; emoji: string } | null;
 }
 
 interface Store {
@@ -79,6 +83,8 @@ interface Store {
   toast: (text: string, tone?: 'good' | 'bad' | 'info') => void;
   clearToast: () => void;
   updateSettings: (fn: (s: Settings) => void) => void;
+  updateCheats: (fn: (c: CheatState) => void) => void;
+  cheatAction: (kind: 'money' | 'stats' | 'energy' | 'trust' | 'friends' | 'followers' | 'car') => void;
   // temps libre
   doActivity: (activityId: string, guestId?: string | null) => string;
   restDay: () => void;
@@ -89,6 +95,9 @@ interface Store {
   setSetup: (v: SetupValues) => void;
   runPractice: (program: 'quali' | 'long' | 'aero') => void;
   runQuali: (risks: QualiRisk[]) => void;
+  startQualiSession: (risks: QualiRisk[]) => void;
+  resolveDecision: (choice: number) => void;
+  clearOutcome: () => void;
   startRace: (startTyre: TyreCompound, plan: TyreCompound[]) => void;
   raceTick: () => void;
   raceToEnd: () => void;
@@ -110,8 +119,9 @@ interface Store {
   markGroupRead: () => void;
   readMail: (id: string) => void;
   resolveMail: (id: string, accept: boolean) => void;
-  createPost: (kind: SocialPost['kind'], text: string) => void;
+  createPost: (kind: SocialPost['kind'], text: string, imageKey?: string) => void;
   likePost: (id: string) => void;
+  updateGallery: (owner: string, keys: string[]) => void;
   // carrière
   negotiate: (offerId: string, ask: CounterProposal, pitch: string) => string;
   acceptOffer: (offerId: string) => void;
@@ -135,7 +145,7 @@ interface Store {
   clearSeasonReport: () => void;
 }
 
-const initialUI: UIState = { screen: 'home', phoneApp: 'messages', openConversation: null, lastInterview: null, toast: null, seasonReport: null, typing: {} };
+const initialUI: UIState = { screen: 'home', phoneApp: 'messages', openConversation: null, lastInterview: null, toast: null, seasonReport: null, typing: {}, outcome: null };
 
 function clone<T>(v: T): T {
   return structuredClone(v);
@@ -185,6 +195,33 @@ export const useGame = create<Store>()(
         toast: (text, tone = 'info') => set((st) => ({ ui: { ...st.ui, toast: { text, tone } } })),
         clearToast: () => set((st) => ({ ui: { ...st.ui, toast: null } })),
         updateSettings: (fn) => mutate((g) => fn(g.settings)),
+        updateCheats: (fn) =>
+          mutate((g) => {
+            g.cheats ??= { enabled: false, persistent: false, quali: {}, race: {}, pace: {} };
+            fn(g.cheats);
+          }),
+        cheatAction: (kind) =>
+          mutate((g) => {
+            const p = g.player;
+            if (kind === 'money') p.money += 10_000_000;
+            if (kind === 'stats') for (const k of Object.keys(p.stats) as (keyof typeof p.stats)[]) p.stats[k] = clamp(p.stats[k] + 3, 40, 99);
+            if (kind === 'energy') {
+              p.energy = 100;
+              p.morale = 100;
+              p.stress = 0;
+            }
+            if (kind === 'trust') {
+              const t = teamOf(g, PLAYER_ID);
+              if (t) g.teams[t].trust = 100;
+            }
+            if (kind === 'friends') for (const d of Object.values(g.drivers)) applyRel(g, d.id, { friendship: 20, respect: 10, rivalry: -10 });
+            if (kind === 'followers') addFollowers(g, 1_000_000);
+            if (kind === 'car') {
+              const t = teamOf(g, PLAYER_ID);
+              if (t) for (const k of ['aero', 'power', 'chassis', 'reliability'] as const) g.teams[t].car[k] = clamp(g.teams[t].car[k] + 2, 60, 99);
+            }
+            log(g, `🎭 Triche utilisée (${kind}).`, 'info');
+          }),
 
         // ─────────── Temps libre ───────────
         doActivity: (activityId, guestId) => {
@@ -266,7 +303,7 @@ export const useGame = create<Store>()(
                 lines.push(`${DRIVERS_BY_ID[guestId].firstName} t’accompagne${likes ? ' et adore ça' : ''}. Votre amitié progresse.`);
                 p.morale = clamp(p.morale + 3, 0, 100);
                 if (chance(0.5)) {
-                  const post = makePost(g, guestId, 'lifestyle', `${act.emoji} avec ${p.firstName} ${DRIVERS_BY_ID[guestId].persona.emojis[0] ?? ''}`, p.followers * 0.06 + 200_000);
+                  const post = makePost(g, guestId, 'lifestyle', `${act.emoji} with ${p.firstName} ${DRIVERS_BY_ID[guestId].persona.emojis[0] ?? ''}`, p.followers * 0.06 + 200_000);
                   post.comments = fanComments(g, post, 0.6);
                   g.feed.unshift(post);
                   addFollowers(g, p.followers * 0.01);
@@ -274,7 +311,7 @@ export const useGame = create<Store>()(
                 delete g.flags[`invite:${guestId}`];
               } else {
                 lines.push(`${DRIVERS_BY_ID[guestId].firstName} a décliné l’invitation.`);
-                pushDM(g, guestId, localReply(g, guestId, 'invite', act.name, null).text.replace(/^(.*)$/, '$1'));
+                pushDM(g, guestId, styleText(DRIVERS_BY_ID[guestId].persona, driverLang(g, guestId) === 'fr' ? 'Désolé, pas dispo cette fois ! Une prochaine ?' : 'Sorry, can\'t make it this time! Next one?', driverLang(g, guestId)));
                 applyRel(g, guestId, { friendship: 0 });
                 d.lastMessageDay = g.day;
               }
@@ -337,7 +374,12 @@ export const useGame = create<Store>()(
               teamOrderAnswer: null,
               collisions: [],
               pitlaneStart: pitlane,
+              decision: null,
+              decisionQueue: [],
+              extra: {},
+              decisionLog: [],
             };
+            g.weekend.decisionQueue = queueWeekendDecisions('fp', c.sprint ? 1 : 2, g, g.weekend);
             g.date = addDays(raceDate(g.season, g.round), -3);
             g.phase = 'weekend';
             log(g, `🏁 Week-end du ${c.name} : bienvenue à ${c.city} !`, 'info');
@@ -370,19 +412,34 @@ export const useGame = create<Store>()(
             w.setupConfidence = Math.max(w.setupConfidence * 0.5 + q * 0.5, q);
             gainXp(g, 'feedback', 0.4);
             g.player.energy = clamp(g.player.energy - 4, 0, 100);
+            if (w.decisionQueue?.length && !w.decision && (chance(0.6) || w.runsLeft === 0)) {
+              w.decision = buildWeekendDecision(g, w, w.decisionQueue.shift()!);
+            }
           }),
         runQuali: (risks) =>
           mutate((g) => {
             const w = g.weekend;
             if (!w) return;
             const c = CALENDAR.find((x) => x.id === w.raceId)!;
+            w.pendingRisks = undefined;
+            w.decisionQueue = [];
             if (w.stage === 'sprintQuali') {
-              const r = runSprintQuali(g, c, w.rain.quali, w.setupConfidence, risks[0] ?? 'normal', w.raceId);
-              w.sprintQuali = r.entries;
+              const r = runSprintQuali(g, c, w.rain.quali, w.setupConfidence, risks[0] ?? 'normal', w.raceId, qualiModsFromWeekend(w));
+              w.sprintQuali = applyQualiCheats(g, r.entries);
               w.notes.push(...r.notes.map((n) => `SQ — ${n}`));
             } else {
-              const r = runQualifying(g, c, w.rain.quali, w.setupConfidence, risks, w.raceId);
+              const r = runQualifying(g, c, w.rain.quali, w.setupConfidence, risks, w.raceId, qualiModsFromWeekend(w));
               let entries = r.entries;
+              const pens = gridPenaltiesFromWeekend(w);
+              for (const [pid, places] of Object.entries(pens)) {
+                const i = entries.findIndex((e) => e.driverId === pid);
+                if (i < 0) continue;
+                const [e] = entries.splice(i, 1);
+                entries.splice(Math.min(entries.length, i + places), 0, e);
+                w.notes.push(`Pénalité de ${places} places sur la grille pour ${lastNameOf(g, pid)}.`);
+              }
+              entries.forEach((e, i) => (e.position = i + 1));
+              entries = applyQualiCheats(g, entries);
               if (w.pitlaneStart) {
                 const me = entries.find((e) => e.driverId === PLAYER_ID);
                 if (me) {
@@ -403,6 +460,43 @@ export const useGame = create<Store>()(
               g.interviews.unshift(itw);
             }
           }),
+        startQualiSession: (risks) => {
+          mutate((g) => {
+            const w = g.weekend;
+            if (!w) return;
+            w.pendingRisks = risks;
+            const q = queueWeekendDecisions('quali', w.stage === 'sprintQuali' ? 1 : 2, g, w);
+            w.decisionQueue = q;
+            w.decision = q.length ? buildWeekendDecision(g, w, w.decisionQueue.shift()!) : null;
+          });
+          const w = get().game?.weekend;
+          if (w && !w.decision) get().runQuali(risks);
+        },
+        resolveDecision: (choice) => {
+          let outcome: UIState['outcome'] = null;
+          let runQ: QualiRisk[] | null = null;
+          mutate((g) => {
+            const w = g.weekend;
+            if (!w) return;
+            if (w.race?.decision) {
+              const d = w.race.decision;
+              const text = resolveRaceDecision(g, w.race, choice);
+              outcome = { title: d.title, text, emoji: d.emoji };
+              return;
+            }
+            if (w.decision) {
+              const d = w.decision;
+              const text = resolveWeekendDecision(g, w, choice);
+              outcome = { title: d.title, text, emoji: d.emoji };
+              const isQuali = d.stage === 'quali';
+              w.decision = isQuali && w.decisionQueue?.length ? buildWeekendDecision(g, w, w.decisionQueue.shift()!) : null;
+              if (isQuali && !w.decision && w.pendingRisks) runQ = w.pendingRisks as QualiRisk[];
+            }
+          });
+          set((st) => ({ ui: { ...st.ui, outcome } }));
+          if (runQ) get().runQuali(runQ);
+        },
+        clearOutcome: () => set((st) => ({ ui: { ...st.ui, outcome: null } })),
         startRace: (startTyre, plan) =>
           mutate((g) => {
             const w = g.weekend;
@@ -411,11 +505,19 @@ export const useGame = create<Store>()(
             const kind = w.stage === 'sprint' ? 'sprint' : 'race';
             const grid: QualiEntry[] = (kind === 'sprint' ? w.sprintQuali : w.quali) ?? [];
             w.race = initRace(ctx, grid, kind, kind === 'sprint' ? w.rain.sprint : w.rain.race, startTyre, plan);
+            const ex = w.extra ?? {};
+            if (ex.startBonus) {
+              w.race.mods = { ...(w.race.mods ?? {}), [PLAYER_ID]: -0.7 };
+              w.race.modLaps = { ...(w.race.modLaps ?? {}), [PLAYER_ID]: 1 };
+            }
+            if (kind === 'race' && ex.dnfRisk && chance(ex.dnfRisk)) {
+              w.race.forcedDnf = { ...(w.race.forcedDnf ?? {}), [PLAYER_ID]: Math.round(rand(0.2, 0.9) * w.race.totalLaps) };
+            }
             w.strategyPlan = plan;
           }),
         raceTick: () => {
           const g = get().game;
-          if (!g?.weekend?.race || g.weekend.race.finished) return;
+          if (!g?.weekend?.race || g.weekend.race.finished || g.weekend.race.decision) return;
           // Clone léger : on ne copie que la course
           const r = clone(g.weekend.race);
           const shallow: GameState = { ...g, weekend: { ...g.weekend, race: r } };
@@ -424,6 +526,7 @@ export const useGame = create<Store>()(
             r.teamOrder.accepted = false;
           }
           simulateLap(raceCtx(shallow), r);
+          if (!r.finished) r.decision = maybeRaceDecision(shallow, r);
           set({ game: shallow });
         },
         raceToEnd: () => {
@@ -432,6 +535,7 @@ export const useGame = create<Store>()(
           const r = clone(g.weekend.race);
           const shallow: GameState = { ...g, weekend: { ...g.weekend, race: r } };
           let guard = 0;
+          if (r.decision) return;
           while (!r.finished && guard++ < 200) {
             if (r.teamOrder && !r.teamOrder.answered) {
               r.teamOrder.answered = true;
@@ -452,6 +556,10 @@ export const useGame = create<Store>()(
               }
             }
             simulateLap(raceCtx(shallow), r);
+            if (!r.finished) {
+              r.decision = maybeRaceDecision(shallow, r);
+              if (r.decision) break;
+            }
           }
           set({ game: shallow });
         },
@@ -509,6 +617,10 @@ export const useGame = create<Store>()(
               }
             }
             g.weekend = null;
+            if (g.cheats && !g.cheats.persistent) {
+              g.cheats.quali = {};
+              g.cheats.race = {};
+            }
             g.round++;
             g.date = addDays(raceDate(g.season, g.round - 1), 1);
             g.day += 4;
@@ -568,7 +680,7 @@ export const useGame = create<Store>()(
             }
             g.news.unshift(news(g, 'interview', effect.headline, effect.summary, i.outlet));
             const t = teamOf(g, PLAYER_ID);
-            if (t && effect.teamTrust <= -5) pushDM(g, `tp:${t}`, `J’ai lu tes déclarations dans ${i.outlet}. Ce genre de choses se règle en interne, pas dans la presse.`, `tp:${t}`);
+            if (t && effect.teamTrust <= -5) pushDM(g, `tp:${t}`, `${TEAMS_BY_ID[t].principal}: ${tpText(g, t, `I read your comments in ${i.outlet}. That kind of thing is handled internally, not in the press.`, `J’ai lu tes déclarations dans ${i.outlet}. Ce genre de choses se règle en interne, pas dans la presse.`)}`, `tp:${t}`);
             log(g, `🎙️ Interview ${i.outlet} : « ${effect.headline} »`, effect.teamTrust < 0 || effect.controversy > 4 ? 'bad' : 'info');
           });
           set((st) => ({ ui: { ...st.ui, lastInterview: { ...effect, id } } }));
@@ -609,12 +721,10 @@ export const useGame = create<Store>()(
               if (ai.accepts_invitation && act) accepted = act;
             } else {
               await new Promise((r) => setTimeout(r, 700 + Math.random() * 1500));
-              const a = analyze(text);
-              const intents = detectIntents(a, text);
-              const parts = intents.slice(0, 2).map((it) => localReply(g1, convId, it, text, act));
-              replyText = parts.map((r) => r.text).join(' ');
-              rel = parts.reduce<{ friendship?: number; rivalry?: number; respect?: number }>((acc, r) => ({ friendship: (acc.friendship ?? 0) + (r.rel.friendship ?? 0), rivalry: (acc.rivalry ?? 0) + (r.rel.rivalry ?? 0), respect: (acc.respect ?? 0) + (r.rel.respect ?? 0) }), {});
-              accepted = parts.find((r) => r.acceptedActivity)?.acceptedActivity;
+              const r = composeReply(useGame.getState().game!, convId, text, 'dm');
+              replyText = r.text;
+              rel = r.rel;
+              accepted = r.acceptedActivity;
             }
           } else if (convId.startsWith('tp:')) {
             await new Promise((r) => setTimeout(r, 1200));
@@ -622,17 +732,22 @@ export const useGame = create<Store>()(
             const intent = detectIntent(a, text);
             const team = TEAMS_BY_ID[convId.slice(3) as keyof typeof TEAMS_BY_ID];
             const trust = g1.teams[team.id].trust;
-            if (intent === 'complaint' || a.scores.blameTeam) {
-              replyText = trust > 60 ? 'Je t’entends. Viens à l’usine lundi, on regarde ça ensemble avec les ingénieurs.' : 'Moins de plaintes, plus de résultats. C’est comme ça que ça marche ici.';
-              rel = {};
+            const fr = tpLang(g1, team.id) === 'fr';
+            const L = (en: string[], frl: string[]) => pick(fr ? frl : en);
+            const act2 = a.scores;
+            if (intent === 'complaint' || act2.blameTeam) {
+              replyText = trust > 60 ? L(['I hear you. Come to the factory on Monday, we\'ll look at it with the engineers.'], ['Je t’entends. Viens à l’usine lundi, on regarde ça avec les ingénieurs.']) : L(['Fewer complaints, more results. That\'s how it works here.'], ['Moins de plaintes, plus de résultats. C’est comme ça que ça marche ici.']);
               mutate((g) => changeTrust(g, trust > 60 ? 0 : -2));
-            } else if (a.scores.rumor || a.scores.leaving) {
-              replyText = trust > 50 ? 'On veut te garder. On en parle dès que les chiffres sont prêts.' : 'Ta place se mérite course après course. On verra en fin de saison.';
-            } else if (a.scores.humble || a.scores.positive) {
-              replyText = pick(['Merci. Continue à travailler comme ça.', 'Bon état d’esprit. On compte sur toi ce week-end.', 'Apprécié. Toute l’équipe pousse dans la même direction.']);
+            } else if (act2.rumor || act2.leaving) {
+              replyText = trust > 50 ? L(['We want to keep you. We\'ll talk as soon as the numbers are ready.'], ['On veut te garder. On en parle dès que les chiffres sont prêts.']) : L(['Your seat is earned race by race. We\'ll see at the end of the season.'], ['Ta place se mérite course après course. On verra en fin de saison.']);
+            } else if (act2.humble || act2.positive) {
+              replyText = L(['Thanks. Keep working like this.', 'Good mindset. We count on you this weekend.', 'Appreciated. Everyone is pushing in the same direction.'], ['Merci. Continue à travailler comme ça.', 'Bon état d’esprit. On compte sur toi ce week-end.', 'Apprécié. Toute l’équipe pousse dans la même direction.']);
               mutate((g) => changeTrust(g, 1));
-            } else replyText = pick(['Bien reçu.', 'Ok, je transmets aux ingénieurs.', 'On en parle au debrief.', 'Noté. Concentre-toi sur la piste.']);
-            replyText = `${team.principal} : ${replyText}`;
+            } else if (act2.question) {
+              const t = g1.teams[team.id];
+              replyText = L([`Car-wise we're pushing on ${t.devFocus === 'balanced' ? 'every area' : t.devFocus}. Trust is ${trust > 60 ? 'high' : trust > 35 ? 'fine' : 'low right now'}, keep delivering.`], [`Côté voiture on pousse sur ${t.devFocus === 'balanced' ? 'tous les domaines' : t.devFocus}. La confiance est ${trust > 60 ? 'bonne' : trust > 35 ? 'correcte' : 'basse en ce moment'}, continue d’assurer.`]);
+            } else replyText = L(['Copy.', 'Ok, I\'ll pass it to the engineers.', 'Let\'s discuss it at the debrief.', 'Noted. Focus on the track.'], ['Bien reçu.', 'Ok, je transmets aux ingénieurs.', 'On en parle au debrief.', 'Noté. Concentre-toi sur la piste.']);
+            replyText = `${team.principal}: ${replyText}`;
           }
           mutate((g) => {
             if (replyText) pushDM(g, convId, replyText, convId);
@@ -707,7 +822,7 @@ export const useGame = create<Store>()(
               log(g, `Participation à « ${a.eventId} » (+${a.reward.toLocaleString('fr-FR')} €).`, 'good');
             }
           }),
-        createPost: (kind, text) =>
+        createPost: (kind, text, imageKey) =>
           mutate((g) => {
             const p = g.player;
             const a = analyze(text);
@@ -718,11 +833,13 @@ export const useGame = create<Store>()(
             }
             if (kind === 'sponsor') quality -= 0.015;
             const pr = p.staff.find((x) => x.role === 'pr')?.level ?? 0;
+            if (imageKey) quality += 0.02;
             const post = makePost(g, PLAYER_ID, kind, text, p.followers * quality * (1 + pr * 0.1) * rand(0.7, 1.3));
+            if (imageKey) post.imageKey = imageKey;
             post.comments = fanComments(g, post, a.sentiment);
             // Pilotes amis qui commentent
             const friends = Object.values(g.drivers).filter((d) => d.rel.friendship > 25 && DRIVERS_BY_ID[d.id]);
-            for (const f of friends.slice(0, 2)) if (chance(0.5)) post.comments.unshift({ author: f.id, text: pick(['🔥', '😂😂', 'legend', '👏', 'trop beau', '🙌', 'qui a pris la photo 👀']) });
+            for (const f of friends.slice(0, 2)) if (chance(0.5)) post.comments.unshift({ author: f.id, text: styleText(DRIVERS_BY_ID[f.id].persona, pick(['🔥', '{laugh}', 'legend', '👏', 'looking good {buddy}', '🙌', 'who took the pic 👀', 'invite me next time']), 'en', 0.2) });
             g.feed.unshift(post);
             addFollowers(g, p.followers * quality * 0.15);
             if (kind === 'sponsor') {
@@ -738,6 +855,11 @@ export const useGame = create<Store>()(
               for (const d of a.mentionsDrivers) applyRel(g, d, { friendship: 2 });
             }
             log(g, `📸 Publication : ${post.likes.toLocaleString('fr-FR')} likes.`, 'info');
+          }),
+        updateGallery: (owner, keys) =>
+          mutate((g) => {
+            g.player.gallery ??= {};
+            g.player.gallery[owner] = keys;
           }),
         likePost: (id) => mutate((g) => {
           const p = g.feed.find((x) => x.id === id);
@@ -777,7 +899,7 @@ export const useGame = create<Store>()(
               if (current) changeTrust(g, -15);
               log(g, `✍️ Contrat signé avec ${team.name} à partir de ${o.fromSeason} !`, 'good');
               g.news.unshift(news(g, 'transfer', `BOMBE : ${g.player.firstName} ${g.player.lastName} chez ${team.name} en ${o.fromSeason} !`, `${team.principal} : « Nous sommes ravis d’accueillir un talent de ce calibre. »`));
-              if (current) pushDM(g, `tp:${current}`, `${TEAMS_BY_ID[current].principal} : J’ai appris la nouvelle. Déçu, mais je respecte ton choix. Je compte sur toi jusqu’à la dernière course.`, `tp:${current}`);
+              if (current) pushDM(g, `tp:${current}`, `${TEAMS_BY_ID[current].principal}: ${tpText(g, current, 'I heard the news. Disappointed, but I respect your choice. I count on you until the last race.', 'J’ai appris la nouvelle. Déçu, mais je respecte ton choix. Je compte sur toi jusqu’à la dernière course.')}`, `tp:${current}`);
               if (!g.player.contract || g.phase === 'offseason') {
                 // sans contrat actif : on change tout de suite
                 if (!g.player.contract) g.player.contract = offerToContract(o);
@@ -806,32 +928,33 @@ export const useGame = create<Store>()(
             const myPos = st.findIndex((d) => d.driverId === PLAYER_ID);
             const matePos = mate ? st.findIndex((d) => d.driverId === mate) : 99;
             let reply = '';
+            const X = (en: string, fr: string) => tpText(g, t, en, fr);
             if (topic === 'status') {
               if (g.player.contract && g.player.contract.status !== 'first' && trust > 70 && myPos < matePos && g.round > 5) {
                 g.player.contract.status = g.player.contract.status === 'second' ? 'equal' : 'first';
-                reply = `D’accord. Vu ta saison, tu passes au statut « ${g.player.contract.status === 'first' ? 'premier pilote' : 'égalité de traitement'} ».`;
+                reply = X(`Ok. Given your season, you move to ${g.player.contract.status === 'first' ? 'number one status' : 'equal treatment'}.`, `D’accord. Vu ta saison, tu passes au statut « ${g.player.contract.status === 'first' ? 'premier pilote' : 'égalité de traitement'} ».`);
                 if (mate) applyRel(g, mate, { friendship: -8, rivalry: 10 });
               } else {
-                reply = trust > 50 ? 'Le statut se gagne sur la piste. Bats ton coéquipier régulièrement et on en reparle.' : 'Franchement ? Tu n’es pas en position de demander ça.';
+                reply = trust > 50 ? X('Status is earned on track. Beat your teammate regularly and we\'ll talk again.', 'Le statut se gagne sur la piste. Bats ton coéquipier régulièrement et on en reparle.') : X('Honestly? You\'re not in a position to ask for that.', 'Franchement ? Tu n’es pas en position de demander ça.');
                 changeTrust(g, -2);
               }
             } else if (topic === 'car') {
-              reply = `On pousse sur ${g.teams[t].devFocus === 'balanced' ? 'tous les domaines' : g.teams[t].devFocus}. Ton retour technique (${g.player.stats.feedback}) aide les ingénieurs.`;
+              reply = X(`We're pushing on ${g.teams[t].devFocus === 'balanced' ? 'every area' : g.teams[t].devFocus}. Your technical feedback (${g.player.stats.feedback}) helps the engineers.`, `On pousse sur ${g.teams[t].devFocus === 'balanced' ? 'tous les domaines' : g.teams[t].devFocus}. Ton retour technique (${g.player.stats.feedback}) aide les ingénieurs.`);
               changeTrust(g, 1);
             } else {
               const end = g.player.contract?.endSeason ?? g.season;
-              if (end > g.season) reply = `Ton contrat court jusqu’en ${end}. On n’est pas pressés.`;
+              if (end > g.season) reply = X(`Your contract runs until ${end}. No rush.`, `Ton contrat court jusqu’en ${end}. On n’est pas pressés.`);
               else if (trust > 40) {
-                reply = 'On prépare une proposition, tu la recevras très vite.';
+                reply = X('We\'re preparing an offer, you\'ll get it very soon.', 'On prépare une proposition, tu la recevras très vite.');
                 const already = g.offers.some((o) => o.teamId === t && (o.state === 'open' || o.state === 'negotiating'));
                 if (!already) {
                   const o = buildOffer(g, t, g.season + 1, 1.02);
                   g.offers.push(o);
                   pushMail(g, { from: `${team.principal} — ${team.name}`, subject: 'Prolongation de contrat', body: 'Comme convenu, voici notre proposition de prolongation. Tous les détails sont dans l’onglet Carrière.', action: { kind: 'contractOffer', offerId: o.id } });
                 }
-              } else reply = 'Pour l’instant, nous évaluons toutes nos options pour l’an prochain.';
+              } else reply = X('For now we\'re evaluating all our options for next year.', 'Pour l’instant, nous évaluons toutes nos options pour l’an prochain.');
             }
-            pushDM(g, `tp:${t}`, `${team.principal} : ${reply}`, `tp:${t}`);
+            pushDM(g, `tp:${t}`, `${team.principal}: ${reply}`, `tp:${t}`);
           }),
 
         // ─────────── Style de vie ───────────
@@ -840,7 +963,7 @@ export const useGame = create<Store>()(
             const a = ASSETS_BY_ID[id];
             if (!a || g.player.money < a.price) return;
             g.player.money -= a.price;
-            g.player.assets.push({ id, boughtDay: g.day, price: a.price });
+            g.player.assets.push({ uid: uid('as'), id, boughtDay: g.day, price: a.price });
             g.player.morale = clamp(g.player.morale + a.morale, 0, 100);
             addFollowers(g, g.player.followers * (a.prestige / 4000));
             const t = teamOf(g, PLAYER_ID);

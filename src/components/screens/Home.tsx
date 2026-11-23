@@ -7,6 +7,8 @@ import { driverStandings } from '../../game/standings';
 import { teamOf, teammateOf } from '../../game/people';
 import { Bar, DriverName, DriverPhoto, Flag, TeamCar, TeamLogo } from '../ui/media';
 import { statusLabel } from '../../game/career/contracts';
+import { Scene } from '../ui/scene';
+import { circuitFallback, teamFallback } from '../ui/backgrounds';
 
 export function CircuitProfile({ id }: { id: string }) {
   const c = CALENDAR.find((x) => x.id === id)!;
@@ -57,7 +59,7 @@ export function Home() {
         </section>
       )}
       {next && (
-        <section className="hero-gp card" style={{ borderColor: team ? TEAMS_BY_ID[team].color : undefined }}>
+        <Scene imageKey={team ? `team:${team}` : null} fallback={team ? teamFallback(team) : circuitFallback(next.id)} className="hero-gp" style={{ borderColor: team ? TEAMS_BY_ID[team].color : undefined }} upload="Image de fond de l’équipe" overlay={0.5}>
           <div className="hero-left">
             <div className="eyebrow">
               Manche {g.round + 1}/24 {next.sprint && <span className="chip warn">SPRINT</span>} {next.night && <span className="chip">🌙 De nuit</span>} {next.street && <span className="chip">🏙️ Urbain</span>}
@@ -98,7 +100,7 @@ export function Home() {
             {team && <TeamCar id={team} height={90} />}
             <CircuitProfile id={next.id} />
           </div>
-        </section>
+        </Scene>
       )}
 
       <div className="grid3">

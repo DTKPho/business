@@ -46,7 +46,14 @@ export interface QualiSessionResult {
  * Simule une séance complète Q1/Q2/Q3. Le risque du joueur s'applique à chaque segment.
  * `playerRisks` : risque choisi pour Q1, Q2, Q3.
  */
-export function runQualifying(s: GameState, c: CircuitDef, rain: number, playerSetup: number, playerRisks: QualiRisk[], raceId: string): QualiSessionResult {
+export interface QualiMods {
+  /** multiplicateur de temps par pilote (0.003 = +0,3 %) */
+  time?: Record<string, number>;
+  /** risque d'erreur supplémentaire du joueur */
+  playerMistake?: number;
+}
+
+export function runQualifying(s: GameState, c: CircuitDef, rain: number, playerSetup: number, playerRisks: QualiRisk[], raceId: string, mods: QualiMods = {}): QualiSessionResult {
   const ids = gridIds(s);
   const n = ids.length;
   const cut1 = Math.max(10, n - 6);
@@ -65,6 +72,11 @@ export function runQualifying(s: GameState, c: CircuitDef, rain: number, playerS
       let best: number | null = null;
       for (let a = 0; a < 2; a++) {
         const o = qualiLap(s, id, c, rain, setupQ, risk, phase);
+        if (o.time !== null) o.time *= 1 + (mods.time?.[id] ?? 0);
+        if (isP && o.time !== null && mods.playerMistake && Math.random() < mods.playerMistake) {
+          o.time *= 1.015;
+          o.note = 'Tour gâché par l’incident choisi plus tôt.';
+        }
         if (o.note && (isP || Math.random() < 0.5)) notes.push(`${['Q1', 'Q2', 'Q3'][phase]} — ${o.note}`);
         if (o.time !== null && (best === null || o.time < best)) best = o.time;
         if (o.time === null) break;
@@ -83,6 +95,6 @@ export function runQualifying(s: GameState, c: CircuitDef, rain: number, playerS
 }
 
 /** Qualif sprint simplifiée (SQ1-SQ3 avec un seul tour). */
-export function runSprintQuali(s: GameState, c: CircuitDef, rain: number, playerSetup: number, risk: QualiRisk, raceId: string): QualiSessionResult {
-  return runQualifying(s, c, rain, playerSetup, [risk, risk, risk], raceId + '-sq');
+export function runSprintQuali(s: GameState, c: CircuitDef, rain: number, playerSetup: number, risk: QualiRisk, raceId: string, mods: QualiMods = {}): QualiSessionResult {
+  return runQualifying(s, c, rain, playerSetup, [risk, risk, risk], raceId + '-sq', mods);
 }

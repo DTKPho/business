@@ -7,6 +7,8 @@ import { carScore } from '../../game/sim/pace';
 import { driverStandings } from '../../game/standings';
 import { Bar, DriverName, DriverPhoto, Flag, TeamCar, TeamLogo } from '../ui/media';
 import { STAT_KEYS, STAT_LABELS } from '../../game/init';
+import { Scene } from '../ui/scene';
+import { teamFallback } from '../ui/backgrounds';
 
 export function Team() {
   const g = useGame((s) => s.game!);
@@ -45,7 +47,7 @@ export function Team() {
   ];
   return (
     <div className="page">
-      <section className="card team-hero" style={{ borderColor: t.color, background: `linear-gradient(120deg, ${t.color}33, transparent 60%)` }}>
+      <Scene imageKey={`team:${tid}`} fallback={teamFallback(tid)} className="team-hero" style={{ borderColor: t.color }} upload="Image de l’équipe" overlay={0.45}>
         <div className="row">
           <TeamLogo id={tid} size={64} />
           <div>
@@ -57,7 +59,7 @@ export function Team() {
           </div>
         </div>
         <TeamCar id={tid} height={110} />
-      </section>
+      </Scene>
       <div className="grid3">
         <section className="card">
           <h2>🏎️ Voiture</h2>

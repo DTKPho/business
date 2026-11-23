@@ -17,6 +17,7 @@ import { TEAMS_BY_ID } from '../../data/teams';
 import type { ChatMessage, GameState, PendingInterview } from '../types';
 import { PLAYER_ID } from '../types';
 import { nameOf, teamOf } from '../people';
+import { driverLang } from './voice';
 import { driverStandings } from '../standings';
 
 export const DEFAULT_CLAUDE_MODEL = 'claude-opus-5-5';
@@ -60,7 +61,7 @@ function personaPrompt(s: GameState, driverId: string): string {
     `Style d’écriture : ${p.style}, ${p.lowercase ? 'écrit en minuscules' : 'ponctuation normale'}, emojis favoris ${p.emojis.join(' ')}, rire « ${p.laugh} », appelle les gens « ${p.buddy} ». Expressions : ${p.catchphrases.join(' / ')}.`,
     `Centres d’intérêt : ${p.interests.join(', ')}. Amis : ${p.friends.map((f) => DRIVERS_BY_ID[f]?.lastName).join(', ') || '—'}. Tensions : ${p.tensions.map((f) => DRIVERS_BY_ID[f]?.lastName).join(', ') || '—'}.`,
     `Relation actuelle avec le joueur : amitié ${Math.round(d.rel.friendship)}/100, respect ${Math.round(d.rel.respect)}/100, rivalité ${Math.round(d.rel.rivalry)}/100.`,
-    s.settings.driverLanguage === 'vo' && !p.speaksFrench ? 'Réponds dans ta langue naturelle (anglais ou ta langue maternelle mêlée d’anglais).' : 'Réponds en français (avec éventuellement quelques mots de ta langue).',
+    driverLang(s, driverId) === 'fr' ? 'Tu es francophone et le joueur aussi : réponds en français, naturellement, comme par SMS.' : 'Write in English, like a real text message (the paddock language). You may sprinkle words of your native language.',
     'Reste fidèle à ce caractère public, bienveillant sur le fond : pas de propos diffamatoires, pas de vie privée inventée sensible. Messages courts comme sur un téléphone (1 à 3 phrases).',
   ].join('\n');
 }
@@ -141,7 +142,7 @@ export async function claudeGroupReplies(s: GameState, history: ChatMessage[], t
     .join('\n');
   const res = await jsonCall<ClaudeGroupReply>(
     s,
-    `Tu animes le groupe WhatsApp privé des pilotes de F1 dans un jeu vidéo. Chaque pilote garde sa personnalité publique réelle (bienveillant sur le fond, chambrage amical, pas de diffamation).\n${worldContext(s)}\nPilotes disponibles :\n${roster}`,
+    `Tu animes le groupe WhatsApp privé des pilotes de F1 dans un jeu vidéo. TOUS les messages du groupe sont en ANGLAIS (langue du paddock), y compris ceux des pilotes francophones. Chaque pilote garde sa personnalité publique réelle (bienveillant sur le fond, chambrage amical, pas de diffamation). Les réponses doivent réagir précisément à ce que le joueur vient d’écrire.\n${worldContext(s)}\nPilotes disponibles :\n${roster}`,
     `Historique récent :\n${convo}\n${s.player.firstName} (joueur) vient d’écrire : « ${text} »\n\nGénère 1 à 4 réponses réalistes de pilotes concernés (driver_id parmi la liste), courtes, avec l’impact sur leur amitié avec le joueur (−10..10).`,
     {
       type: 'object',
@@ -180,7 +181,7 @@ export async function claudeEvaluateInterview(s: GameState, itw: PendingIntervie
   const res = await jsonCall<ClaudeInterviewEval>(
     s,
     `Tu es le rédacteur en chef de « ${itw.outlet} », média F1, dans un jeu vidéo de carrière. Tu analyses l’interview du joueur et en tires un titre d’article et ses conséquences.\n${worldContext(s)}\nÉquipe du joueur : ${team ? TEAMS_BY_ID[team].name + ' (dirigée par ' + TEAMS_BY_ID[team].principal + ')' : 'aucune'}.\nIds des pilotes : ${Object.keys(DRIVERS_BY_ID).join(', ')}.`,
-    `Interview (${itw.context}) menée par ${itw.journalist} :\n\n${qa}\n\nRends : un titre de presse percutant en français, un résumé de l’angle retenu (2 phrases), et les variations (−10..10) de confiance de l’équipe, sympathie du public, professionnalisme, polémique, ainsi que l’impact sur les pilotes mentionnés.`,
+    `Interview (${itw.context}) menée par ${itw.journalist} :\n\n${qa}\n\nLes questions étaient posées en anglais ; le joueur a pu répondre en anglais ou en français. Rends : un titre de presse percutant EN ANGLAIS (style presse britannique), un résumé de l’angle retenu (2 phrases), et les variations (−10..10) de confiance de l’équipe, sympathie du public, professionnalisme, polémique, ainsi que l’impact sur les pilotes mentionnés.`,
     {
       type: 'object',
       additionalProperties: false,

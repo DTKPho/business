@@ -4,6 +4,8 @@ import { TEAMS_BY_ID } from '../../data/teams';
 import { useGame } from '../../game/store';
 import { money } from '../../game/format';
 import { Flag } from '../ui/media';
+import { ImageUpload, Scene, Thumb } from '../ui/scene';
+import { Gallery } from '../ui/gallery';
 
 const CATS: { id: AssetDef['category']; label: string }[] = [
   { id: 'immobilier', label: '🏠 Immobilier' },
@@ -44,7 +46,8 @@ export function Lifestyle() {
                 const owned = p.assets.filter((x) => x.id === a.id).length;
                 return (
                   <div key={a.id} className="card shop-item">
-                    <div className="shop-emoji">{a.emoji}</div>
+                    <Thumb imageKey={`shop:${a.id}`} fallback={a.emoji} alt={a.name} />
+                    <ImageUpload imageKey={`shop:${a.id}`} label="Mettre ma photo" />
                     <b>{a.name}</b>
                     <p className="small muted">{a.desc}</p>
                     <div className="small">
@@ -61,21 +64,28 @@ export function Lifestyle() {
           </section>
         ))}
       {tab === 'owned' && (
-        <section className="card">
-          {!p.assets.length && <p className="muted">Tu ne possèdes encore rien. La boutique t’attend…</p>}
+        <div className="shop-grid owned">
+          {!p.assets.length && <div className="card muted">Tu ne possèdes encore rien. La boutique t’attend…</div>}
           {p.assets.map((a, i) => {
             const def = ASSETS_BY_ID[a.id];
+            const owner = a.uid ?? `${a.id}-${i}`;
             return (
-              <div key={i} className="invest">
-                <div>
-                  <b>{def.emoji} {def.name}</b>
-                  <div className="small muted">Acheté {money(a.price)} · entretien {money(def.upkeep)}/an · revente ~{money(a.price * def.resale)}</div>
+              <div key={owner} className="card shop-item">
+                <Thumb imageKey={`shop:${a.id}`} fallback={def.emoji} alt={def.name} />
+                <b>
+                  {def.emoji} {def.name}
+                </b>
+                <div className="small muted">
+                  Acheté {money(a.price)} · entretien {money(def.upkeep)}/an · revente ~{money(a.price * def.resale)}
                 </div>
-                <button className="ghost sm" onClick={() => sell(i)}>Vendre</button>
+                {(def.category === 'immobilier' || def.category === 'transport' || def.category === 'voiture') && <Gallery owner={owner} title={def.category === 'immobilier' ? 'Photos de la maison' : 'Photos'} />}
+                <button className="ghost sm" onClick={() => sell(i)}>
+                  Vendre
+                </button>
               </div>
             );
           })}
-        </section>
+        </div>
       )}
       {tab === 'staff' && (
         <div className="shop-grid">
@@ -107,6 +117,17 @@ export function Lifestyle() {
         </div>
       )}
       {tab === 'home' && (
+        <>
+        <Scene imageKey={`residence:${p.residence}`} fallback="linear-gradient(120deg, #3d300f, #0e0c08 70%)" upload="Photo de ma résidence" overlay={0.35} className="residence-hero">
+          <div className="eyebrow">Résidence principale</div>
+          <h1>
+            <Flag code={RESIDENCES.find((r) => r.id === p.residence)!.flag} size={26} /> {RESIDENCES.find((r) => r.id === p.residence)!.name}
+          </h1>
+          <p className="small">{RESIDENCES.find((r) => r.id === p.residence)!.desc}</p>
+        </Scene>
+        <section className="card">
+          <Gallery owner={`residence-${p.residence}`} title="Photos de chez moi" />
+        </section>
         <section className="card">
           <h2>Résidence fiscale</h2>
           <p className="muted small">Déménager coûte 50 k€. Le taux d’imposition s’applique à ton salaire, tes primes et tes sponsors.</p>
@@ -122,6 +143,7 @@ export function Lifestyle() {
             ))}
           </div>
         </section>
+        </>
       )}
     </div>
   );

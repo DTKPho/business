@@ -54,7 +54,7 @@ export function InterviewPanel({ itw, onDone }: { itw: PendingInterview; onDone?
       <div className="eyebrow">
         🎙️ {CONTEXT_LABEL[itw.context]} · <b>{itw.outlet}</b> — {itw.journalist} {ai && <span className="chip pos">🤖 analysé par Claude</span>}
       </div>
-      <p className="muted small">Écris tes réponses librement. Ton ton (humble, drôle, arrogant, critique envers ton équipe ou un rival, loyal, évasif…) sera analysé : la presse, ton équipe, les fans et les pilotes cités réagiront.</p>
+      <p className="muted small">Les journalistes posent leurs questions en anglais : réponds en anglais (ou en français). Ton ton (humble, drôle, arrogant, critique envers ton équipe ou un rival, loyal, évasif…) sera analysé : la presse, ton équipe, les fans et les pilotes cités réagiront.</p>
       {itw.questions.map((q, i) => (
         <div key={i} className="qa">
           <div className="question">

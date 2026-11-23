@@ -105,12 +105,13 @@ export function driverPostsAfterRace(s: GameState, res: WeekendResult): SocialPo
   for (const e of res.race.filter((x) => x.driverId !== PLAYER_ID && DRIVERS_BY_ID[x.driverId])) {
     if (!(e.position <= 3 && e.position > 0) && !chance(0.12)) continue;
     const p = DRIVERS_BY_ID[e.driverId].persona;
-    const c = CALENDAR.find((x) => x.id === res.raceId)!;
+    const c0 = CALENDAR.find((x) => x.id === res.raceId)!;
+    const c = { ...c0, city: c0.city === 'Montréal' ? 'Montreal' : c0.city === 'Djeddah' ? 'Jeddah' : c0.city === 'Bakou' ? 'Baku' : c0.city === 'Abou Dabi' ? 'Abu Dhabi' : c0.city === 'Singapour' ? 'Singapore' : c0.city };
     let text: string;
-    if (e.position === 1) text = `${pick(['WHAT. A. DAY.', 'Victoire !', 'P1 🏆'])} ${c.city} ❤️ ${pick(p.catchphrases)}`;
-    else if (e.position > 0 && e.position <= 3) text = `P${e.position} à ${c.city}. ${pick(['Bon boulot l’équipe.', 'On prend !', 'Encore un pas en avant.'])}`;
-    else if (e.dnf) text = `Pas notre jour. ${pick(p.catchphrases)}`;
-    else text = `P${e.position}. ${pick(['On continue de travailler.', 'Next one.', 'Merci aux fans présents !'])}`;
+    if (e.position === 1) text = `${pick(['WHAT. A. DAY.', 'WE WON!', 'P1 🏆', 'Race winner 🏁'])} ${c.city} ❤️ ${pick(p.catchphrases)}`;
+    else if (e.position > 0 && e.position <= 3) text = `P${e.position} in ${c.city}. ${pick(['Great job team.', 'We take it!', 'Another step forward.', 'Podium vibes 🍾'])}`;
+    else if (e.dnf) text = `Not our day. ${pick(p.catchphrases)}`;
+    else text = `P${e.position}. ${pick(['Back to work.', 'On to the next one.', 'Thanks to all the fans here!'])}`;
     if (p.lowercase) text = text.toLowerCase();
     const post = makePost(s, e.driverId, 'race', text, randInt(200_000, 3_000_000) * (e.position === 1 ? 2 : 1));
     out.push(post);
@@ -119,9 +120,9 @@ export function driverPostsAfterRace(s: GameState, res: WeekendResult): SocialPo
 }
 
 export function fanComments(_s: GameState, _post: SocialPost, tone: number): { author: string; text: string }[] {
-  const pos = ['🔥🔥🔥', 'GOAT', 'le meilleur de la grille', 'trop fier de toi', 'champion du monde bientôt 🏆', 'ma journée est faite', 'énorme', 'LET’S GOOO', 'king 👑', 'mérité !!'];
-  const neg = ['surcoté', 'concentre-toi sur la piste plutôt', 'encore une pub…', 'rends le baquet', 'ratio', 'arrogant', 'faut moins faire la fête', 'tu as détruit la course de mon pilote préféré 😡'];
-  const neu = ['🧡', '❤️', 'trop beau', 'photo de qui ?', 'on veut des vlogs', 'c’est où ?', 'mood', 'le casque 😍'];
+  const pos = ['🔥🔥🔥', 'GOAT', 'best on the grid', 'so proud of you', 'future world champion 🏆', 'this made my day', 'massive', 'LET\'S GOOO', 'king 👑', 'deserved!!', 'the helmet 😍', 'icon behaviour', 'we love you ❤️'];
+  const neg = ['overrated', 'focus on driving instead', 'another ad…', 'give the seat back', 'ratio', 'arrogant', 'less partying maybe?', 'you ruined my driver\'s race 😡', 'mid'];
+  const neu = ['🧡', '❤️', 'so cool', 'who took this pic?', 'we want vlogs', 'where is this?', 'mood', 'first', 'drop the playlist', 'POV: me watching at 3am'];
   const n = randInt(3, 6);
   return pickN(FAN_NAMES, n).map((a) => ({ author: a, text: tone > 0.3 ? pick([...pos, ...neu]) : tone < -0.3 ? pick([...neg, ...neu]) : pick([...pos, ...neg.slice(0, 3), ...neu]) }));
 }

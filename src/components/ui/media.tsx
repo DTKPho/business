@@ -49,24 +49,12 @@ export function Flag({ code, size = 16 }: { code: string; size?: number }) {
   return <span style={{ fontSize: size, lineHeight: 1 }} title={code}>{flagEmoji(code)}</span>;
 }
 
-export function Helmet({ primary, secondary, size = 64, number }: { primary: string; secondary: string; size?: number; number?: number }) {
+/** Avatar neutre (silhouette) quand le joueur n'a pas mis de photo. */
+export function Silhouette({ size = 64, tint = '#8a8aa0' }: { size?: number; tint?: string }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 100 100" aria-hidden>
-      <defs>
-        <linearGradient id={`hg${primary}${secondary}`} x1="0" x2="1" y1="0" y2="1">
-          <stop offset="0" stopColor={primary} />
-          <stop offset="1" stopColor={primary} stopOpacity="0.75" />
-        </linearGradient>
-      </defs>
-      <path d="M12 62 C10 30 35 12 60 14 C82 16 94 34 92 56 L90 70 C88 78 80 82 70 82 L26 82 C16 82 12 74 12 62 Z" fill={`url(#hg${primary}${secondary})`} stroke="#0008" strokeWidth="2" />
-      <path d="M14 58 C30 52 60 50 92 54" stroke={secondary} strokeWidth="7" fill="none" />
-      <path d="M40 40 L88 40 C92 40 93 52 90 56 L44 56 C38 56 36 44 40 40 Z" fill="#111" />
-      <path d="M46 43 L84 43" stroke="#fff3" strokeWidth="3" />
-      {number !== undefined && (
-        <text x="30" y="76" fontSize="16" fontWeight="800" fill={secondary} fontFamily="Titillium Web, sans-serif">
-          {number}
-        </text>
-      )}
+    <svg width={size} height={size} viewBox="0 0 100 100" aria-hidden className="silhouette">
+      <circle cx="50" cy="38" r="19" fill={tint} opacity="0.9" />
+      <path d="M14 100 C14 74 30 62 50 62 C70 62 86 74 86 100 Z" fill={tint} opacity="0.9" />
     </svg>
   );
 }
@@ -88,7 +76,7 @@ export function DriverPhoto({ id, size = 48, className = '', ring = true }: { id
     const p = game.player;
     return (
       <div className={`avatar ${className}`} style={style}>
-        {p.photo ? <img src={p.photo} alt={idn.name} /> : <Helmet primary={p.helmet.primary} secondary={p.helmet.secondary} size={size * 0.9} />}
+        {p.photo ? <img src={p.photo} alt={idn.name} /> : <Silhouette size={size} tint="#c9c9d6" />}
       </div>
     );
   }

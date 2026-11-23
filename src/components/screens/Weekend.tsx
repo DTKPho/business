@@ -10,7 +10,10 @@ import { teamOf } from '../../game/people';
 import { DriverName, DriverPhoto, Flag, TeamLogo, TyreDot } from '../ui/media';
 import { InterviewPanel } from '../weekend/InterviewPanel';
 import { RaceLive } from '../weekend/RaceLive';
+import { DecisionModal } from '../weekend/DecisionModal';
 import { CircuitProfile } from './Home';
+import { Scene } from '../ui/scene';
+import { circuitFallback } from '../ui/backgrounds';
 
 const STAGE_LABEL: Record<string, string> = { media: 'Jeudi presse', fp: 'Essais libres', sprintQuali: 'Qualif sprint', sprint: 'Sprint', quali: 'Qualifications', race: 'Course', post: 'Après-course' };
 
@@ -41,7 +44,7 @@ export function Weekend() {
 
   return (
     <div className="page weekend">
-      <section className="wk-head card">
+      <Scene imageKey={`circuit:${c.id}`} fallback={circuitFallback(c.id)} className="wk-head" upload="Image du circuit" overlay={0.4}>
         <div>
           <div className="eyebrow">
             Manche {w.round + 1} · {c.circuit}
@@ -59,7 +62,7 @@ export function Weekend() {
             </div>
           ))}
         </div>
-      </section>
+      </Scene>
       <div className="stepper">
         {w.stages.map((s, i) => (
           <div key={s} className={`st ${i === w.stageIndex ? 'on' : i < w.stageIndex ? 'done' : ''}`}>
@@ -72,6 +75,7 @@ export function Weekend() {
       {(w.stage === 'quali' || w.stage === 'sprintQuali') && <QualiStage />}
       {(w.stage === 'race' || w.stage === 'sprint') && (w.race ? <RaceLive /> : <PreRace />)}
       {w.stage === 'post' && <PostRace />}
+      <DecisionModal />
       {w.notes.length > 0 && w.stage !== 'post' && (
         <details className="card">
           <summary>Notes du week-end ({w.notes.length})</summary>
@@ -156,6 +160,11 @@ function PracticeStage() {
       </div>
       <div className="card">
         <h2>📻 Débriefing</h2>
+        {(w.decisionLog ?? []).map((l, i) => (
+          <div key={i} className="outcome small">
+            {l}
+          </div>
+        ))}
         {!w.runs.length && <p className="muted">Aucun relais pour l’instant.</p>}
         {[...w.runs].reverse().map((r, i) => (
           <div key={i} className="run">
@@ -218,7 +227,7 @@ function QualiTable({ entries, sprint }: { entries: QualiEntry[]; sprint?: boole
 function QualiStage() {
   const g = useGame((s) => s.game!);
   const w = g.weekend!;
-  const runQuali = useGame((s) => s.runQuali);
+  const runQuali = useGame((s) => s.startQualiSession);
   const advance = useGame((s) => s.advanceStage);
   const [risks, setRisks] = useState<QualiRisk[]>(['normal', 'normal', 'normal']);
   const sprint = w.stage === 'sprintQuali';

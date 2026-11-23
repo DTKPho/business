@@ -7,11 +7,13 @@ import { compact, dateFr } from '../../game/format';
 import { identity, teamOf } from '../../game/people';
 import { claudeAvailable } from '../../game/social/claude';
 import { DriverPhoto, TeamLogo } from '../ui/media';
+import { ImageUpload } from '../ui/scene';
+import { newImageKey, saveImage, useImage } from '../../game/imagestore';
 
 const APPS: { id: PhoneApp; icon: string; label: string }[] = [
   { id: 'messages', icon: '💬', label: 'Messages' },
   { id: 'whatsapp', icon: '🟢', label: 'WhatsApp' },
-  { id: 'insta', icon: '📸', label: 'Paddockgram' },
+  { id: 'insta', icon: '📸', label: 'Instagram' },
   { id: 'mail', icon: '✉️', label: 'Mail' },
 ];
 
@@ -33,6 +35,7 @@ export function Phone() {
           <span>{dateFr(g.date)}</span>
           <span>📶 🔋 {Math.round(g.player.energy)}%</span>
         </div>
+        <PhoneWallpaper />
         <div className="phone-screen">
           {app === 'messages' && <Messages />}
           {app === 'whatsapp' && <Group />}
@@ -48,6 +51,9 @@ export function Phone() {
             </button>
           ))}
         </div>
+      </div>
+      <div className="row center" style={{ justifyContent: 'center', marginTop: 8 }}>
+        <span className="small muted">Fond d’écran du téléphone :</span> <ImageUpload imageKey="wallpaper:phone" label="Choisir une image" />
       </div>
       {claudeAvailable(g) ? (
         <p className="small muted center">🤖 Mode IA activé : les pilotes répondent via Claude en incarnant leur personnalité.</p>
@@ -187,6 +193,7 @@ function Group() {
     setText('');
   };
   const members = Object.values(g.drivers).filter((d) => d.teamId && !d.retired).length + 1;
+  const wall = useImage('wallpaper:whatsapp');
   return (
     <div className="app chat wa">
       <div className="app-head wa-head">
@@ -195,8 +202,9 @@ function Group() {
           <b>F1 Drivers 🏁</b>
           <div className="small muted">{members} participants</div>
         </div>
+        <ImageUpload imageKey="wallpaper:whatsapp" compact />
       </div>
-      <div className="bubbles">
+      <div className="bubbles" style={wall ? { backgroundImage: `linear-gradient(#0b141acc, #0b141acc), url("${wall}")`, backgroundSize: 'cover' } : undefined}>
         {g.group.messages.map((m, i, arr) => {
           const showDay = i === 0 || arr[i - 1].day !== m.day;
           const me = m.from === PLAYER_ID;
@@ -237,77 +245,158 @@ function authorName(g: NonNullable<ReturnType<typeof useGame.getState>['game']>,
   return id;
 }
 
+function PostImage({ p }: { p: SocialPost }) {
+  const url = useImage(p.imageKey ?? null);
+  return <div className="post-img">{url ? <img src={url} alt="" /> : p.image}</div>;
+}
+
+function GridCell({ p }: { p: SocialPost }) {
+  const url = useImage(p.imageKey ?? null);
+  return <div className="cell">{url ? <img src={url} alt="" /> : p.image}</div>;
+}
+
 function Insta() {
   const g = useGame((s) => s.game!);
   const create = useGame((s) => s.createPost);
   const like = useGame((s) => s.likePost);
   const [kind, setKind] = useState<SocialPost['kind']>('lifestyle');
   const [text, setText] = useState('');
+  const [photoKey, setPhotoKey] = useState<string | null>(null);
+  const photoUrl = useImage(photoKey);
   const [tab, setTab] = useState<'feed' | 'me'>('feed');
+  const fileRef = useRef<HTMLInputElement>(null);
   const posts = tab === 'me' ? g.feed.filter((p) => p.author === PLAYER_ID) : g.feed;
   const myPosts = g.feed.filter((p) => p.author === PLAYER_ID);
+  const storyIds = Object.values(g.drivers)
+    .filter((d) => d.teamId && DRIVERS_BY_ID[d.id])
+    .sort((a, b) => b.rel.friendship - a.rel.friendship)
+    .slice(0, 10)
+    .map((d) => d.id);
   return (
-    <div className="app insta">
+    <div className="app insta ig">
       <div className="app-head">
-        <h3>Paddockgram</h3>
+        <h3 className="ig-logo">Instagram</h3>
         <div className="tabs sm">
-          <button className={tab === 'feed' ? 'on' : ''} onClick={() => setTab('feed')}>Fil</button>
-          <button className={tab === 'me' ? 'on' : ''} onClick={() => setTab('me')}>Mon profil</button>
+          <button className={tab === 'feed' ? 'on' : ''} onClick={() => setTab('feed')}>🏠</button>
+          <button className={tab === 'me' ? 'on' : ''} onClick={() => setTab('me')}>👤</button>
         </div>
-      </div>
-      {tab === 'me' && (
-        <div className="insta-profile">
-          <DriverPhoto id={PLAYER_ID} size={64} />
-          <div className="stat-box"><b>{myPosts.length}</b><span>posts</span></div>
-          <div className="stat-box"><b>{compact(g.player.followers)}</b><span>abonnés</span></div>
-          <div className="stat-box"><b>{Math.round(g.player.image.likeability)}</b><span>sympathie</span></div>
-        </div>
-      )}
-      <div className="composer col">
-        <div className="row">
-          <select value={kind} onChange={(e) => setKind(e.target.value as SocialPost['kind'])}>
-            <option value="race">🏁 Course</option>
-            <option value="lifestyle">🌅 Lifestyle</option>
-            <option value="training">🏋️ Entraînement</option>
-            <option value="fans">❤️ Message aux fans</option>
-            <option value="sponsor">⌚ Post sponsorisé</option>
-            <option value="statement">📝 Déclaration</option>
-            <option value="meme">😂 Mème</option>
-          </select>
-          <button className="primary sm" disabled={!text.trim()} onClick={() => { create(kind, text); setText(''); setTab('me'); }}>
-            Publier
-          </button>
-        </div>
-        <textarea rows={2} value={text} onChange={(e) => setText(e.target.value)} placeholder="Légende de ta publication…" />
       </div>
       <div className="posts">
+        {tab === 'feed' && (
+          <div className="stories">
+            <div className="story">
+              <div className="ring">
+                <DriverPhoto id={PLAYER_ID} size={52} ring={false} />
+              </div>
+              <span>Ta story</span>
+            </div>
+            {storyIds.map((id) => (
+              <div key={id} className="story">
+                <div className="ring">
+                  <DriverPhoto id={id} size={52} ring={false} />
+                </div>
+                <span className="ellipsis">{identity(g, id).lastName.toLowerCase()}</span>
+              </div>
+            ))}
+          </div>
+        )}
+        {tab === 'me' && (
+          <>
+            <div className="insta-profile">
+              <DriverPhoto id={PLAYER_ID} size={72} />
+              <div className="stat-box"><b>{myPosts.length}</b><span>posts</span></div>
+              <div className="stat-box"><b>{compact(g.player.followers)}</b><span>followers</span></div>
+              <div className="stat-box"><b>{Math.round(g.player.image.likeability)}%</b><span>likeability</span></div>
+            </div>
+            <div className="small" style={{ padding: '0 12px 8px' }}>
+              <b>{g.player.firstName} {g.player.lastName}</b> <span className="verified">✔</span>
+              <div className="muted">F1 driver · #{g.player.number}</div>
+            </div>
+          </>
+        )}
+        <div className="composer col">
+          <div className="row">
+            <select value={kind} onChange={(e) => setKind(e.target.value as SocialPost['kind'])}>
+              <option value="race">🏁 Race</option>
+              <option value="lifestyle">🌅 Lifestyle</option>
+              <option value="training">🏋️ Training</option>
+              <option value="fans">❤️ Fans</option>
+              <option value="sponsor">⌚ Sponsored</option>
+              <option value="statement">📝 Statement</option>
+              <option value="meme">😂 Meme</option>
+            </select>
+            <button className="ghost sm" onClick={() => fileRef.current?.click()}>📷 Photo</button>
+            <input
+              ref={fileRef}
+              type="file"
+              accept="image/*"
+              hidden
+              onChange={async (e) => {
+                const f = e.target.files?.[0];
+                e.target.value = '';
+                if (!f) return;
+                const k = newImageKey('post');
+                await saveImage(k, f, 1400);
+                setPhotoKey(k);
+              }}
+            />
+            <button
+              className="primary sm"
+              disabled={!text.trim() && !photoKey}
+              onClick={() => {
+                create(kind, text, photoKey ?? undefined);
+                setText('');
+                setPhotoKey(null);
+                setTab('me');
+              }}
+            >
+              Share
+            </button>
+          </div>
+          {photoUrl && <img src={photoUrl} alt="" style={{ maxHeight: 120, borderRadius: 8, objectFit: 'cover' }} />}
+          <textarea rows={2} value={text} onChange={(e) => setText(e.target.value)} placeholder="Write a caption…" />
+        </div>
+        {tab === 'me' && myPosts.length > 0 && (
+          <div className="ig-grid">
+            {myPosts.slice(0, 30).map((p) => (
+              <GridCell key={p.id} p={p} />
+            ))}
+          </div>
+        )}
         {posts.slice(0, 40).map((p) => (
           <div key={p.id} className="post">
             <div className="post-head">
               {DRIVERS_BY_ID[p.author] || p.author === PLAYER_ID || g.generatedDrivers[p.author] ? <DriverPhoto id={p.author} size={30} /> : TEAMS_BY_ID[p.author as TeamId] ? <TeamLogo id={p.author as TeamId} size={30} /> : null}
-              <b>{authorName(g, p.author)}</b>
-              <span className="small muted">· jour {p.day}</span>
+              <b>{authorName(g, p.author)}</b> <span className="verified">✔</span>
+              <span className="small muted">· {g.day - p.day <= 0 ? 'today' : `${g.day - p.day}d`}</span>
             </div>
-            <div className="post-img">{p.image}</div>
+            <PostImage p={p} />
             <div className="post-actions">
               <button className={`ghost sm ${p.likedByPlayer ? 'liked' : ''}`} onClick={() => like(p.id)}>
                 {p.likedByPlayer ? '❤️' : '🤍'} {compact(p.likes)}
               </button>
+              <span className="small muted">💬 {p.comments.length}</span>
             </div>
             <div className="post-text">
               <b>{authorName(g, p.author)}</b> {p.text}
             </div>
             {p.comments.slice(0, 4).map((c, i) => (
               <div key={i} className="small comment">
-                <b>{DRIVERS_BY_ID[c.author] ? `${DRIVERS_BY_ID[c.author].firstName} ${DRIVERS_BY_ID[c.author].lastName} ✔️` : c.author}</b> {c.text}
+                <b>{DRIVERS_BY_ID[c.author] ? `${DRIVERS_BY_ID[c.author].firstName.toLowerCase()}${DRIVERS_BY_ID[c.author].lastName.toLowerCase().replace(/[^a-z]/g, '')}` : c.author}</b>
+                {DRIVERS_BY_ID[c.author] && <span className="verified"> ✔</span>} {c.text}
               </div>
             ))}
           </div>
         ))}
-        {!posts.length && <p className="muted center">Rien pour l’instant.</p>}
+        {!posts.length && <p className="muted center">Nothing yet.</p>}
       </div>
     </div>
   );
+}
+
+function PhoneWallpaper() {
+  const url = useImage('wallpaper:phone');
+  return url ? <div className="phone-wall" style={{ backgroundImage: `url("${url}")` }} /> : null;
 }
 
 function Mail() {
