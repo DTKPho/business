@@ -2256,3 +2256,12 @@ button:active:not(:disabled) {
   background: #3a1212;
   color: #ff9a9a;
 }
+
+.resume-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  border-left: 4px solid var(--theme);
+}

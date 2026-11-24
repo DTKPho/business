@@ -60,6 +60,28 @@ export function Setup() {
         </div>
       </div>
 
+      <div className="card resume-card">
+        <div>
+          <b>🔁 Tu as déjà une carrière dans une autre version du jeu ?</b>
+          <div className="small muted">Dans l’ancienne version, va dans Réglages → « Exporter la sauvegarde complète », puis importe le fichier ici : ta carrière et tes photos reviennent.</div>
+        </div>
+        <label className="btn primary">
+          📂 Importer ma sauvegarde
+          <input
+            type="file"
+            accept="application/json,.json"
+            hidden
+            onChange={async (e) => {
+              const f = e.target.files?.[0];
+              e.target.value = '';
+              if (!f) return;
+              const msg = await importSave(await f.text());
+              if (!msg) alert('Sauvegarde invalide');
+            }}
+          />
+        </label>
+      </div>
+
       <div className="setup-body card">
         {step === 0 && (
           <div className="grid2">
@@ -252,20 +274,6 @@ export function Setup() {
             </button>
           )}
         </div>
-      </div>
-      <div className="center muted small">
-        <label className="link">
-          Importer une sauvegarde (.json)
-          <input
-            type="file"
-            accept="application/json"
-            hidden
-            onChange={async (e) => {
-              const f = e.target.files?.[0];
-              if (f && !importSave(await f.text())) alert('Sauvegarde invalide');
-            }}
-          />
-        </label>
       </div>
     </div>
   );

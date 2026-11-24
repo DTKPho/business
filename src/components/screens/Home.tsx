@@ -9,6 +9,7 @@ import { Bar, DriverName, DriverPhoto, Flag, TeamCar, TeamLogo } from '../ui/med
 import { statusLabel } from '../../game/career/contracts';
 import { Scene } from '../ui/scene';
 import { circuitFallback, teamFallback } from '../ui/backgrounds';
+import { downloadFullBackup } from '../../game/backup';
 
 export function CircuitProfile({ id }: { id: string }) {
   const c = CALENDAR.find((x) => x.id === id)!;
@@ -42,8 +43,28 @@ export function Home() {
   const report = useGame((s) => s.ui.seasonReport);
   const clearReport = useGame((s) => s.clearSeasonReport);
 
+  const onDevServer = typeof location !== 'undefined' && location.protocol.startsWith('http') && /^(localhost|127\.0\.0\.1)$/.test(location.hostname);
+  const toast = useGame((s) => s.toast);
+
   return (
     <div className="page home">
+      {onDevServer && (
+        <section className="card resume-card">
+          <div>
+            <b>📦 Transférer ta carrière vers l’application (Paddock.html / Windows)</b>
+            <div className="small muted">Clique ici pour télécharger ta sauvegarde complète (partie + photos), puis importe-la au démarrage de l’autre version.</div>
+          </div>
+          <button
+            className="primary"
+            onClick={async () => {
+              const n = await downloadFullBackup(useGame.getState().game!);
+              toast(`Sauvegarde complète téléchargée (partie + ${n} photo${n > 1 ? 's' : ''}).`, 'good');
+            }}
+          >
+            💾 Exporter ma carrière
+          </button>
+        </section>
+      )}
       {report && (
         <section className="card">
           <h2>🔁 Mercato de l’intersaison</h2>

@@ -3,6 +3,7 @@ import { DRIVERS } from '../../data/drivers';
 import { TEAMS } from '../../data/teams';
 import { useGame } from '../../game/store';
 import { claudeTestKey, DEFAULT_CLAUDE_MODEL } from '../../game/social/claude';
+import { downloadFullBackup } from '../../game/backup';
 import { DriverPhoto, TeamLogo } from '../ui/media';
 
 const MODELS = [
@@ -21,13 +22,13 @@ export function SettingsScreen() {
   const [imgUrl, setImgUrl] = useState('');
   const st = g.settings;
 
-  const exportSave = () => {
-    const blob = new Blob([JSON.stringify({ ...g, settings: { ...g.settings, claude: { ...g.settings.claude, apiKey: '' } } })], { type: 'application/json' });
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = `paddock-${g.player.lastName}-${g.season}-R${g.round + 1}.json`;
-    a.click();
-    URL.revokeObjectURL(a.href);
+  const toast = useGame((s) => s.toast);
+  const [busy, setBusy] = useState(false);
+  const exportSave = async () => {
+    setBusy(true);
+    const n = await downloadFullBackup(useGame.getState().game!);
+    setBusy(false);
+    toast(`Sauvegarde complète téléchargée (partie + ${n} photo${n > 1 ? 's' : ''}).`, 'good');
   };
 
   return (
@@ -77,14 +78,28 @@ export function SettingsScreen() {
             <input type="checkbox" checked={!!st.showCheats} onChange={(e) => update((s) => { s.showCheats = e.target.checked; })} /> Afficher l’onglet 🎭 Triche
           </label>
           <h3>Sauvegarde</h3>
-          <p className="small muted">La partie est sauvegardée automatiquement dans ton navigateur.</p>
+          <p className="small muted">
+            La partie est sauvegardée automatiquement, mais chaque version du jeu (navigateur via npm, fichier Paddock.html, application Windows) a son propre stockage. Pour passer de l’une à l’autre : exporte la sauvegarde complète ici, puis importe-la dans l’autre version.
+          </p>
           <div className="row wrap">
-            <button className="ghost" onClick={exportSave}>
-              💾 Exporter (.json)
+            <button className="primary" disabled={busy} onClick={exportSave}>
+              {busy ? '⏳ Préparation…' : '💾 Exporter la sauvegarde complète (partie + photos)'}
             </button>
             <label className="btn ghost">
-              📂 Importer
-              <input type="file" accept="application/json" hidden onChange={async (e) => { const f = e.target.files?.[0]; if (f && !importSave(await f.text())) alert('Sauvegarde invalide'); }} />
+              📂 Importer une sauvegarde
+              <input
+                type="file"
+                accept="application/json,.json"
+                hidden
+                onChange={async (e) => {
+                  const f = e.target.files?.[0];
+                  e.target.value = '';
+                  if (!f) return;
+                  const msg = await importSave(await f.text());
+                  if (msg) toast(msg, 'good');
+                  else alert('Sauvegarde invalide');
+                }}
+              />
             </label>
             <button className="danger" onClick={() => confirm('Effacer définitivement cette carrière ?') && reset()}>
               🗑️ Nouvelle carrière

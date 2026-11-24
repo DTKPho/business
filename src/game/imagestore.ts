@@ -69,6 +69,55 @@ async function idbSet(key: string, blob: Blob | null): Promise<void> {
 const urlCache = new Map<string, string | null>();
 const listeners = new Map<string, Set<() => void>>();
 
+// ───────── Export / import de toutes les images (sauvegarde complète) ─────────
+function blobToDataUrl(b: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const r = new FileReader();
+    r.onload = () => resolve(String(r.result));
+    r.onerror = () => reject(r.error);
+    r.readAsDataURL(b);
+  });
+}
+
+/** Toutes les images importées dans le jeu, encodées en data URL. */
+export async function exportAllImages(): Promise<Record<string, string>> {
+  const out: Record<string, string> = {};
+  try {
+    const d = await db();
+    const keys: IDBValidKey[] = await new Promise((resolve) => {
+      const r = d.transaction(STORE, 'readonly').objectStore(STORE).getAllKeys();
+      r.onsuccess = () => resolve(r.result);
+      r.onerror = () => resolve([]);
+    });
+    for (const k of keys) {
+      const b = await idbGet(String(k));
+      if (b) out[String(k)] = await blobToDataUrl(b);
+    }
+  } catch {
+    /* IndexedDB indisponible */
+  }
+  return out;
+}
+
+/** Restaure des images exportées (remplace celles qui ont la même clé). */
+export async function importAllImages(images: Record<string, string>): Promise<number> {
+  let n = 0;
+  for (const [key, dataUrl] of Object.entries(images)) {
+    try {
+      const blob = await (await fetch(dataUrl)).blob();
+      const old = urlCache.get(key);
+      if (old) URL.revokeObjectURL(old);
+      urlCache.delete(key);
+      await idbSet(key, blob);
+      notify(key);
+      n++;
+    } catch {
+      /* image ignorée */
+    }
+  }
+  return n;
+}
+
 function notify(key: string) {
   listeners.get(key)?.forEach((f) => f());
 }

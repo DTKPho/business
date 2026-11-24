@@ -54,6 +54,7 @@ import {
   startNextSeason,
 } from './career/season';
 import { applyQualiCheats } from './cheats';
+import { readBackup } from './backup';
 import { expectedFinish, expectedMap, teamObjective, verdictFor } from './expectations';
 import { autoChoice, buildWeekendDecision, gridPenaltiesFromWeekend, maybeRaceDecision, qualiModsFromWeekend, queueWeekendDecisions, resolveRaceDecision, resolveWeekendDecision } from './decisions';
 import { buildOffer, negotiate as negotiateOffer, offerToContract, type CounterProposal } from './career/contracts';
@@ -82,7 +83,7 @@ interface Store {
   // général
   newGame: (input: NewPlayerInput) => void;
   resetGame: () => void;
-  importSave: (json: string) => boolean;
+  importSave: (text: string) => Promise<string | null>;
   setScreen: (s: Screen) => void;
   setPhoneApp: (a: PhoneApp, conv?: string | null) => void;
   toast: (text: string, tone?: 'good' | 'bad' | 'info') => void;
@@ -215,15 +216,15 @@ export const useGame = create<Store>()(
 
         newGame: (input) => set({ game: createGame(input), ui: { ...initialUI } }),
         resetGame: () => set({ game: null, ui: { ...initialUI } }),
-        importSave: (json) => {
-          try {
-            const g = JSON.parse(json) as GameState;
-            if (!g.player || !g.drivers) return false;
-            set({ game: g, ui: { ...initialUI } });
-            return true;
-          } catch {
-            return false;
-          }
+        importSave: async (text) => {
+          const r = await readBackup(text);
+          if (!r) return null;
+          // garder la clé API déjà saisie dans cette version (elle n'est jamais exportée)
+          const key = get().game?.settings.claude.apiKey ?? '';
+          const g = r.game;
+          if (!g.settings.claude.apiKey && key) g.settings.claude.apiKey = key;
+          set({ game: g, ui: { ...initialUI } });
+          return `Carrière de ${g.player.firstName} ${g.player.lastName} restaurée (saison ${g.season}, manche ${g.round + 1})${r.images ? ` avec ${r.images} photo(s)` : ''} !`;
         },
         setScreen: (screen) => set((st) => ({ ui: { ...st.ui, screen } })),
         setPhoneApp: (phoneApp, conv) => set((st) => ({ ui: { ...st.ui, screen: 'phone', phoneApp, openConversation: conv === undefined ? st.ui.openConversation : conv } })),
