@@ -1,27 +1,69 @@
 {
   "name": "paddock-f1-career",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "oxlint",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "build:app": "tsc -b && vite build --config vite.app.config.ts && node scripts/make-app.mjs",
+    "app": "npm run build:app && electron .",
+    "dist:win": "npm run build:app && electron-builder --win zip --x64",
+    "dist:mac": "npm run build:app && electron-builder --mac zip",
+    "dist:linux": "npm run build:app && electron-builder --linux AppImage"
   },
-  "dependencies": {
-    "@anthropic-ai/sdk": "^1.12.0",
-    "react": "^19.2.8",
-    "react-dom": "^19.2.8",
-    "zustand": "^5.0.15"
-  },
+  "dependencies": {},
   "devDependencies": {
+    "@anthropic-ai/sdk": "^1.12.0",
     "@types/node": "^24.13.3",
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.7",
     "@vitejs/plugin-react": "^6.1.1",
+    "electron": "^45.4.1",
+    "electron-builder": "^26.18.0",
     "oxlint": "^1.81.0",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
     "typescript": "~6.0.2",
-    "vite": "^8.3.0"
+    "vite": "^8.3.0",
+    "vite-plugin-singlefile": "^2.3.4",
+    "zustand": "^5.0.15"
+  },
+  "main": "electron/main.cjs",
+  "description": "Paddock — jeu de carrière de pilote de Formule 1",
+  "author": "Paddock",
+  "build": {
+    "appId": "com.paddock.f1career",
+    "productName": "Paddock F1",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "electron/**",
+      "dist-app/**",
+      "build/icon.png",
+      "package.json"
+    ],
+    "win": {
+      "target": "zip",
+      "signAndEditExecutable": false,
+      "icon": "build/icon-256.png",
+      "artifactName": "Paddock-F1-win.${ext}"
+    },
+    "mac": {
+      "target": "zip",
+      "icon": "build/icon.png",
+      "category": "public.app-category.games",
+      "artifactName": "Paddock-F1-mac.${ext}"
+    },
+    "linux": {
+      "target": "AppImage",
+      "icon": "build/icon.png",
+      "category": "Game",
+      "artifactName": "Paddock-F1.${ext}"
+    },
+    "compression": "maximum"
   }
 }

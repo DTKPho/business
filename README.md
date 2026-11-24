@@ -12,13 +12,25 @@ les autres pilotes, ton argent et ta vie en dehors des circuits.
 
 ## Lancer le jeu
 
+**Le plus simple : double-clique sur `Paddock.html`** (à la racine du dossier). Le jeu
+s’ouvre dans ton navigateur, sans rien installer. La partie est sauvegardée dans le
+navigateur.
+
+**Application de bureau** (Windows, Mac, Linux), fabriquée avec Electron :
+
 ```bash
 npm install
-npm run dev
+```
+```bash
+npm run dist:win
 ```
 
-Puis ouvre l’URL affichée (par défaut http://localhost:5173). Build de production :
-`npm run build`, puis `npm run preview`.
+Le fichier `release/Paddock-F1-win.zip` contient `Paddock F1.exe` : dézippe et
+double-clique. Sur Mac : `npm run dist:mac` ; sous Linux : `npm run dist:linux`.
+Pour lancer l’application sans la fabriquer : `npm run app`.
+
+**Mode développeur** : `npm run dev` puis http://localhost:5173. Après une
+modification, `npm run build:app` régénère `Paddock.html`.
 
 ## Ce que tu gères
 
@@ -117,6 +129,16 @@ karting, e-sport, restaurant…), fondation caritative, vie de couple.
 - **Résumé de course** après chaque sprint et Grand Prix (même avec « ⏭ Fin ») :
   courbe de ta position et chronologie des moments forts.
 - Bouton **🎬 Mode TV / 🎮 Je pilote** pour passer de l’un à l’autre en pleine course.
+
+## Attentes et verdicts
+
+Chaque résultat est jugé par rapport au potentiel réel de ta voiture et de ton
+pilotage sur ce circuit : l’équipe fixe un **objectif** avant chaque GP, et la
+course reçoit un **verdict** (de « Exploit ! » à « Contre-performance »). P14 en
+Cadillac peut être un exploit, P6 en Mercedes une déception. Le verdict influence
+la note, le moral, la confiance de l’équipe, la presse et les questions des
+journalistes (banque de plus de 75 questions, choisies selon le contexte et le ton
+du média, sans répétition).
 
 ## Mode IA (optionnel)
 

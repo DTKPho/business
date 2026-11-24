@@ -45,7 +45,7 @@ export function verdictFor(actual: number, expected: number, dnf?: string | null
   if (diff >= 3) return 'great';
   if (diff >= 1) return 'good';
   if (diff >= -1) return 'par';
-  if (diff >= -4) return 'poor';
+  if (diff >= -5) return 'poor';
   return 'disaster';
 }
 
