@@ -1,78 +1,24 @@
 /** Interviews écrites par le joueur : questions contextuelles et analyse des réponses. */
 import { OUTLETS } from '../../data/media';
-import { CALENDAR } from '../../data/calendar';
 import { TEAMS_BY_ID } from '../../data/teams';
-import type { GameState, InterviewEffect, InterviewQuestion, PendingInterview, RaceResultEntry } from '../types';
+import type { GameState, InterviewEffect, PendingInterview, RaceResultEntry } from '../types';
 import { PLAYER_ID } from '../types';
-import { lastNameOf, nameOf, teammateOf, teamOf } from '../people';
-import { pick, uid, chance } from '../rng';
+import { lastNameOf, teammateOf, teamOf } from '../people';
+import { pick, uid } from '../rng';
 import { analyze } from './nlp';
-import { circuitName } from './voice';
-import { driverStandings } from '../standings';
+import { pickQuestions } from './questions';
 
 export function createInterview(s: GameState, context: PendingInterview['context'], extra?: { race?: RaceResultEntry; raceId?: string; quali?: number }): PendingInterview {
-  const outlet = context === 'tv' || context === 'postRace' || context === 'postQuali' ? pick(OUTLETS.filter((o) => o.tone === 'tv')) : context === 'podcast' ? OUTLETS.find((o) => o.id === 'boxbox')! : pick(OUTLETS.filter((o) => o.tone !== 'tv'));
-  const qs = generateQuestions(s, context, extra);
+  const outlet =
+    context === 'tv'
+      ? pick(OUTLETS.filter((o) => o.tone === 'tv'))
+      : context === 'podcast'
+        ? OUTLETS.find((o) => o.id === 'boxbox')!
+        : context === 'postRace' || context === 'postQuali'
+          ? pick(OUTLETS)
+          : pick(OUTLETS.filter((o) => o.tone !== 'tv'));
+  const qs = pickQuestions(s, context, outlet.tone, extra);
   return { id: uid('itw'), context, outlet: outlet.name, journalist: pick(outlet.journalists), questions: qs, answers: qs.map(() => ''), done: false, day: s.day };
-}
-
-function generateQuestions(s: GameState, context: PendingInterview['context'], extra?: { race?: RaceResultEntry; raceId?: string; quali?: number }): InterviewQuestion[] {
-  const teamId = teamOf(s, PLAYER_ID);
-  const team = teamId ? TEAMS_BY_ID[teamId] : null;
-  const mate = teammateOf(s, PLAYER_ID);
-  const standings = driverStandings(s);
-  const myPos = standings.findIndex((d) => d.driverId === PLAYER_ID) + 1;
-  const leader = standings[0];
-  const qs: InterviewQuestion[] = [];
-  const circuit = extra?.raceId ? CALENDAR.find((c) => c.id === extra.raceId) : CALENDAR[s.round];
-  const last = s.results[s.results.length - 1];
-  const lastMe = last?.race.find((e) => e.driverId === PLAYER_ID);
-
-  if (context === 'postRace' && extra?.race) {
-    const r = extra.race;
-    if (r.dnf) qs.push({ text: `You retired today (${r.dnf}). What happened from your side?`, topic: 'result' });
-    else if (r.position === 1) qs.push({ text: pick(['You won! Tell us what you are feeling right now.', 'Victory! Talk us through those final laps.']), topic: 'result' });
-    else if (r.position <= 3) qs.push({ text: `A podium, P${r.position}. Happy, or was there more out there?`, topic: 'result' });
-    else if (r.position <= 10) qs.push({ text: `P${r.position}, some points. How would you sum up your race?`, topic: 'result' });
-    else qs.push({ text: `P${r.position}, out of the points. What went wrong?`, topic: 'result' });
-    const col = s.flags['lastCollision'] as string | undefined;
-    if (col) {
-      const [other, blame] = col.split('|');
-      qs.push({ text: `The contact with ${lastNameOf(s, other)}: ${blame === PLAYER_ID ? 'the stewards found you responsible. Do you accept the decision?' : 'it looked like his fault. What would you say to him?'}`, topic: 'rival', subject: other });
-    } else if (mate) {
-      const mr = s.weekend?.raceResult?.find((e) => e.driverId === mate);
-      if (mr) qs.push({ text: `${lastNameOf(s, mate)} finished ${mr.dnf ? 'with a DNF' : `P${mr.position}`}. How do you rate your intra-team battle?`, topic: 'teammate', subject: mate });
-    }
-    if (s.flags['teamOrderRefused']) qs.push({ text: 'You ignored a team order on the radio. Why?', topic: 'controversy' });
-    else qs.push({ text: myPos <= 3 ? `You're P${myPos} in the championship. Can we talk about the title?` : `Next up: ${CALENDAR[s.round + 1] ? circuitName(CALENDAR[s.round + 1].id, 'en') : 'the end of the season'}. What are your targets?`, topic: 'championship' });
-    return qs;
-  }
-
-  if (context === 'postQuali') {
-    const q = extra?.quali ?? 10;
-    qs.push({ text: q === 1 ? 'Pole position! How did that final lap feel?' : q <= 5 ? `P${q} on the grid. Happy with your qualifying?` : `Only P${q}. What was missing?`, topic: 'result' });
-    qs.push({ text: 'What\'s the plan for tomorrow? What can we expect?', topic: 'team' });
-    return qs;
-  }
-
-  // Jeudi presse / interviews longues
-  qs.push({ text: `Welcome to ${circuit ? circuitName(circuit.id, 'en') : 'this Grand Prix'}. Does ${circuit?.street ? 'a street circuit' : 'this track'} suit you?`, topic: 'result' });
-  if (lastMe && lastMe.dnf) qs.push({ text: 'After last weekend\'s DNF, how did you bounce back mentally?', topic: 'personal' });
-  else if (lastMe && lastMe.position === 1) qs.push({ text: 'You arrive here as a race winner. Does the pressure change?', topic: 'championship' });
-  if (mate && chance(0.7)) qs.push({ text: `People say the atmosphere with ${nameOf(s, mate)} is ${chance(0.5) ? 'tense' : 'great'}. What's the truth?`, topic: 'teammate', subject: mate });
-  const contract = s.player.contract;
-  if (contract && contract.endSeason <= s.season && chance(0.85)) qs.push({ text: `Your contract with ${team?.name} ends this season. Any talks? Other teams?`, topic: 'contract' });
-  if (leader && leader.driverId !== PLAYER_ID && chance(0.5)) qs.push({ text: `${nameOf(s, leader.driverId)} leads the championship. Can he be beaten this year?`, topic: 'rival', subject: leader.driverId });
-  if (chance(0.4) && team) qs.push({ text: `What do you think of ${team.principal}'s work leading the team?`, topic: 'team', subject: teamId ?? undefined });
-  if (s.player.image.controversy > 40 && chance(0.6)) qs.push({ text: 'Your nights out and social posts get a lot of attention. Is that compatible with elite sport?', topic: 'lifestyle' });
-  if (chance(0.35)) qs.push({ text: 'What\'s your view on the FIA\'s fines for swearing on the radio?', topic: 'regulations' });
-  if (chance(0.3)) qs.push({ text: 'Any message for your growing fanbase?', topic: 'fans' });
-  if (context === 'podcast') {
-    qs.push({ text: 'Tell us about your childhood. How did it all start in karting?', topic: 'personal' });
-    qs.push({ text: 'Who is the funniest driver in the paddock, and the most annoying on track?', topic: 'rival' });
-  }
-  if (context === 'feature') qs.push({ text: 'Where do you see yourself in five years?', topic: 'future' });
-  return qs.slice(0, context === 'podcast' || context === 'feature' ? 4 : 3);
 }
 
 /** Analyse locale des réponses du joueur et calcul de leurs conséquences. */

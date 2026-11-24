@@ -2233,3 +2233,26 @@ button:active:not(:disabled) {
 .tl-emoji {
   font-size: 18px;
 }
+.objective {
+  margin: -6px 0 14px;
+  padding: 8px 14px;
+  border-radius: 10px;
+  background: #13131bcc;
+  border: 1px dashed color-mix(in srgb, var(--theme) 60%, var(--line));
+}
+.verdict {
+  display: inline-block;
+  margin-top: 6px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-weight: 700;
+  background: #2a2a38;
+}
+.verdict.good {
+  background: #0f2d1d;
+  color: #7ff0b0;
+}
+.verdict.bad {
+  background: #3a1212;
+  color: #ff9a9a;
+}

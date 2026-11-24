@@ -54,6 +54,7 @@ import {
   startNextSeason,
 } from './career/season';
 import { applyQualiCheats } from './cheats';
+import { expectedFinish, expectedMap, teamObjective, verdictFor } from './expectations';
 import { autoChoice, buildWeekendDecision, gridPenaltiesFromWeekend, maybeRaceDecision, qualiModsFromWeekend, queueWeekendDecisions, resolveRaceDecision, resolveWeekendDecision } from './decisions';
 import { buildOffer, negotiate as negotiateOffer, offerToContract, type CounterProposal } from './career/contracts';
 import { createInterview, evaluateInterview } from './social/interview';
@@ -414,6 +415,7 @@ export const useGame = create<Store>()(
               decisionLog: [],
             };
             g.weekend.decisionQueue = queueWeekendDecisions('fp', c.sprint ? 1 : 2, g, g.weekend);
+            g.weekend.objective = teamObjective(g, c.id);
             g.date = addDays(raceDate(g.season, g.round), -3);
             g.phase = 'weekend';
             log(g, `🏁 Week-end du ${c.name} : bienvenue à ${c.city} !`, 'info');
@@ -697,6 +699,13 @@ export const useGame = create<Store>()(
             } else {
               w.raceResult = res;
               const wr: WeekendResult = { season: g.season, round: g.round, raceId: w.raceId, quali: w.quali ?? [], sprint: w.sprintResult, race: res, playerRating: 0 };
+              const meR = res.find((e) => e.driverId === PLAYER_ID);
+              wr.playerExpected = w.objective?.target ?? expectedFinish(g, PLAYER_ID, w.raceId);
+              // Les abandons des voitures censées finir devant ne doivent pas gonfler le verdict
+              const expMap = expectedMap(g, w.raceId);
+              const dnfAhead = res.filter((e) => e.dnf && e.driverId !== PLAYER_ID && (expMap[e.driverId] ?? 99) < wr.playerExpected!).length;
+              wr.playerVerdict = verdictFor(meR && !meR.dnf ? Math.max(1, meR.position + Math.round(dnfAhead * 0.8)) : 0, wr.playerExpected, meR?.dnf);
+              wr.objective = w.objective;
               wr.playerRating = playerRating(g, wr);
               g.results.push(wr);
               postRace(g, wr, w.collisions, w.teamOrderAnswer);

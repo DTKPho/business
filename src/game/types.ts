@@ -297,6 +297,9 @@ export interface WeekendResult {
   sprint: RaceResultEntry[] | null;
   race: RaceResultEntry[];
   playerRating: number; // note /10
+  playerExpected?: number; // position attendue
+  playerVerdict?: string; // verdict (voir expectations.ts)
+  objective?: { target: number; label: string };
 }
 
 export interface WeekendState {
@@ -330,6 +333,7 @@ export interface WeekendState {
   pendingRisks?: string[];
   auto?: AutoSettings;
   summaries?: RaceSummary[];
+  objective?: { target: number; label: string };
 }
 
 // ───────────────────── Social ─────────────────────

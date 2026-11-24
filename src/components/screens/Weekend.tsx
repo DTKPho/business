@@ -13,6 +13,7 @@ import { RaceLive } from '../weekend/RaceLive';
 import { DecisionModal } from '../weekend/DecisionModal';
 import { RaceSummary } from '../weekend/Broadcast';
 import type { AutoProfile } from '../../game/types';
+import { VERDICT_FR, type Verdict } from '../../game/expectations';
 import { CircuitProfile } from './Home';
 import { Scene } from '../ui/scene';
 import { circuitFallback } from '../ui/backgrounds';
@@ -73,6 +74,11 @@ export function Weekend() {
         ))}
       </div>
       <AutoBar />
+      {w.objective && w.stage !== 'post' && (
+        <div className="objective">
+          🎯 Objectif de l’équipe : <b>{w.objective.label}</b> <span className="muted small">(rythme estimé de ta voiture : ~P{w.objective.target})</span>
+        </div>
+      )}
       {w.stage === 'media' && <MediaStage />}
       {w.stage === 'fp' && <PracticeStage />}
       {(w.stage === 'quali' || w.stage === 'sprintQuali') && <QualiStage />}
@@ -414,10 +420,16 @@ function PostRace() {
         <div className="card post-hero">
           <div className="big-num">{me?.dnf ? 'AB' : `P${me?.position}`}</div>
           <div>
-            <h2>{me?.position === 1 ? '🏆 VICTOIRE !' : me && me.position > 0 && me.position <= 3 ? '🍾 Podium !' : me?.dnf ? 'Abandon' : 'Arrivée'}</h2>
+            <h2>{me?.position === 1 ? '🏆 VICTOIRE !' : me && me.position > 0 && me.position <= 3 ? '🍾 Podium !' : me?.dnf ? 'Abandon' : res?.playerVerdict === 'exceptional' ? '🤯 Exploit !' : res?.playerVerdict === 'great' ? '💪 Superbe course' : res?.playerVerdict === 'disaster' ? '😣 Dimanche difficile' : 'Arrivée'}</h2>
             <div>
               Note du week-end : <b className="accent">{res?.playerRating}/10</b> · {me?.points ?? 0} point(s)
             </div>
+            {res?.playerVerdict && (
+              <div className={`verdict ${VERDICT_FR[res.playerVerdict as Verdict].tone}`}>
+                {VERDICT_FR[res.playerVerdict as Verdict].label}
+                {res.playerExpected ? <span className="small"> · attendu ~P{res.playerExpected}{res.objective ? ` · objectif : ${res.objective.label}` : ''}</span> : null}
+              </div>
+            )}
           </div>
         </div>
         {(w.summaries ?? []).slice().reverse().map((sm, i) => (

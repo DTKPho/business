@@ -1,19 +1,19 @@
 import { CALENDAR, raceDate } from '../../data/calendar';
 import { DRIVERS_BY_ID } from '../../data/drivers';
 import { ACTIVITIES_BY_ID, ASSETS_BY_ID, BRANDS, BUSINESSES_BY_ID, INVESTMENTS_BY_ID, RESIDENCES_BY_ID } from '../../data/lifestyle';
-import { TEAMS, TEAMS_BY_ID, TEAM_IDS } from '../../data/teams';
-import type { ChatMessage, Conversation, DriverState, GameState, LogEntry, MailItem, Relationship, TeamId, WeekendResult } from '../types';
+import { TEAMS, TEAMS_BY_ID } from '../../data/teams';
+import type { ChatMessage, Conversation, DriverState, GameState, LogEntry, MailItem, Relationship, WeekendResult } from '../types';
 import { PLAYER_ID } from '../types';
 import { ageOf, gridIds, identity, lastNameOf, nameOf, overall, statsOf, teamDrivers, teammateOf, teamOf } from '../people';
 import { chance, clamp, gauss, pick, pickN, rand, randInt, uid } from '../rng';
 import { driverStandings, teamStandings } from '../standings';
-import { carScore } from '../sim/pace';
 import { groupAfterRace, groupRandom } from '../social/group';
 import { driverPostsAfterRace, fanComments, makePost, paddockRumour, raceNews, news } from '../social/press';
 import { spontaneousDM, tpText } from '../social/voice';
 import { buildOffer, generateOffers, offerToContract } from './contracts';
 import { addDays, money } from '../format';
 import { daysUntilWeekend, START_SEASON } from '../init';
+import { expectedFinish, expectedMap, isBad, isGood, verdictFor } from '../expectations';
 
 export function log(s: GameState, text: string, tone: LogEntry['tone'] = 'neutral') {
   s.log.unshift({ id: uid('l'), day: s.day, text, tone });
@@ -155,26 +155,25 @@ export function raceFinances(s: GameState, res: WeekendResult): FinanceLine[] {
 
 // ───────────── Après-course ─────────────
 
-export function expectedPosition(s: GameState, teamId: TeamId, raceId: string): number {
-  const c = CALENDAR.find((x) => x.id === raceId)!;
-  const ranks = TEAM_IDS.map((t) => ({ t, v: carScore(s.teams[t], c) })).sort((a, b) => b.v - a.v);
-  const r = ranks.findIndex((x) => x.t === teamId);
-  return r * 2 + 1.5;
+/** Position attendue d'un pilote (voiture + pilote) sur ce circuit. */
+export function expectedPosition(s: GameState, driverId: string, raceId: string): number {
+  return expectedFinish(s, driverId, raceId);
 }
 
 export function playerRating(s: GameState, res: WeekendResult): number {
   const me = res.race.find((e) => e.driverId === PLAYER_ID);
   const q = res.quali.find((e) => e.driverId === PLAYER_ID);
   if (!me) return 5;
-  const exp = expectedPosition(s, me.teamId, res.raceId);
+  const exp = res.playerExpected ?? expectedPosition(s, PLAYER_ID, res.raceId);
   let r = 6.2;
   if (me.dnf) r = me.dnf.includes('accrochage') || me.dnf.includes('mur') || me.dnf.includes('sortie') || me.dnf.includes('tête') ? 3.5 : 5.5;
-  else r += (exp - me.position) * 0.32 + (me.grid - me.position) * 0.06;
+  else r += (exp - me.position) * 0.38 + (me.grid - me.position) * 0.06;
   if (q) r += (exp - q.position) * 0.1;
   const mate = teammateOf(s, PLAYER_ID);
   const mr = mate ? res.race.find((e) => e.driverId === mate) : null;
   if (mr && !me.dnf && (mr.dnf || mr.position > me.position)) r += 0.4;
   if (me.position === 1) r += 0.8;
+  if (!me.dnf && me.position <= 10 && exp > 10) r += 0.5; // points avec une voiture qui n'en vaut pas
   return Math.round(clamp(r, 1, 10) * 10) / 10;
 }
 
@@ -213,7 +212,8 @@ export function postRace(s: GameState, res: WeekendResult, collisions: { a: stri
 
   // Confiance de l'équipe
   const rating = res.playerRating;
-  const exp = expectedPosition(s, team, res.raceId);
+  const exp = res.playerExpected ?? expectedPosition(s, PLAYER_ID, res.raceId);
+  const verdict = verdictFor(me?.position ?? 0, exp, me?.dnf);
   if (me) {
     let dt = me.dnf ? (rating < 4 ? -6 : -1) : clamp((exp - me.position) * 0.9, -6, 8);
     if (teamOrderAnswer === 'refused') {
@@ -230,9 +230,10 @@ export function postRace(s: GameState, res: WeekendResult, collisions: { a: stri
 
   // Moral, énergie, stress
   if (me) {
-    const mDelta = me.position === 1 ? 18 : me.position > 0 && me.position <= 3 ? 10 : me.points > 0 ? 3 : me.dnf ? -10 : -5;
+    const vm: Record<string, number> = { exceptional: 14, great: 9, good: 4, par: 0, poor: -5, disaster: -10, unlucky: -6, crash: -12 };
+    const mDelta = (vm[verdict] ?? 0) + (me.position === 1 ? 8 : me.position > 0 && me.position <= 3 ? 4 : 0);
     p.morale = clamp(p.morale + mDelta + (rating - 6) * 2, 0, 100);
-    p.stress = clamp(p.stress + (me.position === 1 ? -10 : me.dnf ? 10 : 2), 0, 100);
+    p.stress = clamp(p.stress + (isGood(verdict) ? -6 : isBad(verdict) ? 8 : 1), 0, 100);
   }
   const jet = p.assets.some((a) => a.id === 'jet' || a.id === 'jet2') && p.staff.some((x) => x.role === 'pilot');
   const physio = p.staff.find((x) => x.role === 'physio')?.level ?? 0;
@@ -252,6 +253,8 @@ export function postRace(s: GameState, res: WeekendResult, collisions: { a: stri
     else if (me.position > 0 && me.position <= 3) fGrowth += base * 0.025 + 40_000;
     else if (me.points > 0) fGrowth += base * 0.006;
     if (me.grid - me.position >= 6) fGrowth += base * 0.01;
+    if (verdict === 'exceptional') fGrowth += base * 0.02 + 30_000;
+    else if (verdict === 'great') fGrowth += base * 0.008;
   }
   const pr = p.staff.find((x) => x.role === 'pr')?.level ?? 0;
   addFollowers(s, fGrowth * (1 + pr * 0.1));
@@ -295,11 +298,12 @@ export function postRace(s: GameState, res: WeekendResult, collisions: { a: stri
   }
 
   // Forme des IA
+  const expMap = expectedMap(s, res.raceId);
   for (const e of res.race) {
     if (e.driverId === PLAYER_ID) continue;
     const d = s.drivers[e.driverId];
     if (!d) continue;
-    const exp2 = expectedPosition(s, e.teamId, res.raceId);
+    const exp2 = expMap[e.driverId] ?? 11;
     d.form = clamp(d.form * 0.6 + (e.dnf ? -1 : (exp2 - e.position) * 0.4) + gauss(0, 1), -8, 8);
     d.morale = clamp(d.morale + (e.position === 1 ? 10 : e.dnf ? -6 : 0), 0, 100);
   }
@@ -315,7 +319,7 @@ export function postRace(s: GameState, res: WeekendResult, collisions: { a: stri
       .map((d) => d.id);
     for (const id of pickN(friends, me.position === 1 ? 3 : 1)) if (DRIVERS_BY_ID[id]) pushDM(s, id, spontaneousDM(s, id, 'congrats', { position: me.position }));
   }
-  if (me && (me.dnf || me.position > exp + 5)) {
+  if (me && (me.dnf || verdict === 'disaster')) {
     const friends = Object.values(s.drivers).filter((d) => d.rel.friendship > 30 && DRIVERS_BY_ID[d.id]);
     if (friends.length && chance(0.6)) pushDM(s, pick(friends).id, spontaneousDM(s, pick(friends).id, 'support'));
   }
@@ -327,7 +331,9 @@ export function postRace(s: GameState, res: WeekendResult, collisions: { a: stri
     if (me.position === 1) txt = pick([X('What a race! The whole factory is on fire. Enjoy it, you earned it.', 'Quelle course ! Toute l’usine est en feu. Profite, tu l’as méritée.'), X('Magnificent win. Thank you for your commitment.', 'Victoire magnifique. Merci pour ton engagement.')]);
     else if (teamOrderAnswer === 'refused') txt = X('I won\'t say it twice: when the team gives an instruction, you follow it. We talk tomorrow at the factory.', 'Je ne vais pas le répéter deux fois : quand l’équipe donne une consigne, tu l’appliques. On en parle demain à l’usine.');
     else if (me.dnf && rating < 4) txt = X('We left points on the table today. Go through it with your engineer, I want a reaction.', 'On a laissé des points sur la table aujourd’hui. Analyse ça avec ton ingénieur, je veux une réaction.');
-    else if (me.position > 0 && me.position < exp - 2) txt = X('Well above expectations. Keep it up.', 'Bien au-dessus des attentes. Continue comme ça.');
+    else if (verdict === 'exceptional') txt = X(`P${me.position} with this car? That's a fantastic drive. The whole factory saw it.`, `P${me.position} avec cette voiture ? C’est une course fantastique. Toute l’usine l’a vue.`);
+    else if (verdict === 'great') txt = X('Well above expectations. Keep it up.', 'Bien au-dessus des attentes. Continue comme ça.');
+    else if (verdict === 'disaster') txt = X(`P${me.position} is not where this car should be. Let's understand why.`, `P${me.position}, ce n’est pas la place de cette voiture. Il faut comprendre pourquoi.`);
     if (txt) txt = `${tdef.principal}: ${txt}`;
     if (txt) pushDM(s, tp, txt, tp);
   }

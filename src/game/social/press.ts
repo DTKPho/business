@@ -33,21 +33,30 @@ export function raceNews(s: GameState, res: WeekendResult): NewsItem[] {
     const n = `${s.player.firstName} ${s.player.lastName}`;
     let t = '';
     let b = '';
+    const v = res.playerVerdict;
+    const exp = res.playerExpected ?? 10;
+    const car = TEAMS_BY_ID[me.teamId].name;
     if (me.position === 1) {
       t = pick([`${n} triomphe à ${c.city} !`, `Masterclass de ${n} au ${c.short}`, `${n}, le nouveau visage de la victoire`]);
-      b = 'Une performance de très haut niveau qui fait déjà parler tout le paddock.';
+      b = exp > 3 ? `Personne n’imaginait une ${car} victorieuse ici. Un coup de maître.` : 'Une performance de très haut niveau qui fait déjà parler tout le paddock.';
     } else if (me.position > 0 && me.position <= 3) {
-      t = `Podium pour ${n} au ${c.short}`;
-      b = `P${me.position} pour ${n}, qui confirme sa montée en puissance.`;
+      t = v === 'exceptional' ? `Podium inattendu pour ${n} et ${car} !` : `Podium pour ${n} au ${c.short}`;
+      b = `P${me.position} pour ${n}${v === 'exceptional' ? `, avec une voiture qui visait plutôt la P${exp}` : ', qui confirme sa montée en puissance'}.`;
     } else if (me.dnf) {
       t = pick([`Week-end noir pour ${n}`, `${n} contraint à l’abandon`]);
-      b = `Abandon (${me.dnf}). ${me.dnf.includes('accrochage') || me.dnf.includes('mur') ? 'Une erreur qui risque de coûter cher.' : 'La malchance s’acharne.'}`;
-    } else if (me.position > me.grid + 4) {
-      t = `${n} recule au ${c.short}`;
-      b = `Parti ${me.grid}e, arrivé ${me.position}e : un dimanche difficile.`;
+      b = `Abandon (${me.dnf}). ${v === 'crash' ? 'Une erreur qui risque de coûter cher.' : 'La malchance s’acharne.'}`;
+    } else if (v === 'exceptional' || v === 'great') {
+      t = pick([`${n} sublime sa ${car} au ${c.short}`, `P${me.position} : la performance cachée du week-end signée ${n}`, `${n} tire le maximum de sa ${car}`]);
+      b = `Attendue autour de la P${exp}, la ${car} termine P${me.position}. Le paddock a remarqué.`;
+    } else if (v === 'disaster') {
+      t = pick([`${n} à la peine au ${c.short}`, `Dimanche raté pour ${n}`, `${car} : ${n} loin du compte`]);
+      b = `Avec une voiture capable de viser la P${exp}, terminer P${me.position} interroge.`;
     } else if (me.grid - me.position >= 5) {
       t = `La remontée fantastique de ${n}`;
       b = `De la ${me.grid}e à la ${me.position}e place, ${n} a régalé le public.`;
+    } else if (me.position > me.grid + 4) {
+      t = `${n} recule au ${c.short}`;
+      b = `Parti ${me.grid}e, arrivé ${me.position}e : un dimanche difficile.`;
     }
     if (t) out.push(news(s, 'player', t, b));
   }
